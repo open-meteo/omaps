@@ -6,5 +6,6 @@ export default defineConfig({
 	plugins: [wasm()],
 	optimizeDeps: {
 		exclude: ['@openmeteo/file-reader', '@openmeteo/file-format-wasm']
-	}
+	},
+	base: '/omaps/'
 });
