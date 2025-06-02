@@ -1,0 +1,60 @@
+:root {
+	font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+	color-scheme: light dark;
+	color: rgba(255, 255, 255, 0.87);
+	background-color: rgb(2, 8, 23);
+
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+
+@media (prefers-color-scheme: light) {
+	:root {
+	    	color: #213547;
+		background-color: #ffffff;
+	}
+}
+
+html, body {
+	margin: 0;
+}
+
+#map_container {
+	position: relative;
+	width: 100%;
+	height: calc(100vh - 72px); /* calculate height of the screen minus the heading */
+}
+
+.map {
+	position: absolute;
+	width: 100%;
+	min-height: 100%;
+}
+
+.header {
+	height: 72px;
+	max-width: 1100px;
+	margin: 0 auto;
+}
+
+.nav-logo {
+	color: white;
+	display: flex;
+	align-items: center;
+	text-decoration: none;
+	gap: 5px;
+	padding-top: 25px;
+	padding-left: 25px;
+}
+
+.nav-logo svg {
+	margin-top: -5px;
+}
+
+.nav-logo:hover {
+	text-decoration: underline;
+}
