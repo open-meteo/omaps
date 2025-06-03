@@ -7,5 +7,8 @@ export default defineConfig({
 	optimizeDeps: {
 		exclude: ['@openmeteo/file-reader', '@openmeteo/file-format-wasm']
 	},
-	base: '/omaps/'
+	base: '/omaps/',
+	build: {
+		chunkSizeWarningLimit: 1200
+	}
 });
