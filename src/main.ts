@@ -28,6 +28,8 @@ if (mapContainer) {
 		attributionControl: false
 	});
 
+	map.showTileBoundaries = true;
+
 	map.on('load', () => {
 		loadOmFile();
 	});
@@ -73,7 +75,10 @@ const loadOmFile = async () => {
 
 				if (!isNaN(data[index])) {
 					new Marker({ element: el })
-						.setLngLat({ lng: coordinate.lng, lat: coordinate.lat })
+						.setLngLat({
+							lng: coordinate.lng,
+							lat: coordinate.lat
+						})
 						.addTo(map);
 				}
 			}
