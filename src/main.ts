@@ -5,7 +5,12 @@ import './style.css';
 
 import * as turf from '@turf/turf';
 
+import { pad } from './utils/pad';
+import { OmFileReader, OmDataType, MemoryHttpBackend } from '@openmeteo/file-reader';
+
 import omProtocol from './om-protocol';
+
+import { getIndexFromLatLong } from './om-protocol';
 
 let map: maplibregl.Map;
 const mapContainer: HTMLElement | null = document.getElementById('map_container');
@@ -18,6 +23,8 @@ let domain = {
 let arraySize = domain.grid.nx * domain.grid.ny;
 let timeSelected = new Date();
 let variable = { value: 'temperature_2m', label: 'Temperature 2m' };
+
+let data;
 
 const tileBounds = [
 	[8.44, 46.8],
@@ -94,79 +101,130 @@ if (mapContainer) {
 			id: 'omFileLayer',
 			type: 'raster'
 		});
+
+		map.on('click', function (e) {
+			var coordinates = e.lngLat;
+			const index = getIndexFromLatLong(coordinates.lat, coordinates.lng);
+			console.log(data[index].toFixed(2) + 'C°');
+		});
+
+		loadOmFile();
+
+		const radius = 20; // kilometer
+		const options = {
+			steps: 64,
+			units: 'kilometers'
+		};
+		const bboxBegin = turf.circle(
+			[domain.grid.lonMin, domain.grid.latMin],
+			radius,
+			options
+		);
+		const bboxEnd = turf.circle(
+			[
+				domain.grid.lonMin + domain.grid.dx * domain.grid.nx,
+				domain.grid.latMin + domain.grid.dy * domain.grid.ny
+			],
+			17,
+			options
+		);
+
+		// Add the circle as a GeoJSON source
+		map.addSource('location-radius', {
+			type: 'geojson',
+			data: turf.featureCollection([bboxBegin, bboxEnd])
+		});
+
+		// Add a fill layer with some transparency
+		map.addLayer({
+			id: 'location-radius',
+			type: 'fill',
+			source: 'location-radius',
+			paint: {
+				'fill-color': '#8CCFFF',
+				'fill-opacity': 0.5
+			}
+		});
+
+		// Add a line layer to draw the circle outline
+		map.addLayer({
+			id: 'location-radius-outline',
+			type: 'line',
+			source: 'location-radius',
+			paint: {
+				'line-color': '#0094ff',
+				'line-width': 3
+			}
+		});
 	});
 }
 
-// const loadOmFile = async () => {
-// 	let url = `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z/${variable.value}.om`;
+const loadOmFile = async () => {
+	// let url = `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z/${variable.value}.om`;
 
-// 		const coordinates = [];
-// 		for (let [i, _] of new Array(dimensions[0]).entries()) {
-// 			for (let [j, _] of new Array(dimensions[1]).entries()) {
-// 				coordinates.push({
-// 					lng: domain.grid.lonMin + domain.grid.dx * j,
-// 					lat: domain.grid.latMin + domain.grid.dy * i
-// 				});
-// 			}
-// 		}
+	let backend = new MemoryHttpBackend({
+		url: './data/temperature_2m.om',
+		maxFileSize: 500 * 1024 * 1024 // 500 MB
+	});
+	let reader = await OmFileReader.create(backend);
+	if (reader) {
+		const dimensions = reader.getDimensions();
 
-// 		const tileCoords = [];
+		// Create ranges for each dimension
+		const ranges = dimensions.map((dim, _) => {
+			return { start: 0, end: dim };
+		});
+		data = await reader.read(OmDataType.FloatArray, ranges);
 
-// 		for (let [index, coordinate] of coordinates.entries()) {
-// 			if (
-// 				coordinate.lng >= tileBounds[0][0] &&
-// 				coordinate.lng <= tileBounds[2][0] &&
-// 				coordinate.lat >= tileBounds[0][1] &&
-// 				coordinate.lat <= tileBounds[2][1]
-// 			) {
-// 				const el = document.createElement('div');
-// 				el.className = 'marker';
-// 				el.style.width = `${14}px`;
-// 				el.style.height = `${14}px`;
-// 				el.innerHTML = `<span style="font-size: 12px; color: rgba(0,0,0,0.6);">${data[index].toFixed(0)}</span>`;
+		const coordinates = [];
+		for (let [i, _] of new Array(dimensions[0] - 1).entries()) {
+			for (let [j, _] of new Array(dimensions[1] - 1).entries()) {
+				coordinates.push({
+					lng: domain.grid.lonMin + domain.grid.dx * j,
+					lat: domain.grid.latMin + domain.grid.dy * i,
+					row: i,
+					column: j
+				});
+			}
+		}
 
-// 				let marker;
-// 				if (!isNaN(data[index])) {
-// 					marker = new maplibregl.Marker({ element: el })
-// 						.setLngLat({
-// 							lng: coordinate.lng,
-// 							lat: coordinate.lat
-// 						})
-// 						.addTo(map);
-// 				}
-// 				coordinate['marker'] = marker;
-// 				coordinate['temperature'] = data[index];
+		const tileCoords = [];
+		let hits = 0;
 
-// 				tileCoords.push(coordinate);
-// 			}
-// 		}
+		for (let [index, coordinate] of coordinates.entries()) {
+			if (
+				coordinate.lng >= tileBounds[0][0] &&
+				coordinate.lng <= tileBounds[2][0] &&
+				coordinate.lat >= tileBounds[0][1] &&
+				coordinate.lat <= tileBounds[2][1]
+			) {
+				//if (index % Math.round(arraySize / 500) === 0) {
+				const el = document.createElement('div');
+				el.className = 'marker';
+				el.style.width = `${14}px`;
+				el.style.height = `${14}px`;
+				el.innerHTML = `<span style="font-size: 12px; color: rgba(0,0,0,0.6);">${data[index].toFixed(2)}C°</span>`;
 
-// 		const pixels = TILE_SIZE * TILE_SIZE;
-// 		const rgba = new Uint8ClampedArray(pixels * 4);
+				let marker;
+				if (!isNaN(data[index])) {
+					setTimeout(() => {
+						marker = new maplibregl.Marker({ element: el })
+							.setLngLat({
+								lng: coordinate.lng,
+								lat: coordinate.lat + 0.01
+							})
+							.addTo(map);
+					}, 30 * hits);
+					hits++;
+				}
+				coordinate['marker'] = marker;
+				coordinate['temperature'] = data[index];
+				coordinate['index'] = index;
 
-// 		const interpolate = colorScale({
-// 			min: 15,
-// 			max: 25
-// 		});
+				tileCoords.push(coordinate);
+			}
+		}
 
-// 		for (let i = 0; i < pixels; i++) {
-// 			const px = 20;
-// 			if (isNaN(px) || px === Infinity) {
-// 				rgba[4 * i] = 0;
-// 				rgba[4 * i + 1] = 0;
-// 				rgba[4 * i + 2] = 0;
-// 				rgba[4 * i + 3] = 0;
-// 			} else {
-// 				const color = interpolate(px);
-// 				rgba[4 * i] = color[0];
-// 				rgba[4 * i + 1] = color[1];
-// 				rgba[4 * i + 2] = color[2];
-// 				rgba[4 * i + 3] = 255;
-// 			}
-// 		}
-
-// 		const image = await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
-
-// 		console.log(tileCoords, rgba, image);
-// 	}
-// };
+		console.log(data.length, coordinates.length);
+	}
+};

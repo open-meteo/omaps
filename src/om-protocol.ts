@@ -21,6 +21,31 @@ const omFileDataCache = new QuickLRU<string, Float32Array>({
 	maxAge: ONE_HOUR_IN_MILLISECONDS
 });
 
+let domain = {
+	value: 'dwd_icon_d2',
+	label: ' DWD ICON D2',
+	grid: { nx: 1214, ny: 745, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
+};
+
+export const getIndexFromLatLong = (lat, lon) => {
+	if (
+		lat < domain.grid.latMin ||
+		lat > domain.grid.latMin + domain.grid.dy * domain.grid.ny ||
+		lon < domain.grid.lonMin ||
+		lon > domain.grid.lonMin + domain.grid.dx * domain.grid.nx
+	) {
+		return NaN;
+	} else {
+		let lx = lon - domain.grid.lonMin;
+		let x = Math.round(lx / domain.grid.dx);
+		let ly = lat - domain.grid.latMin;
+		let y = Math.round(ly / domain.grid.dy);
+
+		return domain.grid.nx * (y - 1) + x;
+		//return domain.grid.nx * y + (domain.grid.nx - x);
+	}
+};
+
 const getRawTile = async (
 	{ z, x, y }: TileIndex,
 	url: string,
@@ -39,8 +64,6 @@ const getRawTile = async (
 const getDataCoordinates = async ({ z, x, y }: TileIndex, data: string): Promise<TypedArray> => {
 	const mercBbox = tileIndexToMercatorBbox({ x, y, z });
 	const bbox = mercatorBboxToGeographicBbox(mercBbox);
-
-	console.log(bbox);
 };
 
 const renderTile = async (url: string) => {
@@ -83,6 +106,8 @@ const renderTile = async (url: string) => {
 	} else {
 		const coordinates = getDataCoordinates({ z, x, y }, data);
 	}
+
+	console.log(hash, z, x, y);
 
 	// const renderCustom = CustomRendererStore.get(cogUrl);
 	// if (renderCustom !== undefined) {
@@ -162,19 +187,13 @@ const renderTile = async (url: string) => {
 	return await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
 };
 
-let domain = {
-	value: 'dwd_icon_d2',
-	label: ' DWD ICON D2',
-	grid: { nx: 1214, ny: 745, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
-};
-
 const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 	return {
 		tilejson: '2.2.0',
 		tiles: [fullUrl + '/{z}/{x}/{y}'],
 		attribution: 'open-meteo',
 		minzoom: 2,
-		maxzoom: 9,
+		maxzoom: 10,
 		bounds: [
 			domain.grid.lonMin,
 			domain.grid.lonMin + domain.grid.dx * domain.grid.nx,
