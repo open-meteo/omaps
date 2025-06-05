@@ -74,9 +74,20 @@ export const getIndexFromLatLong = (lat: number, lon: number) => {
 
 export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => {
 	const data = omFileDataCache.get(omUrl);
-	const { index } = getIndexFromLatLong(lat, lon);
+	const { index, xFraction, yFraction } = getIndexFromLatLong(lat, lon);
+
 	if (data && index) {
-		return data[index];
+		const p0 = data[index];
+		const p1 = data[index + 1];
+		const p2 = data[index + nx];
+		const p3 = data[index + 1 + nx];
+
+		return (
+			p0 * (1 - xFraction) * (1 - yFraction) +
+			p1 * xFraction * (1 - yFraction) +
+			p2 * (1 - xFraction) * yFraction +
+			p3 * xFraction * yFraction
+		);
 	} else {
 		return NaN;
 	}
