@@ -28,19 +28,13 @@ body {
 #map_container {
 	position: relative;
 	width: 100%;
-	height: calc(100vh - 72px); /* calculate height of the screen minus the heading */
+	height: calc(100vh); /* calculate height of the screen minus the heading */
 }
 
 .map {
 	position: absolute;
 	width: 100%;
 	min-height: 100%;
-}
-
-.header {
-	height: 72px;
-	max-width: 1100px;
-	margin: 0 auto;
 }
 
 .nav-logo {
