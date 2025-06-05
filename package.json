@@ -17,6 +17,7 @@
 		"vite-plugin-wasm": "^3.4.1"
 	},
 	"dependencies": {
+		"@mapbox/tilebelt": "^2.0.2",
 		"@openmeteo/file-reader": "^0.0.5",
 		"@turf/turf": "^7.2.0",
 		"maplibre-gl": "^5.5.0"

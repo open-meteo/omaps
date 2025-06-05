@@ -1377,7 +1377,7 @@ export type ColorScaleParams = {
 };
 
 const colorScale = ({
-	colorScheme = 'BrewerPuBuGn9',
+	colorScheme = 'CartoTemps',
 	customColors,
 	min,
 	max,

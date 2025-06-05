@@ -6,17 +6,20 @@ import QuickLRU from 'quick-lru';
 
 import { colorScale } from './utils/color-scales';
 
-import { TILE_SIZE } from './constants';
-import { tileIndexToMercatorBbox, mercatorBboxToGeographicBbox } from './utils/math';
+import * as tilebelt from '@mapbox/tilebelt';
 
+import { type TileJSON, type TileIndex } from './types';
+
+export const OPACITY = 75;
+export const TILE_SIZE = 256;
 const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 
-const tileCache = new QuickLRU<string, Promise<TypedArray>>({
+const tileCache = new QuickLRU<string, ImageBitmap>({
 	maxSize: 1024,
 	maxAge: ONE_HOUR_IN_MILLISECONDS
 });
 
-const omFileDataCache = new QuickLRU<string, Float32Array>({
+const omFileDataCache = new QuickLRU<string, Float32Array<ArrayBufferLike>>({
 	maxSize: 1024,
 	maxAge: ONE_HOUR_IN_MILLISECONDS
 });
@@ -27,7 +30,7 @@ let domain = {
 	grid: { nx: 1214, ny: 745, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
 };
 
-export const getIndexFromLatLong = (lat, lon) => {
+export const getIndexFromLatLong = (lat: number, lon: number) => {
 	if (
 		lat < domain.grid.latMin ||
 		lat > domain.grid.latMin + domain.grid.dy * domain.grid.ny ||
@@ -41,29 +44,78 @@ export const getIndexFromLatLong = (lat, lon) => {
 		let ly = lat - domain.grid.latMin;
 		let y = Math.round(ly / domain.grid.dy);
 
-		return domain.grid.nx * (y - 1) + x;
-		//return domain.grid.nx * y + (domain.grid.nx - x);
+		return (domain.grid.nx + 1) * (y - 1) + x;
 	}
 };
 
-const getRawTile = async (
+export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => {
+	const data = omFileDataCache.get(omUrl);
+	const index = getIndexFromLatLong(lat, lon);
+	if (data && index) {
+		return data[index];
+	} else {
+		return NaN;
+	}
+};
+
+const getTile = async (
 	{ z, x, y }: TileIndex,
-	url: string,
-	tileSize: number = 256
-): Promise<TypedArray> => {
-	const key = `${url}/${tileSize}/${z}/${x}/${y}`;
+	omUrl: string,
+	tileSize: number = TILE_SIZE
+): Promise<ImageBitmap> => {
+	const key = `${omUrl}/${tileSize}/${z}/${x}/${y}`;
 	const cachedTile = tileCache.get(key);
 	if (cachedTile) {
 		return cachedTile;
 	} else {
+		const data = omFileDataCache.get(omUrl);
+		const pixels = TILE_SIZE * TILE_SIZE;
+		const rgba = new Uint8ClampedArray(pixels * 4);
+
+		const coordinates = tilebelt.tileToBBOX([x, y, z]);
+
+		let lonMin = coordinates[0];
+		let latMax = coordinates[3];
+		let lx = coordinates[2] - coordinates[0];
+		let ly = coordinates[3] - coordinates[1];
+		let stepx = lx / TILE_SIZE;
+		let stepy = ly / TILE_SIZE;
+
+		const interpolate = colorScale({
+			min: 0,
+			max: 40
+		});
+
+		for (let [i, _] of new Array(TILE_SIZE).entries()) {
+			for (let [j, _] of new Array(TILE_SIZE).entries()) {
+				let index = j + i * TILE_SIZE;
+				const px =
+					data[
+						getIndexFromLatLong(
+							latMax - i * stepy,
+							lonMin + j * stepx
+						)
+					];
+				if (isNaN(px) || px === Infinity) {
+					rgba[4 * index] = 0;
+					rgba[4 * index + 1] = 0;
+					rgba[4 * index + 2] = 0;
+					rgba[4 * index + 3] = 0;
+				} else {
+					const color = interpolate(px);
+					rgba[4 * index] = color[0];
+					rgba[4 * index + 1] = color[1];
+					rgba[4 * index + 2] = color[2];
+					rgba[4 * index + 3] = 255 * (OPACITY / 100);
+				}
+			}
+		}
+
+		const tile = await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
+
 		tileCache.set(key, tile);
 		return tile;
 	}
-};
-
-const getDataCoordinates = async ({ z, x, y }: TileIndex, data: string): Promise<TypedArray> => {
-	const mercBbox = tileIndexToMercatorBbox({ x, y, z });
-	const bbox = mercatorBboxToGeographicBbox(mercBbox);
 };
 
 const renderTile = async (url: string) => {
@@ -76,18 +128,35 @@ const renderTile = async (url: string) => {
 	const urlParts = result[1].split('#');
 	const omUrl = urlParts[0];
 
-	urlParts.shift();
-
-	const hash = urlParts.join('#') ?? '';
 	const z = parseInt(result[2]);
 	const x = parseInt(result[3]);
 	const y = parseInt(result[4]);
 
 	// Read OM data
-	// Create a reader with a file backend
+	const tile = await getTile({ z, x, y }, omUrl);
 
-	const data = omFileDataCache.get(omUrl);
-	if (!data) {
+	return tile;
+};
+
+const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
+	return {
+		tilejson: '2.2.0',
+		tiles: [fullUrl + '/{z}/{x}/{y}'],
+		attribution: 'open-meteo',
+		minzoom: 2,
+		maxzoom: 9,
+		bounds: [
+			domain.grid.lonMin,
+			domain.grid.lonMin + domain.grid.dx * domain.grid.nx,
+			domain.grid.latMin,
+			domain.grid.latMin + domain.grid.dy * domain.grid.ny
+		]
+	};
+};
+
+const omProtocol = async (params: RequestParameters): Promise<GetResourceResponse<ImageBitmap>> => {
+	if (params.type == 'json') {
+		const omUrl = params.url.replace('om://', '');
 		let backend = new MemoryHttpBackend({
 			url: omUrl,
 			maxFileSize: 500 * 1024 * 1024 // 500 MB
@@ -100,111 +169,10 @@ const renderTile = async (url: string) => {
 			const ranges = dimensions.map((dim, _) => {
 				return { start: 0, end: dim };
 			});
-			const newData = await reader.read(OmDataType.FloatArray, ranges);
-			omFileDataCache.set(omUrl, newData);
+			const data = await reader.read(OmDataType.FloatArray, ranges);
+			omFileDataCache.set(omUrl, data);
 		}
-	} else {
-		const coordinates = getDataCoordinates({ z, x, y }, data);
-	}
 
-	console.log(hash, z, x, y);
-
-	// const renderCustom = CustomRendererStore.get(cogUrl);
-	// if (renderCustom !== undefined) {
-	// 	rgba = renderCustom(rawTile, metadata);
-	// } else if (hash.startsWith('dem')) {
-	// 	rgba = renderTerrain(rawTile, metadata);
-	// } else if (hash.startsWith('color')) {
-	// 	const colorParams = hash.split('color').pop()?.substring(1);
-
-	// 	if (!colorParams) {
-	// 		throw new Error('Color params are not defined');
-	// 	} else {
-	// 		const customColorsString = colorParams.match(
-	// 			/\[("#([0-9a-fA-F]{3,6})"(,(\s)?)?)+]/
-	// 		)?.[0];
-
-	// 		let colorScheme: string = '';
-	// 		let customColors: Array<HEXColor> = [];
-	// 		let minStr: string;
-	// 		let maxStr: string;
-	// 		let modifiers: string;
-
-	// 		if (customColorsString) {
-	// 			customColors = JSON.parse(customColorsString);
-
-	// 			[minStr, maxStr, modifiers] = colorParams
-	// 				.replace(`${customColorsString},`, '')
-	// 				.split(',');
-	// 		} else {
-	// 			[colorScheme, minStr, maxStr, modifiers] = colorParams.split(',');
-	// 		}
-
-	// 		const min = parseFloat(minStr),
-	// 			max = parseFloat(maxStr),
-	// 			isReverse = modifiers?.includes('-') || false,
-	// 			isContinuous = modifiers?.includes('c') || false;
-
-	// 		rgba = renderColor(rawTile, {
-	// 			...metadata,
-	// 			colorScale: {
-	// 				colorScheme,
-	// 				customColors,
-	// 				min,
-	// 				max,
-	// 				isReverse,
-	// 				isContinuous
-	// 			}
-	// 		});
-	// 	}
-	// } else {
-	// 	rgba = renderPhoto(rawTile, metadata);
-	// }
-	const pixels = TILE_SIZE * TILE_SIZE;
-	const rgba = new Uint8ClampedArray(pixels * 4);
-
-	const interpolate = colorScale({
-		min: 5,
-		max: 30
-	});
-
-	for (let i = 0; i < pixels; i++) {
-		const px = Math.random() * 25 + 5;
-		if (isNaN(px) || px === Infinity) {
-			rgba[4 * i] = 0;
-			rgba[4 * i + 1] = 0;
-			rgba[4 * i + 2] = 0;
-			rgba[4 * i + 3] = 0;
-		} else {
-			const color = interpolate(px);
-			rgba[4 * i] = color[0];
-			rgba[4 * i + 1] = color[1];
-			rgba[4 * i + 2] = color[2];
-			rgba[4 * i + 3] = 100;
-		}
-	}
-
-	return await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
-};
-
-const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
-	return {
-		tilejson: '2.2.0',
-		tiles: [fullUrl + '/{z}/{x}/{y}'],
-		attribution: 'open-meteo',
-		minzoom: 2,
-		maxzoom: 10,
-		bounds: [
-			domain.grid.lonMin,
-			domain.grid.lonMin + domain.grid.dx * domain.grid.nx,
-			domain.grid.latMin,
-			domain.grid.latMin + domain.grid.dy * domain.grid.ny
-		]
-	};
-};
-
-const omProtocol = async (params: RequestParameters): Promise<GetResourceResponse<ImageBitmap>> => {
-	if (params.type == 'json') {
 		return {
 			data: await getTilejson(params.url)
 		};
