@@ -14,6 +14,7 @@ import { getValueFromLatLong } from './om-protocol';
 export const TILE_SIZE = 256;
 
 let map: maplibregl.Map;
+const infoBox: HTMLElement | null = document.getElementById('info_box');
 const mapContainer: HTMLElement | null = document.getElementById('map_container');
 
 let domain = {
@@ -52,6 +53,10 @@ if (mapContainer) {
 
 	map.on('load', () => {
 		let omUrl = `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z/${variable.value}.om`;
+
+		if (infoBox) {
+			infoBox.innerHTML = `<div>Selected domain: ${domain.value}<br>Selected variable: ${variable.value}<br>Selected time: ${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())} ${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z</div>`;
+		}
 
 		map.addSource('domain-area', {
 			type: 'geojson',

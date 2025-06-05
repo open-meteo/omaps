@@ -9,9 +9,8 @@
 		"preview": "vite preview"
 	},
 	"devDependencies": {
-		"@mapbox/sphericalmercator": "^2.0.1",
+		"@turf/turf": "^7.2.0",
 		"d3-scale": "^4.0.2",
-		"quick-lru": "^7.0.1",
 		"typescript": "~5.8.3",
 		"vite": "^6.3.5",
 		"vite-plugin-wasm": "^3.4.1"
@@ -19,7 +18,7 @@
 	"dependencies": {
 		"@mapbox/tilebelt": "^2.0.2",
 		"@openmeteo/file-reader": "^0.0.5",
-		"@turf/turf": "^7.2.0",
-		"maplibre-gl": "^5.5.0"
+		"maplibre-gl": "^5.5.0",
+		"quick-lru": "^7.0.1"
 	}
 }
