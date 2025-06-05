@@ -22,11 +22,26 @@ const omFileDataCache = new QuickLRU<string, Float32Array<ArrayBufferLike>>({
 	maxAge: ONE_HOUR_IN_MILLISECONDS
 });
 
-let domain = {
-	value: 'dwd_icon_d2',
-	label: ' DWD ICON D2',
-	grid: { nx: 1215, ny: 746, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
+// DWD ICON World
+export const domain = {
+	value: 'dwd_icon',
+	label: 'DWD ICON',
+	grid: { nx: 2879, ny: 1441, latMin: -90, lonMin: -180, dx: 0.125, dy: 0.125, zoom: 1 }
 };
+
+// DWD ICON EU
+// export const domain = {
+// 	value: 'dwd_icon_eu',
+// 	label: 'DWD ICON EU',
+// 	grid: { nx: 1377, ny: 657, latMin: 29.5, lonMin: -23.5, dx: 0.0625, dy: 0.0625, zoom: 2.2 }
+// };
+
+// DWD ICON D2
+// export const domain = {
+// 	value: 'dwd_icon_d2',
+// 	label: ' DWD ICON D2',
+// 	grid: { nx: 1215, ny: 746, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
+// };
 
 const nx = domain.grid.nx;
 const ny = domain.grid.ny;
@@ -151,7 +166,9 @@ const getTile = async (
 
 	const tile = await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
 
-	console.log(`getTile(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`);
+	console.log(
+		`getTile(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`
+	);
 
 	//tileCache.set(key, tile);
 	return tile;
@@ -185,12 +202,7 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 		attribution: 'open-meteo',
 		minzoom: 1,
 		maxzoom: 15,
-		bounds: [
-			domain.grid.lonMin,
-			domain.grid.lonMin + domain.grid.dx * domain.grid.nx,
-			domain.grid.latMin,
-			domain.grid.latMin + domain.grid.dy * domain.grid.ny
-		]
+		bounds: [lonMin, latMin, lonMin + dx * nx, latMin + dy * ny]
 	};
 };
 
@@ -213,8 +225,12 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 			omFileDataCache.set(omUrl, data);
 		}
 
+		const tileJson = await getTilejson(params.url);
+
+		console.log(tileJson);
+
 		return {
-			data: await getTilejson(params.url)
+			data: tileJson
 		};
 	} else if (params.type == 'image') {
 		return {

@@ -7,19 +7,13 @@ import { pad } from './utils/pad';
 
 import omProtocol from './om-protocol';
 
-import { getValueFromLatLong } from './om-protocol';
+import { getValueFromLatLong, domain } from './om-protocol';
 
 export const TILE_SIZE = 256;
 
 let map: maplibregl.Map;
 const infoBox: HTMLElement | null = document.getElementById('info_box');
 const mapContainer: HTMLElement | null = document.getElementById('map_container');
-
-let domain = {
-	value: 'dwd_icon_d2',
-	label: ' DWD ICON D2',
-	grid: { nx: 1215, ny: 746, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
-};
 
 let timeSelected = new Date();
 let variable = { value: 'temperature_2m', label: 'Temperature 2m' };
