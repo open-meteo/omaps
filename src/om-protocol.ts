@@ -6,8 +6,6 @@ import QuickLRU from 'quick-lru';
 
 import { colorScale } from './utils/color-scales';
 
-import * as tilebelt from '@mapbox/tilebelt';
-
 import { type TileJSON, type TileIndex } from './types';
 
 export const OPACITY = 75;
@@ -29,6 +27,22 @@ let domain = {
 	label: ' DWD ICON D2',
 	grid: { nx: 1214, ny: 745, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
 };
+
+const r2d = 180 / Math.PI;
+function tile2lon(x: number, z: number): number {
+	return (x / Math.pow(2, z)) * 360 - 180;
+}
+function tile2lat(y: number, z: number): number {
+	const n = Math.PI - (2 * Math.PI * y) / Math.pow(2, z);
+	return r2d * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+}
+export function tileToBBOX(tile: [x: number, y: number, z: number]) {
+	const e = tile2lon(tile[0] + 1, tile[2]);
+	const w = tile2lon(tile[0], tile[2]);
+	const s = tile2lat(tile[1] + 1, tile[2]);
+	const n = tile2lat(tile[1], tile[2]);
+	return [w, s, e, n];
+}
 
 export const getIndexFromLatLong = (lat: number, lon: number) => {
 	if (
@@ -72,15 +86,6 @@ const getTile = async (
 		const pixels = TILE_SIZE * TILE_SIZE;
 		const rgba = new Uint8ClampedArray(pixels * 4);
 
-		const coordinates = tilebelt.tileToBBOX([x, y, z]);
-
-		let lonMin = coordinates[0];
-		let latMax = coordinates[3];
-		let lx = coordinates[2] - coordinates[0];
-		let ly = coordinates[3] - coordinates[1];
-		let stepx = lx / TILE_SIZE;
-		let stepy = ly / TILE_SIZE;
-
 		const interpolate = colorScale({
 			min: 0,
 			max: 40
@@ -89,13 +94,11 @@ const getTile = async (
 		for (let [i, _] of new Array(TILE_SIZE).entries()) {
 			for (let [j, _] of new Array(TILE_SIZE).entries()) {
 				let index = j + i * TILE_SIZE;
-				const px =
-					data[
-						getIndexFromLatLong(
-							latMax - i * stepy,
-							lonMin + j * stepx
-						)
-					];
+
+				const lon = tile2lon(x + j / TILE_SIZE, z);
+				const lat = tile2lat(y + i / TILE_SIZE, z);
+
+				const px = data[getIndexFromLatLong(lat, lon)];
 				if (isNaN(px) || px === Infinity) {
 					rgba[4 * index] = 0;
 					rgba[4 * index + 1] = 0;

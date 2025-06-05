@@ -61,19 +61,25 @@ body {
 	text-decoration: underline;
 }
 
+.info-wrapper {
+	position: absolute;
+	bottom: 10%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	pointer-events: none;
+}
+
 #info_box {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	position: absolute;
 	min-height: 75px;
 	background: rgba(255, 255, 255, 0.8);
 	min-width: 25%;
-	bottom: 10%;
-	margin: 0 37.5%;
 	border-radius: 15px;
 	padding: 15px;
 	color: black;
 	text-align: center;
-	pointer-events: none;
 }
