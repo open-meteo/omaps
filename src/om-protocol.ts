@@ -12,10 +12,10 @@ export const OPACITY = 75;
 export const TILE_SIZE = 256;
 const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 
-const tileCache = new QuickLRU<string, ImageBitmap>({
-	maxSize: 1024,
-	maxAge: ONE_HOUR_IN_MILLISECONDS
-});
+// const tileCache = new QuickLRU<string, ImageBitmap>({
+// 	maxSize: 1024,
+// 	maxAge: ONE_HOUR_IN_MILLISECONDS
+// });
 
 const omFileDataCache = new QuickLRU<string, Float32Array<ArrayBufferLike>>({
 	maxSize: 1024,
@@ -30,6 +30,10 @@ let domain = {
 
 const nx = domain.grid.nx;
 const ny = domain.grid.ny;
+const lonMin = domain.grid.lonMin;
+const latMin = domain.grid.latMin;
+const dx = domain.grid.dx;
+const dy = domain.grid.dy;
 
 const r2d = 180 / Math.PI;
 function tile2lon(x: number, z: number): number {
@@ -56,13 +60,8 @@ export const getIndexFromLatLong = (lat: number, lon: number) => {
 	) {
 		return { index: NaN, xFraction: 0, yFraction: 0 };
 	} else {
-		const lonMin = domain.grid.lonMin;
-		const latMin = domain.grid.latMin;
-		const dx = domain.grid.dx;
-		const dy = domain.grid.dy;
-
-		let x = (lon - lonMin) / dx;
-		let y = (lat - latMin) / dy;
+		const x = (lon - lonMin) / dx;
+		const y = (lat - latMin) / dy;
 
 		const xFraction = x - Math.floor(x);
 		const yFraction = y - Math.floor(y);
@@ -93,54 +92,57 @@ export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => 
 	}
 };
 
+const colors = colorScale({
+	min: 0,
+	max: 41
+});
+
 const getTile = async (
 	{ z, x, y }: TileIndex,
-	omUrl: string,
-	tileSize: number = TILE_SIZE
+	omUrl: string
+	//tileSize: number = TILE_SIZE
 ): Promise<ImageBitmap> => {
-	const key = `${omUrl}/${tileSize}/${z}/${x}/${y}`;
-	const cachedTile = tileCache.get(key);
-	if (cachedTile) {
-		return cachedTile;
-	} else {
-		const data = omFileDataCache.get(omUrl);
-		const pixels = TILE_SIZE * TILE_SIZE;
-		const rgba = new Uint8ClampedArray(pixels * 4);
+	// const key = `${omUrl}/${tileSize}/${z}/${x}/${y}`;
+	// const cachedTile = tileCache.get(key);
+	// if (cachedTile) {
+	// 	return cachedTile;
+	// } else {
+	const data = omFileDataCache.get(omUrl);
+	const pixels = TILE_SIZE * TILE_SIZE;
+	const rgba = new Uint8ClampedArray(pixels * 4);
 
-		const interpolate = colorScale({
-			min: 0,
-			max: 40
-		});
+	for (let i = 0; i < TILE_SIZE; i++) {
+		const lat = tile2lat(y + i / TILE_SIZE, z);
+		for (let j = 0; j < TILE_SIZE; j++) {
+			const ind = j + i * TILE_SIZE;
+			const lon = tile2lon(x + j / TILE_SIZE, z);
 
-		for (let [i, _] of new Array(TILE_SIZE).entries()) {
-			for (let [j, _] of new Array(TILE_SIZE).entries()) {
-				let ind = j + i * TILE_SIZE;
+			const { index, xFraction, yFraction } = getIndexFromLatLong(lat, lon);
+			const p0 = data[index];
+			const p1 = data[index + 1];
+			const p2 = data[index + nx];
+			const p3 = data[index + 1 + nx];
 
-				const lon = tile2lon(x + j / TILE_SIZE, z);
-				const lat = tile2lat(y + i / TILE_SIZE, z);
+			const px =
+				p0 * (1 - xFraction) * (1 - yFraction) +
+				p1 * xFraction * (1 - yFraction) +
+				p2 * (1 - xFraction) * yFraction +
+				p3 * xFraction * yFraction;
 
-				const { index, xFraction, yFraction } = getIndexFromLatLong(
-					lat,
-					lon
-				);
-				const p0 = data[index];
-				const p1 = data[index + 1];
-				const p2 = data[index + nx];
-				const p3 = data[index + 1 + nx];
-
-				const px =
-					p0 * (1 - xFraction) * (1 - yFraction) +
-					p1 * xFraction * (1 - yFraction) +
-					p2 * (1 - xFraction) * yFraction +
-					p3 * xFraction * yFraction;
-
-				if (isNaN(px) || px === Infinity) {
-					rgba[4 * ind] = 0;
-					rgba[4 * ind + 1] = 0;
-					rgba[4 * ind + 2] = 0;
-					rgba[4 * ind + 3] = 0;
-				} else {
-					const color = interpolate(px);
+			if (isNaN(px) || px === Infinity) {
+				rgba[4 * ind] = 0;
+				rgba[4 * ind + 1] = 0;
+				rgba[4 * ind + 2] = 0;
+				rgba[4 * ind + 3] = 0;
+			} else {
+				const color =
+					colors[
+						Math.min(
+							colors.length - 1,
+							Math.max(0, Math.floor(px))
+						)
+					];
+				if (color) {
 					rgba[4 * ind] = color[0];
 					rgba[4 * ind + 1] = color[1];
 					rgba[4 * ind + 2] = color[2];
@@ -148,12 +150,13 @@ const getTile = async (
 				}
 			}
 		}
-
-		const tile = await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
-
-		tileCache.set(key, tile);
-		return tile;
 	}
+
+	const tile = await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
+
+	//tileCache.set(key, tile);
+	return tile;
+	//}
 };
 
 const renderTile = async (url: string) => {

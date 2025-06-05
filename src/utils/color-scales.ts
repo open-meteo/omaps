@@ -1432,8 +1432,9 @@ const colorScale = ({
 		const domain = intervals(min, max, range.length);
 		return scaleLinear(domain, range).clamp(true);
 	} else {
-		const domain = thresholds(min, max, range.length);
-		return scaleThreshold(domain, range);
+		//const domain = thresholds(min, max, range.length);
+		//const scale = scaleThreshold(domain, range);
+		return range;
 	}
 };
 
