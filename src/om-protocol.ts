@@ -25,8 +25,11 @@ const omFileDataCache = new QuickLRU<string, Float32Array<ArrayBufferLike>>({
 let domain = {
 	value: 'dwd_icon_d2',
 	label: ' DWD ICON D2',
-	grid: { nx: 1214, ny: 745, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
+	grid: { nx: 1215, ny: 746, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
 };
+
+const nx = domain.grid.nx;
+const ny = domain.grid.ny;
 
 const r2d = 180 / Math.PI;
 function tile2lon(x: number, z: number): number {
@@ -51,20 +54,27 @@ export const getIndexFromLatLong = (lat: number, lon: number) => {
 		lon < domain.grid.lonMin ||
 		lon > domain.grid.lonMin + domain.grid.dx * domain.grid.nx
 	) {
-		return NaN;
+		return { index: NaN, xFraction: 0, yFraction: 0 };
 	} else {
-		let lx = lon - domain.grid.lonMin;
-		let x = Math.round(lx / domain.grid.dx);
-		let ly = lat - domain.grid.latMin;
-		let y = Math.round(ly / domain.grid.dy);
+		const lonMin = domain.grid.lonMin;
+		const latMin = domain.grid.latMin;
+		const dx = domain.grid.dx;
+		const dy = domain.grid.dy;
 
-		return (domain.grid.nx + 1) * (y - 1) + x;
+		let x = (lon - lonMin) / dx;
+		let y = (lat - latMin) / dy;
+
+		const xFraction = x - Math.floor(x);
+		const yFraction = y - Math.floor(y);
+
+		const index = Math.floor(y) * domain.grid.nx + Math.floor(x);
+		return { index, xFraction, yFraction };
 	}
 };
 
 export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => {
 	const data = omFileDataCache.get(omUrl);
-	const index = getIndexFromLatLong(lat, lon);
+	const { index } = getIndexFromLatLong(lat, lon);
 	if (data && index) {
 		return data[index];
 	} else {
@@ -86,6 +96,8 @@ const getTile = async (
 		const pixels = TILE_SIZE * TILE_SIZE;
 		const rgba = new Uint8ClampedArray(pixels * 4);
 
+		console.log(data.length, domain.grid.nx * domain.grid.ny);
+
 		const interpolate = colorScale({
 			min: 0,
 			max: 40
@@ -93,23 +105,37 @@ const getTile = async (
 
 		for (let [i, _] of new Array(TILE_SIZE).entries()) {
 			for (let [j, _] of new Array(TILE_SIZE).entries()) {
-				let index = j + i * TILE_SIZE;
+				let ind = j + i * TILE_SIZE;
 
 				const lon = tile2lon(x + j / TILE_SIZE, z);
 				const lat = tile2lat(y + i / TILE_SIZE, z);
 
-				const px = data[getIndexFromLatLong(lat, lon)];
+				const { index, xFraction, yFraction } = getIndexFromLatLong(
+					lat,
+					lon
+				);
+				const p0 = data[index];
+				const p1 = data[index + 1];
+				const p2 = data[index + nx];
+				const p3 = data[index + 1 + nx];
+
+				const px =
+					p0 * (1 - xFraction) * (1 - yFraction) +
+					p1 * xFraction * (1 - yFraction) +
+					p2 * (1 - xFraction) * yFraction +
+					p3 * xFraction * yFraction;
+
 				if (isNaN(px) || px === Infinity) {
-					rgba[4 * index] = 0;
-					rgba[4 * index + 1] = 0;
-					rgba[4 * index + 2] = 0;
-					rgba[4 * index + 3] = 0;
+					rgba[4 * ind] = 0;
+					rgba[4 * ind + 1] = 0;
+					rgba[4 * ind + 2] = 0;
+					rgba[4 * ind + 3] = 0;
 				} else {
 					const color = interpolate(px);
-					rgba[4 * index] = color[0];
-					rgba[4 * index + 1] = color[1];
-					rgba[4 * index + 2] = color[2];
-					rgba[4 * index + 3] = 255 * (OPACITY / 100);
+					rgba[4 * ind] = color[0];
+					rgba[4 * ind + 1] = color[1];
+					rgba[4 * ind + 2] = color[2];
+					rgba[4 * ind + 3] = 255 * (OPACITY / 100);
 				}
 			}
 		}
