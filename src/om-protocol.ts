@@ -102,6 +102,8 @@ const getTile = async (
 	// if (cachedTile) {
 	// 	return cachedTile;
 	// } else {
+	const start = performance.now();
+
 	const data = omFileDataCache.get(omUrl);
 	const pixels = TILE_SIZE * TILE_SIZE;
 	const rgba = new Uint8ClampedArray(pixels * 4);
@@ -148,6 +150,8 @@ const getTile = async (
 	}
 
 	const tile = await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
+
+	console.log(`getTile(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`);
 
 	//tileCache.set(key, tile);
 	return tile;
