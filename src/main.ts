@@ -3,8 +3,6 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 import './style.css';
 
-import * as turf from '@turf/turf';
-
 import { pad } from './utils/pad';
 
 import omProtocol from './om-protocol';
@@ -26,19 +24,6 @@ let domain = {
 let timeSelected = new Date();
 let variable = { value: 'temperature_2m', label: 'Temperature 2m' };
 
-const boundsDomain = [
-	[domain.grid.lonMin, domain.grid.latMin],
-	[domain.grid.lonMin + domain.grid.dx * domain.grid.nx, domain.grid.latMin],
-	[
-		domain.grid.lonMin + domain.grid.dx * domain.grid.nx,
-		domain.grid.latMin + domain.grid.dy * domain.grid.ny
-	],
-	[domain.grid.lonMin, domain.grid.latMin + domain.grid.dy * domain.grid.ny],
-	[domain.grid.lonMin, domain.grid.latMin]
-];
-
-const domainPoly = turf.polygon([boundsDomain]);
-
 if (mapContainer) {
 	maplibregl.addProtocol('om', omProtocol);
 
@@ -57,20 +42,6 @@ if (mapContainer) {
 		if (infoBox) {
 			infoBox.innerHTML = `<div>Selected domain: ${domain.value}<br>Selected variable: ${variable.value}<br>Selected time: ${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())} ${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z</div>`;
 		}
-
-		map.addSource('domain-area', {
-			type: 'geojson',
-			data: domainPoly
-		});
-		map.addLayer({
-			id: 'domain-areas',
-			type: 'line',
-			source: 'domain-area',
-			paint: {
-				'line-color': 'orange',
-				'line-opacity': 0.8
-			}
-		});
 
 		map.addSource('omFileSource', {
 			type: 'raster',

@@ -52,12 +52,7 @@ export function tileToBBOX(tile: [x: number, y: number, z: number]) {
 }
 
 export const getIndexFromLatLong = (lat: number, lon: number) => {
-	if (
-		lat < domain.grid.latMin ||
-		lat > domain.grid.latMin + domain.grid.dy * domain.grid.ny ||
-		lon < domain.grid.lonMin ||
-		lon > domain.grid.lonMin + domain.grid.dx * domain.grid.nx
-	) {
+	if (lat < latMin || lat > latMin + dy * ny || lon < lonMin || lon > lonMin + dx * nx) {
 		return { index: NaN, xFraction: 0, yFraction: 0 };
 	} else {
 		const x = (lon - lonMin) / dx;
