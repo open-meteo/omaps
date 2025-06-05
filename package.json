@@ -18,6 +18,7 @@
 	"dependencies": {
 		"@mapbox/tilebelt": "^2.0.2",
 		"@openmeteo/file-reader": "^0.0.5",
+		"d3": "^7.9.0",
 		"maplibre-gl": "^5.5.0",
 		"quick-lru": "^7.0.1"
 	}

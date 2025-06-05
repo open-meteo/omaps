@@ -1,5 +1,7 @@
 import { scaleLinear, scaleThreshold } from 'd3-scale';
 
+import * as d3 from 'd3';
+
 export type HEXColor = `#${string}`;
 
 export const COLOR_SCHEMES = {
@@ -1376,6 +1378,29 @@ export type ColorScaleParams = {
 	isContinuous?: boolean;
 };
 
+function interpolateColorScaleHSL(colors, steps) {
+	const segments = colors.length - 1;
+	const stepsPerSegment = Math.floor(steps / segments);
+	const remainder = steps % segments;
+
+	const rgbArray = [];
+
+	for (let i = 0; i < segments; i++) {
+		const startColor = colors[i];
+		const endColor = colors[i + 1];
+		const interpolate = d3.interpolateHsl(startColor, endColor);
+
+		const numSteps = stepsPerSegment + (i < remainder ? 1 : 0);
+
+		for (let j = 0; j < numSteps; j++) {
+			const t = j / (numSteps - 1); // range [0, 1]
+			const color = d3.color(interpolate(t)).rgb();
+			rgbArray.push([color.r, color.g, color.b]);
+		}
+	}
+
+	return rgbArray;
+}
 const colorScale = ({
 	colorScheme = 'CartoTemps',
 	customColors,
@@ -1400,8 +1425,7 @@ const colorScale = ({
 		);
 	}
 
-	const colorInts = colors.map(hexToIntColor);
-
+	let colorInts = interpolateColorScaleHSL(colors, max - min);
 	const range = isReverse ? colorInts.reverse() : colorInts;
 
 	if (isContinuous) {

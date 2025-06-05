@@ -96,8 +96,6 @@ const getTile = async (
 		const pixels = TILE_SIZE * TILE_SIZE;
 		const rgba = new Uint8ClampedArray(pixels * 4);
 
-		console.log(data.length, domain.grid.nx * domain.grid.ny);
-
 		const interpolate = colorScale({
 			min: 0,
 			max: 40
@@ -172,8 +170,8 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 		tilejson: '2.2.0',
 		tiles: [fullUrl + '/{z}/{x}/{y}'],
 		attribution: 'open-meteo',
-		minzoom: 2,
-		maxzoom: 9,
+		minzoom: 1,
+		maxzoom: 15,
 		bounds: [
 			domain.grid.lonMin,
 			domain.grid.lonMin + domain.grid.dx * domain.grid.nx,

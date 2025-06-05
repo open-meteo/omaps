@@ -20,7 +20,7 @@ const mapContainer: HTMLElement | null = document.getElementById('map_container'
 let domain = {
 	value: 'dwd_icon_d2',
 	label: ' DWD ICON D2',
-	grid: { nx: 1214, ny: 745, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
+	grid: { nx: 1215, ny: 746, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
 };
 
 let timeSelected = new Date();
