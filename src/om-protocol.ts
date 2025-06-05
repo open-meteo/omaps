@@ -120,10 +120,10 @@ function interpolate2DHermite(data: Float32Array<ArrayBufferLike>, nx: number, i
 	// Interpolate along X for each of the 4 rows
 	const interpRow = [];
 	for (let j = -1; j < 3; j++) {
-		const p0 = data[index + j * nx + 1];
-		const p1 = data[index + j * nx + 2];
-		const m0 = getDerivative(data[index + j * nx + 0], data[index + j * nx + 2]);
-		const m1 = getDerivative(data[index + j * nx + 1], data[index + j * nx + 3]);
+		const p0 = data[index + j * nx];
+		const p1 = data[index + j * nx + 1];
+		const m0 = getDerivative(data[index + j * nx - 1], data[index + j * nx + 1]);
+		const m1 = getDerivative(data[index + j * nx + 0], data[index + j * nx + 2]);
 		interpRow[j+1] = hermite(xFraction, p0, p1, m0, m1);
 	}
 
@@ -133,6 +133,64 @@ function interpolate2DHermite(data: Float32Array<ArrayBufferLike>, nx: number, i
 	const m0 = getDerivative(interpRow[0], interpRow[2]);
 	const m1 = getDerivative(interpRow[1], interpRow[3]);
 	return hermite(yFraction, p0, p1, m0, m1);
+}
+
+// 1D Quintic Hermite interpolation
+function quinticHermite(t: number, f0: number, f1: number, m0: number, m1: number, c0: number, c1: number): number {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const t4 = t3 * t;
+  const t5 = t4 * t;
+
+  const h0 = 1 - 10 * t3 + 15 * t4 - 6 * t5;
+  const h1 = t - 6 * t3 + 8 * t4 - 3 * t5;
+  const h2 = 0.5 * t2 - 1.5 * t3 + 1.5 * t4 - 0.5 * t5;
+  const h3 = 10 * t3 - 15 * t4 + 6 * t5;
+  const h4 = -4 * t3 + 7 * t4 - 3 * t5;
+  const h5 = 0.5 * t3 - t4 + 0.5 * t5;
+
+  return (
+    h0 * f0 + h1 * m0 + h2 * c0 +
+    h3 * f1 + h4 * m1 + h5 * c1
+  );
+}
+
+// Estimate first derivative (symmetric central)
+function derivative(fm1: number, fp1: number): number {
+  return (fp1 - fm1) / 2;
+}
+
+// Estimate second derivative (Laplacian-like)
+function secondDerivative(fm1: number, f0: number, fp1: number): number {
+  return fm1 - 2 * f0 + fp1;
+}
+
+// 2D Quintic Hermite Interpolation on a 6x6 or larger grid
+function quinticHermite2D(data: Float32Array<ArrayBufferLike>, nx: number, index: number, xFraction: number, yFraction: number): number {
+  // Collect interpolated values from 6 rows
+  const colValues = [];
+
+  for (let j = -2; j <= 3; j++) {
+    const f0 = data[index + j * nx];
+    const f1 = data[index + j * nx + 1];
+    const m0 = derivative(data[index + j * nx - 1], data[index + j * nx + 1]);
+    const m1 = derivative(data[index + j * nx], data[index + j * nx + 2]);
+    const c0 = secondDerivative(data[index + j * nx - 1], f0, f1);
+    const c1 = secondDerivative(f0, f1, data[index + j * nx + 2]);
+
+    const interpolatedX = quinticHermite(xFraction, f0, f1, m0, m1, c0, c1);
+    colValues.push(interpolatedX);
+  }
+
+  // Now interpolate in Y
+  const f0 = colValues[2];
+  const f1 = colValues[3];
+  const m0 = derivative(colValues[1], colValues[3]);
+  const m1 = derivative(colValues[2], colValues[4]);
+  const c0 = secondDerivative(colValues[0], f0, f1);
+  const c1 = secondDerivative(f0, f1, colValues[5]);
+
+  return quinticHermite(yFraction, f0, f1, m0, m1, c0, c1);
 }
 
 export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => {
@@ -178,6 +236,7 @@ const getTile = async (
 			const { index, xFraction, yFraction } = getIndexFromLatLong(lat, lon);
 			//const px = interpolateLinear(data, index, xFraction, yFraction);
 			const px = interpolate2DHermite(data, nx, index, xFraction, yFraction);
+			//const px = quinticHermite2D(data, nx, index, xFraction, yFraction);
 
 			if (isNaN(px) || px === Infinity) {
 				rgba[4 * ind] = 0;
