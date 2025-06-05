@@ -57,7 +57,7 @@ body {
 
 .info-wrapper {
 	position: absolute;
-	bottom: 10%;
+	bottom: 0%;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -69,11 +69,11 @@ body {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	min-height: 75px;
+	/*min-height: 75px;*/
 	background: rgba(255, 255, 255, 0.8);
-	min-width: 25%;
+	/*min-width: 25%;*/
 	border-radius: 15px;
-	padding: 15px;
+	padding: 5px 20px;
 	color: black;
 	text-align: center;
 }

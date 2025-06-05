@@ -23,11 +23,11 @@ const omFileDataCache = new QuickLRU<string, Float32Array<ArrayBufferLike>>({
 });
 
 // DWD ICON World
-export const domain = {
-	value: 'dwd_icon',
-	label: 'DWD ICON',
-	grid: { nx: 2879, ny: 1441, latMin: -90, lonMin: -180, dx: 0.125, dy: 0.125, zoom: 1 }
-};
+//export const domain = {
+//	value: 'dwd_icon',
+//	label: 'DWD ICON',
+//	grid: { nx: 2879, ny: 1441, latMin: -90, lonMin: -180, dx: 0.125, dy: 0.125, zoom: 1 }
+//};
 
 // DWD ICON EU
 // export const domain = {
@@ -37,11 +37,11 @@ export const domain = {
 // };
 
 // DWD ICON D2
-// export const domain = {
-// 	value: 'dwd_icon_d2',
-// 	label: ' DWD ICON D2',
-// 	grid: { nx: 1215, ny: 746, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
-// };
+export const domain = {
+ 	value: 'dwd_icon_d2',
+ 	label: ' DWD ICON D2',
+ 	grid: { nx: 1215, ny: 746, latMin: 43.18, lonMin: -3.94, dx: 0.02, dy: 0.02, zoom: 3.75 }
+};
 
 const nx = domain.grid.nx;
 const ny = domain.grid.ny;
@@ -93,12 +93,56 @@ const interpolateLinear = (data: Float32Array<ArrayBufferLike>, index: number, x
 }
 
 
+function hermite(t: number, p0: number, p1: number, m0: number, m1: number) {
+	const t2 = t * t;
+	const t3 = t2 * t;
+
+	const h00 = 2 * t3 - 3 * t2 + 1;
+	const h10 = t3 - 2 * t2 + t;
+	const h01 = -2 * t3 + 3 * t2;
+	const h11 = t3 - t2;
+
+	return h00 * p0 + h10 * m0 + h01 * p1 + h11 * m1;
+}
+
+function getDerivative(fPrev: number, fNext: number) {
+	return (fNext - fPrev) / 2;
+}
+
+function interpolate2DHermite(data: Float32Array<ArrayBufferLike>, nx: number, index: number, xFraction: number, yFraction: number) {
+	let x = index % nx;
+	let y = index / nx
+	let ny = data.length / nx
+	if (x <= 1 || y<=1 || x >= nx -3 || y >= ny -3) {
+		return interpolateLinear(data, index, xFraction, yFraction);
+	}
+
+	// Interpolate along X for each of the 4 rows
+	const interpRow = [];
+	for (let j = -1; j < 3; j++) {
+		const p0 = data[index + j * nx + 1];
+		const p1 = data[index + j * nx + 2];
+		const m0 = getDerivative(data[index + j * nx + 0], data[index + j * nx + 2]);
+		const m1 = getDerivative(data[index + j * nx + 1], data[index + j * nx + 3]);
+		interpRow[j+1] = hermite(xFraction, p0, p1, m0, m1);
+	}
+
+	// Interpolate the result along Y
+	const p0 = interpRow[1];
+	const p1 = interpRow[2];
+	const m0 = getDerivative(interpRow[0], interpRow[2]);
+	const m1 = getDerivative(interpRow[1], interpRow[3]);
+	return hermite(yFraction, p0, p1, m0, m1);
+}
+
 export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => {
 	const data = omFileDataCache.get(omUrl);
 	const { index, xFraction, yFraction } = getIndexFromLatLong(lat, lon);
 
 	if (data && index) {
-		return interpolateLinear(data, index, xFraction, yFraction);
+		//const px = interpolateLinear(data, index, xFraction, yFraction);
+		const px = interpolate2DHermite(data, nx, index, xFraction, yFraction);
+		return px
 	} else {
 		return NaN;
 	}
@@ -106,7 +150,7 @@ export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => 
 
 const colors = colorScale({
 	min: 0,
-	max: 41
+	max: 30
 });
 
 const getTile = async (
@@ -132,7 +176,8 @@ const getTile = async (
 			const lon = tile2lon(x + j / TILE_SIZE, z);
 
 			const { index, xFraction, yFraction } = getIndexFromLatLong(lat, lon);
-			const px = interpolateLinear(data, index, xFraction, yFraction);
+			//const px = interpolateLinear(data, index, xFraction, yFraction);
+			const px = interpolate2DHermite(data, nx, index, xFraction, yFraction);
 
 			if (isNaN(px) || px === Infinity) {
 				rgba[4 * ind] = 0;
