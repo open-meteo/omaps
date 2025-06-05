@@ -81,22 +81,24 @@ export const getIndexFromLatLong = (lat: number, lon: number) => {
 	}
 };
 
+const interpolateLinear = (data: Float32Array<ArrayBufferLike>, index: number, xFraction: number, yFraction: number): number => {
+	const p0 = data[index];
+	const p1 = data[index + 1];
+	const p2 = data[index + nx];
+	const p3 = data[index + 1 + nx];
+	return p0 * (1 - xFraction) * (1 - yFraction) +
+		p1 * xFraction * (1 - yFraction) +
+		p2 * (1 - xFraction) * yFraction +
+		p3 * xFraction * yFraction;
+}
+
+
 export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => {
 	const data = omFileDataCache.get(omUrl);
 	const { index, xFraction, yFraction } = getIndexFromLatLong(lat, lon);
 
 	if (data && index) {
-		const p0 = data[index];
-		const p1 = data[index + 1];
-		const p2 = data[index + nx];
-		const p3 = data[index + 1 + nx];
-
-		return (
-			p0 * (1 - xFraction) * (1 - yFraction) +
-			p1 * xFraction * (1 - yFraction) +
-			p2 * (1 - xFraction) * yFraction +
-			p3 * xFraction * yFraction
-		);
+		return interpolateLinear(data, index, xFraction, yFraction);
 	} else {
 		return NaN;
 	}
@@ -119,7 +121,7 @@ const getTile = async (
 	// } else {
 	const start = performance.now();
 
-	const data = omFileDataCache.get(omUrl);
+	const data = omFileDataCache.get(omUrl)!;
 	const pixels = TILE_SIZE * TILE_SIZE;
 	const rgba = new Uint8ClampedArray(pixels * 4);
 
@@ -130,16 +132,7 @@ const getTile = async (
 			const lon = tile2lon(x + j / TILE_SIZE, z);
 
 			const { index, xFraction, yFraction } = getIndexFromLatLong(lat, lon);
-			const p0 = data[index];
-			const p1 = data[index + 1];
-			const p2 = data[index + nx];
-			const p3 = data[index + 1 + nx];
-
-			const px =
-				p0 * (1 - xFraction) * (1 - yFraction) +
-				p1 * xFraction * (1 - yFraction) +
-				p2 * (1 - xFraction) * yFraction +
-				p3 * xFraction * yFraction;
+			const px = interpolateLinear(data, index, xFraction, yFraction);
 
 			if (isNaN(px) || px === Infinity) {
 				rgba[4 * ind] = 0;
