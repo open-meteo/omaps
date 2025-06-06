@@ -58,13 +58,28 @@ export const interpolate2DHermite = (
 	xFraction: number,
 	yFraction: number
 ) => {
-	if (xFraction > 0.45 && xFraction < 0.55 && yFraction > 0.45 && yFraction < 0.55) {
-		// print grid point
-		return 0;
+	if (xFraction < 0.05 && yFraction < 0.05) {
+		return 40
+	}
+	if (xFraction < 0.05 && yFraction > 0.95) {
+		return 0
+	}
+	if (xFraction > 0.95 && yFraction > 0.95) {
+		return 40
+	}
+	if (yFraction < 0.05 && xFraction > 0.95) {
+		return 0
 	}
 	// tension = 0 is Hermite with Catmull-Rom. Tension = 1 is bilinear interpolation
 	// 0.5 is somewhat in the middle
-	return interpolateCardinal2D(data, nx, index, xFraction, yFraction, 0.2);
+	return interpolateCardinal2D(data, nx, index, xFraction, yFraction, 0.3)
+	//return interpolateRBF3x3(data, nx, index, xFraction, yFraction)
+	//return interpolateRBF4x4(data, nx, index, xFraction, yFraction)
+	//return interpolateSmoothBilinear(data, index, xFraction, yFraction, nx)
+	//return interpolateMonotonicHermite(data, nx, index, xFraction, yFraction)
+	//return interpolateGaussianBilinear(data, index, xFraction, yFraction, nx)
+	//return interpolateLinear(data, index, xFraction, yFraction, nx)
+	//return quinticHermite2D(data, nx, index, xFraction, yFraction)
 
 	/*let x = index % nx;
 	let y = index / nx;
@@ -255,4 +270,92 @@ export const degreesToRadians = (degree: number) => {
 
 export const radiansToDegrees = (rad: number) => {
 	return rad * (180 / Math.PI);
+};
+
+
+
+const interpolateRBF4x4 = (
+	data: Float32Array | (Float32Array & ArrayBufferLike),
+	nx: number,
+	index: number,
+	xFraction: number,
+	yFraction: number
+): number => {
+	const sigma = 0.65;
+	const denom = 2 * sigma * sigma;
+
+	const ny = data.length / nx;
+	const x = (index % nx) + xFraction;
+	const y = Math.floor(index / nx) + yFraction;
+
+	const ix = Math.floor(x);
+	const iy = Math.floor(y);
+
+	let sum = 0;
+	let weightSum = 0;
+
+	for (let dy = -1; dy <= 2; dy++) {
+		for (let dx = -1; dx <= 2; dx++) {
+			const px = ix + dx;
+			const py = iy + dy;
+
+			if (px < 0 || px >= nx || py < 0 || py >= ny) continue;
+
+			const fx = x - px;
+			const fy = y - py;
+			const dist2 = fx * fx + fy * fy;
+			const weight = Math.exp(-dist2 / denom);
+
+			const sampleIndex = py * nx + px;
+			const value = data[sampleIndex];
+
+			sum += value * weight;
+			weightSum += weight;
+		}
+	}
+
+	return weightSum > 0 ? sum / weightSum : 0;
+};
+
+const interpolateRBF3x3 = (
+	data: Float32Array | (Float32Array & ArrayBufferLike),
+	nx: number,
+	index: number,
+	xFraction: number,
+	yFraction: number
+): number => {
+	const sigma = 0.4;
+	const denom = 2 * sigma * sigma;
+
+	const ny = data.length / nx;
+	const x = (index % nx) + xFraction;
+	const y = Math.floor(index / nx) + yFraction;
+
+	const ix = Math.floor(x);
+	const iy = Math.floor(y);
+
+	let sum = 0;
+	let weightSum = 0;
+
+	for (let dy = -1; dy <= 1; dy++) {
+		for (let dx = -1; dx <= 1; dx++) {
+			const px = ix + dx;
+			const py = iy + dy;
+
+			if (px < 0 || px >= nx || py < 0 || py >= ny) continue;
+
+			const fx = x - px;
+			const fy = y - py;
+			const dist2 = fx * fx + fy * fy;
+			const weight = Math.exp(-dist2 / denom);
+
+			const sampleIndex = py * nx + px;
+			const value = data[sampleIndex];
+
+			sum += value * weight;
+			weightSum += weight;
+		}
+	}
+
+	return weightSum > 0 ? sum / weightSum : 0;
 };
