@@ -58,7 +58,15 @@ export const interpolate2DHermite = (
 	xFraction: number,
 	yFraction: number
 ) => {
-	let x = index % nx;
+	if (xFraction > 0.45 && xFraction < 0.55 && yFraction > 0.45 && yFraction < 0.55) {
+		// print grid point
+		return 0
+	}
+	// tension = 0 is Hermite with Catmull-Rom. Tension = 1 is bilinear interpolation
+	// 0.5 is somewhat in the middle
+	return interpolateCardinal2D(data, nx, index, xFraction, yFraction, 0.2)
+
+	/*let x = index % nx;
 	let y = index / nx;
 	let ny = data.length / nx;
 	if (x <= 1 || y <= 1 || x >= nx - 3 || y >= ny - 3) {
@@ -80,7 +88,7 @@ export const interpolate2DHermite = (
 	const p1 = interpRow[2];
 	const m0 = getDerivative(interpRow[0], interpRow[2]);
 	const m1 = getDerivative(interpRow[1], interpRow[3]);
-	return hermite(yFraction, p0, p1, m0, m1);
+	return hermite(yFraction, p0, p1, m0, m1);*/
 };
 
 // 1D Quintic Hermite interpolation
@@ -164,10 +172,44 @@ export const getIndexFromLatLong = (lat: number, lon: number, domain: Domain) =>
 		const x = (lon - domain.grid.lonMin) / domain.grid.dx;
 		const y = (lat - domain.grid.latMin) / domain.grid.dy;
 
-		const xFraction = x - Math.floor(x);
-		const yFraction = y - Math.floor(y);
+		const xFraction = (((lon - domain.grid.lonMin) % domain.grid.dx) / domain.grid.dx);
+		const yFraction = (((lat - domain.grid.latMin) % domain.grid.dy) / domain.grid.dy);
 
 		const index = Math.floor(y) * domain.grid.nx + Math.floor(x);
 		return { index, xFraction, yFraction };
 	}
+};
+
+// 1D Cardinal Spline for 4 values
+const cardinalSpline = (t: number, p0: number, p1: number, p2: number, p3: number, tension: number): number => {
+	const t2 = t * t;
+	const t3 = t2 * t;
+	const s = (1 - tension) / 2;
+
+	return (
+		s * (-t3 + 2 * t2 - t) * p0 +
+		s * (-t3 + t2) * p1 +
+		(2*t3 -3*t2 + 1) * p1 +
+		s * (t3 - 2*t2 + t) * p2 +
+		(-2*t3 + 3*t2) * p2 +
+		s * (t3 - t2)*p3
+	);
+};
+
+const interpolateCardinal2D = (
+	data: Float32Array | Float32Array & ArrayBufferLike,
+	nx: number,
+	index: number,
+	xFraction: number,
+	yFraction: number,
+	tension: number = 0 // range [0,1]. tension = 0 is Catmull-Rom
+): number => {
+	// Interpolate 4 rows in X
+	const r0 = cardinalSpline(xFraction, data[index + (-1 * nx) - 1], data[index + (-1 * nx) + 0], data[index + (-1 * nx) + 1], data[index + (-1 * nx) + 2], tension);
+	const r1 = cardinalSpline(xFraction, data[index + (+0 * nx) - 1], data[index + (+0 * nx) + 0], data[index + (+0 * nx) + 1], data[index + (+0 * nx) + 2], tension);
+	const r2 = cardinalSpline(xFraction, data[index + (+1 * nx) - 1], data[index + (+1 * nx) + 0], data[index + (+1 * nx) + 1], data[index + (+1 * nx) + 2], tension);
+	const r3 = cardinalSpline(xFraction, data[index + (+2 * nx) - 1], data[index + (+2 * nx) + 0], data[index + (+2 * nx) + 1], data[index + (+2 * nx) + 2], tension);
+
+	// Interpolate in Y
+	return cardinalSpline(yFraction, r0, r1, r2, r3, tension);
 };
