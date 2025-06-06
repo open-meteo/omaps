@@ -130,6 +130,8 @@ if (mapContainer) {
 	});
 
 	map.on('load', () => {
+		console.log(domain);
+
 		omUrl = getOMUrl();
 		source = map.addSource('omFileSource', {
 			type: 'raster',

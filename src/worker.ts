@@ -1,6 +1,7 @@
 import { colorScale } from './utils/color-scales';
 
 import { tile2lat, tile2lon, getIndexFromLatLong, interpolate2DHermite } from './utils/math';
+import { Projection, ProjectionGrid } from './utils/projection';
 import { hideZero } from './utils/variables';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
@@ -49,11 +50,38 @@ self.onmessage = async (message) => {
 				const ind = j + i * TILE_SIZE;
 				const lon = tile2lon(x + j / TILE_SIZE, z);
 
-				const { index, xFraction, yFraction } = getIndexFromLatLong(
-					lat,
-					lon,
-					domain
-				);
+				let indexObject;
+				if (domain.grid.projection) {
+					const ny = domain.grid.ny;
+					const latMin = domain.grid.latMin;
+					const lonMin = domain.grid.lonMin;
+					const dx = domain.grid.dx;
+					const dy = domain.grid.dy;
+
+					let λ0 = domain.grid.projection.λ0;
+					let ϕ0 = domain.grid.projection.ϕ0;
+					let ϕ1 = domain.grid.projection.ϕ1;
+					let ϕ2 = domain.grid.projection.ϕ2;
+					let radius = domain.grid.projection.radius;
+
+					const projection = new Projection(λ0, ϕ0, ϕ1, ϕ2, radius);
+					const projectionGrid = new ProjectionGrid(
+						nx,
+						ny,
+						latMin,
+						lonMin,
+						dx,
+						dy,
+						projection
+					);
+					indexObject = projectionGrid.findPointInterpolated(
+						lat,
+						lon
+					);
+				} else {
+					indexObject = getIndexFromLatLong(lat, lon, domain);
+				}
+				const { index, xFraction, yFraction } = indexObject;
 
 				let px = interpolate2DHermite(
 					data,

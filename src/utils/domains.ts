@@ -1,12 +1,15 @@
+import { Projection } from './projection';
+
 export const domainGroups = [
 	'dwd',
+	'ncep',
+	'ecmwf',
 	'italia_meteo',
 	'meteofrance',
-	'ecmwf',
 	'ukmo',
 	//'kma',
 	'knmi',
-	'cams'
+	'dmi'
 ];
 
 export const domains = [
@@ -71,31 +74,11 @@ export const domains = [
 			}
 		}
 	},
-	// ItaliaMeteo
+
+	// GFS
 	{
-		value: 'italia_meteo_arpae_icon_2i',
-		label: 'IM ARPAE ICON 2i',
-		grid: {
-			nx: 761,
-			ny: 761,
-			latMin: 33.7,
-			lonMin: 3,
-			dx: 0.025,
-			dy: 0.02,
-			zoom: 5.2,
-			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
-				return this;
-			}
-		}
-	},
-	// MeteoFrance
-	{
-		value: 'meteofrance_arpege_world',
-		label: 'MF ARPEGE World',
+		value: 'ncep_gfs025',
+		label: 'GFS Global 0.25°',
 		grid: {
 			nx: 1440,
 			ny: 721,
@@ -114,57 +97,16 @@ export const domains = [
 		}
 	},
 	{
-		value: 'meteofrance_arpege_europe',
-		label: 'MF ARPEGE Europe',
+		value: 'ncep_gfs013',
+		label: 'GFS Global 0.13°',
 		grid: {
-			nx: 741,
-			ny: 521,
-			latMin: 20,
-			lonMin: -32,
-			dx: 0.1,
-			dy: 0.1,
-			zoom: 3.5,
-			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
-				return this;
-			}
-		}
-	},
-	{
-		value: 'meteofrance_arome_france0025',
-		label: 'MF AROME France',
-		grid: {
-			nx: 1121,
-			ny: 717,
-			latMin: 37.5,
-			lonMin: -12,
-			dx: 0.025,
-			dy: 0.025,
-			zoom: 3.5,
-			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
-				return this;
-			}
-		}
-	},
-
-	{
-		value: 'meteofrance_arome_france_hd',
-		label: 'MF AROME France HD',
-		grid: {
-			nx: 2801,
-			ny: 1791,
-			latMin: 37.5,
-			lonMin: -12,
-			dx: 0.01,
-			dy: 0.01,
-			zoom: 3.5,
+			nx: 3072,
+			ny: 1536,
+			latMin: (-0.11714935 * (1536 - 1)) / 2,
+			lonMin: -180,
+			dx: 360 / 3072,
+			dy: 0.11714935,
+			zoom: 1,
 			center: function () {
 				this.center = {
 					lng: this.lonMin + this.dx * (this.nx * 0.5),
@@ -216,6 +158,110 @@ export const domains = [
 			}
 		}
 	},
+	// ItaliaMeteo
+	{
+		value: 'italia_meteo_arpae_icon_2i',
+		label: 'IM ARPAE ICON 2i',
+		grid: {
+			nx: 761,
+			ny: 761,
+			latMin: 33.7,
+			lonMin: 3,
+			dx: 0.025,
+			dy: 0.02,
+			zoom: 5.2,
+			center: function () {
+				this.center = {
+					lng: this.lonMin + this.dx * (this.nx * 0.5),
+					lat: this.latMin + this.dy * (this.ny * 0.5)
+				};
+				return this;
+			}
+		}
+	},
+	// MeteoFrance
+	{
+		value: 'meteofrance_arpege_world025',
+		label: 'MF ARPEGE World',
+		grid: {
+			nx: 1440,
+			ny: 721,
+			latMin: -90,
+			lonMin: -180,
+			dx: 0.25,
+			dy: 0.25,
+			zoom: 1,
+			center: function () {
+				this.center = {
+					lng: this.lonMin + this.dx * (this.nx * 0.5),
+					lat: this.latMin + this.dy * (this.ny * 0.5)
+				};
+				return this;
+			}
+		}
+	},
+	{
+		value: 'meteofrance_arpege_europe',
+		label: 'MF ARPEGE Europe',
+		grid: {
+			nx: 741,
+			ny: 521,
+			latMin: 20,
+			lonMin: -32,
+			dx: 0.1,
+			dy: 0.1,
+			zoom: 3.5,
+			center: function () {
+				this.center = {
+					lng: this.lonMin + this.dx * (this.nx * 0.5),
+					lat: this.latMin + this.dy * (this.ny * 0.5)
+				};
+				return this;
+			}
+		}
+	},
+	{
+		value: 'meteofrance_arome_france0025',
+		label: 'MF AROME France',
+		grid: {
+			nx: 1121,
+			ny: 717,
+			latMin: 37.5,
+			lonMin: -12,
+			dx: 0.025,
+			dy: 0.025,
+			zoom: 5.2,
+			center: function () {
+				this.center = {
+					lng: this.lonMin + this.dx * (this.nx * 0.5),
+					lat: this.latMin + this.dy * (this.ny * 0.5)
+				};
+				return this;
+			}
+		}
+	},
+
+	{
+		value: 'meteofrance_arome_france_hd',
+		label: 'MF AROME France HD',
+		grid: {
+			nx: 2801,
+			ny: 1791,
+			latMin: 37.5,
+			lonMin: -12,
+			dx: 0.01,
+			dy: 0.01,
+			zoom: 5.2,
+			center: function () {
+				this.center = {
+					lng: this.lonMin + this.dx * (this.nx * 0.5),
+					lat: this.latMin + this.dy * (this.ny * 0.5)
+				};
+				return this;
+			}
+		}
+	},
+
 	// UKMO
 	{
 		value: 'ukmo_global_deterministic_10km',
@@ -253,29 +299,6 @@ export const domains = [
 	// 	}
 	// }
 
-	// Not available in data_spatial
-	// KMA
-	// {
-	// 	value: 'kma_gdps',
-	// 	label: 'KMA GDPS 12km',
-	// 	grid: {
-	// 		nx: 2560,
-	// 		ny: 1920,
-	// 		latMin: -90 + 180 / 1920 / 2,
-	// 		lonMin: -180 + 360 / 2560 / 2,
-	// 		dx: 360 / 2560,
-	// 		dy: 180 / 1920,
-	// 		zoom: 1,
-	// 		center: function () {
-	// 			this.center = {
-	// 				lng: this.lonMin + this.dx * (this.nx * 0.5),
-	// 				lat: this.latMin + this.dy * (this.ny * 0.5)
-	// 			};
-	// 			return this;
-	// 		}
-	// 	}
-	// },
-
 	// KNMI
 	{
 		value: 'knmi_harmonie_arome_netherlands',
@@ -298,22 +321,29 @@ export const domains = [
 		}
 	},
 
-	// CAMS
+	// DMI
 	{
-		value: 'knmi_harmonie_arome_netherlands',
-		label: 'KNMI Harmonie Arome Netherlands',
+		value: 'dmi_harmonie_arome_europe',
+		label: 'DMI Harmonie Arome Europe',
 		grid: {
-			nx: 390,
-			ny: 390,
-			latMin: 49,
-			lonMin: 0,
-			dx: 0.029,
-			dy: 0.018,
+			nx: 1906,
+			ny: 1606,
+			latMin: 39.671,
+			lonMin: -25.421997,
+			dx: 2000,
+			dy: 2000,
 			zoom: 6,
+			projection: {
+				λ0: 352,
+				ϕ0: 55.5,
+				ϕ1: 55.5,
+				ϕ2: 55.5,
+				radius: 6371229
+			},
 			center: function () {
 				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
+					lng: this.lonMin, // +??
+					lat: this.latMin // +??
 				};
 				return this;
 			}
