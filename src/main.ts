@@ -61,7 +61,7 @@ if (mapContainer) {
 
 	map = new maplibregl.Map({
 		container: mapContainer,
-		style: `https://maptiler.servert.nl/styles/basic-world/style.json`,
+		style: `https://maptiler.servert.nl/styles/basic-world-maps/style.json`,
 		center: center,
 		zoom: domain?.grid.zoom,
 		attributionControl: false,
