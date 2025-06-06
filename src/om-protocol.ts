@@ -16,6 +16,11 @@ import { type TileJSON, type TileIndex } from './types';
 
 const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 
+const tileCache = new QuickLRU<string, ImageBitmap>({
+	maxSize: 1024,
+	maxAge: ONE_HOUR_IN_MILLISECONDS
+});
+
 const omFileDataCache = new QuickLRU<string, Float32Array<ArrayBufferLike>>({
 	maxSize: 1024,
 	maxAge: ONE_HOUR_IN_MILLISECONDS
@@ -45,43 +50,33 @@ export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => 
 	}
 };
 
-const colors = colorScale({
-	min: 0,
-	max: 30
-});
-
-const getTile = async (
-	{ z, x, y }: TileIndex,
-	omUrl: string
-	//tileSize: number = TILE_SIZE
-): Promise<ImageBitmap> => {
+const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitmap> => {
 	const key = `${omUrl}/${TILE_SIZE}/${z}/${x}/${y}`;
-	// const cachedTile = tileCache.get(key);
-	// if (cachedTile) {
-	// 	return cachedTile;
-	// } else {
-	// const start = performance.now();
-	//
-	const worker = new TileWorker();
+	const cachedTile = tileCache.get(key);
+	if (cachedTile) {
+		return cachedTile;
+	} else {
+		const start = performance.now();
 
-	const data = omFileDataCache.get(omUrl)!;
-	worker.postMessage({ type: 'GT', x, y, z, key, data });
-	const tilePromise = new Promise((resolve, reject) => {
-		worker.onmessage = async (message) => {
-			if (message.data.type == 'RT' && key == message.data.key) {
-				resolve(message.data.tile);
-			}
-		};
-	});
+		const worker = new TileWorker();
 
-	return tilePromise;
+		const data = omFileDataCache.get(omUrl)!;
+		worker.postMessage({ type: 'GT', x, y, z, key, data });
+		const tilePromise = new Promise<ImageBitmap>((resolve) => {
+			worker.onmessage = (message) => {
+				if (message.data.type == 'RT' && key == message.data.key) {
+					tileCache.set(key, message.data.tile);
+					resolve(message.data.tile);
+				}
+			};
+		});
 
-	// console.log(
-	// 	`getTile(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`
-	// );
+		console.log(
+			`getTile(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`
+		);
 
-	//tileCache.set(key, tile);
-	//}
+		return tilePromise;
+	}
 };
 
 const renderTile = async (url: string) => {
