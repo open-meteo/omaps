@@ -25,6 +25,16 @@ let latMin;
 let dx;
 let dy;
 
+interface FileReader {
+	reader: OmFileReader | undefined;
+	backend: MemoryHttpBackend | undefined;
+}
+
+const fileReader: FileReader = {
+	reader: undefined,
+	backend: undefined
+};
+
 const tileCache = new QuickLRU<string, ImageBitmap>({
 	maxSize: 1024,
 	maxAge: ONE_HOUR_IN_MILLISECONDS
@@ -109,6 +119,12 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 		// Parse OMfile here to cache data
 		const omUrl = params.url.replace('om://', '');
 
+		if (fileReader.reader) {
+			fileReader.reader.dispose();
+		}
+		delete fileReader.reader;
+		delete fileReader.backend;
+
 		domain = domains.find((dm) => dm.value === omUrl.split('/')[4]) ?? domains[0];
 
 		nx = domain.grid.nx;
@@ -118,19 +134,19 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 		dx = domain.grid.dx;
 		dy = domain.grid.dy;
 
-		let backend = new MemoryHttpBackend({
+		fileReader.backend = new MemoryHttpBackend({
 			url: omUrl,
 			maxFileSize: 500 * 1024 * 1024 // 500 MB
 		});
-		let reader = await OmFileReader.create(backend);
-		if (reader) {
-			const dimensions = reader.getDimensions();
+		fileReader.reader = await OmFileReader.create(fileReader.backend);
+		if (fileReader.reader) {
+			const dimensions = fileReader.reader.getDimensions();
 
 			// Create ranges for each dimension
 			const ranges = dimensions.map((dim, _) => {
 				return { start: 0, end: dim };
 			});
-			const data = await reader.read(OmDataType.FloatArray, ranges);
+			const data = await fileReader.reader.read(OmDataType.FloatArray, ranges);
 			omFileDataCache.set(omUrl, data);
 
 			// worker.postMessage({ type: 'SD', omData: data });
