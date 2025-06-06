@@ -51,7 +51,7 @@ const changeOMfileURL = () => {
 			id: 'omFileLayer',
 			type: 'raster'
 		},
-		'admin_sub'
+		'waterway'
 	);
 };
 
@@ -61,7 +61,7 @@ if (mapContainer) {
 
 	map = new maplibregl.Map({
 		container: mapContainer,
-		style: `https://maptiler.servert.nl/styles/basic-world-no-labels/style.json`,
+		style: `https://maptiler.servert.nl/styles/basic-world/style.json`,
 		center: center,
 		zoom: domain?.grid.zoom,
 		attributionControl: false,
@@ -83,7 +83,7 @@ if (mapContainer) {
 				id: 'omFileLayer',
 				type: 'raster'
 			},
-			'admin_sub'
+			'waterway'
 		);
 
 		let popup: maplibregl.Popup | undefined;
