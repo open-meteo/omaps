@@ -57,12 +57,11 @@ body {
 
 .info-wrapper {
 	position: absolute;
-	bottom: 0%;
+	bottom: 15px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	width: 100%;
-	pointer-events: none;
 }
 
 #info_box {
@@ -73,7 +72,19 @@ body {
 	background: rgba(255, 255, 255, 0.8);
 	/*min-width: 25%;*/
 	border-radius: 15px;
-	padding: 5px 20px;
+	padding: 15px 20px;
 	color: black;
 	text-align: center;
+}
+
+.maplibregl-popup {
+	pointer-events: none;
+}
+
+.variable-selection,
+.domain-selection {
+	background-color: white;
+	color: black;
+	padding: 5px;
+	border-radius: 3px;
 }

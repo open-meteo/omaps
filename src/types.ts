@@ -40,3 +40,17 @@ export type TilePixel = {
 	row: number;
 	column: number;
 };
+
+export interface Domain {
+	value: 'string';
+	label: 'string';
+	grid: {
+		nx: number;
+		ny: number;
+		lonMin: number;
+		latMin: number;
+		dx: number;
+		dy: number;
+		zoom: number;
+	};
+}

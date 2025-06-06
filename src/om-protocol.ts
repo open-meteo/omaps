@@ -16,6 +16,15 @@ import { type TileJSON, type TileIndex } from './types';
 
 const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 
+let domain;
+
+let nx;
+let ny;
+let lonMin;
+let latMin;
+let dx;
+let dy;
+
 const tileCache = new QuickLRU<string, ImageBitmap>({
 	maxSize: 1024,
 	maxAge: ONE_HOUR_IN_MILLISECONDS
@@ -26,20 +35,11 @@ const omFileDataCache = new QuickLRU<string, Float32Array<ArrayBufferLike>>({
 	maxAge: ONE_HOUR_IN_MILLISECONDS
 });
 
-const domain = domains.find((dm) => dm.value === import.meta.env.VITE_DOMAIN) ?? domains[0];
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
-const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
-
-const nx = domain.grid.nx;
-const ny = domain.grid.ny;
-const lonMin = domain.grid.lonMin;
-const latMin = domain.grid.latMin;
-const dx = domain.grid.dx;
-const dy = domain.grid.dy;
 
 export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => {
 	const data = omFileDataCache.get(omUrl);
-	const { index, xFraction, yFraction } = getIndexFromLatLong(lat, lon);
+	const { index, xFraction, yFraction } = getIndexFromLatLong(lat, lon, domain);
 
 	if (data && index) {
 		//const px = interpolateLinear(data, index, xFraction, yFraction);
@@ -56,12 +56,10 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 	if (cachedTile) {
 		return cachedTile;
 	} else {
-		const start = performance.now();
-
 		const worker = new TileWorker();
 
 		const data = omFileDataCache.get(omUrl)!;
-		worker.postMessage({ type: 'GT', x, y, z, key, data });
+		worker.postMessage({ type: 'GT', x, y, z, key, data, domain });
 		const tilePromise = new Promise<ImageBitmap>((resolve) => {
 			worker.onmessage = (message) => {
 				if (message.data.type == 'RT' && key == message.data.key) {
@@ -70,10 +68,6 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 				}
 			};
 		});
-
-		console.log(
-			`getTile(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`
-		);
 
 		return tilePromise;
 	}
@@ -114,6 +108,16 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 	if (params.type == 'json') {
 		// Parse OMfile here to cache data
 		const omUrl = params.url.replace('om://', '');
+
+		domain = domains.find((dm) => dm.value === omUrl.split('/')[4]) ?? domains[0];
+
+		nx = domain.grid.nx;
+		ny = domain.grid.ny;
+		lonMin = domain.grid.lonMin;
+		latMin = domain.grid.latMin;
+		dx = domain.grid.dx;
+		dy = domain.grid.dy;
+
 		let backend = new MemoryHttpBackend({
 			url: omUrl,
 			maxFileSize: 500 * 1024 * 1024 // 500 MB
@@ -132,8 +136,10 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 			// worker.postMessage({ type: 'SD', omData: data });
 		}
 
+		const tileJson = await getTilejson(params.url);
+
 		return {
-			data: await getTilejson(params.url)
+			data: tileJson
 		};
 	} else if (params.type == 'image') {
 		return {

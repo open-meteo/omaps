@@ -2,27 +2,26 @@ import { colorScale } from './utils/color-scales';
 
 import { tile2lat, tile2lon, getIndexFromLatLong, interpolate2DHermite } from './utils/math';
 
-import { domains } from './utils/domains';
-
-const domain = domains.find((dm) => dm.value === import.meta.env.VITE_DOMAIN) ?? domains[0];
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
 const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
-
-const nx = domain.grid.nx;
 
 const colors = colorScale({
 	min: 0,
 	max: 30
 });
 
-//let data;
 self.onmessage = async (message) => {
 	if (message.data.type == 'GT') {
+		const start = performance.now();
+
 		const key = message.data.key;
 		const x = message.data.x;
 		const y = message.data.y;
 		const z = message.data.z;
 		const data = message.data.data;
+
+		const domain = message.data.domain;
+		const nx = domain.grid.nx;
 
 		const pixels = TILE_SIZE * TILE_SIZE;
 		const rgba = new Uint8ClampedArray(pixels * 4);
@@ -35,9 +34,10 @@ self.onmessage = async (message) => {
 
 				const { index, xFraction, yFraction } = getIndexFromLatLong(
 					lat,
-					lon
+					lon,
+					domain
 				);
-				//const px = interpolateLinear(data, index, xFraction, yFraction);
+
 				const px = interpolate2DHermite(
 					data,
 					nx,
@@ -45,7 +45,6 @@ self.onmessage = async (message) => {
 					xFraction,
 					yFraction
 				);
-				//const px = quinticHermite2D(data, nx, index, xFraction, yFraction);
 
 				if (isNaN(px) || px === Infinity) {
 					rgba[4 * ind] = 0;
@@ -73,6 +72,9 @@ self.onmessage = async (message) => {
 		const tile = await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
 
 		postMessage({ type: 'RT', tile: tile, key: key });
+		console.log(
+			`getTileWorker(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`
+		);
 		self.close();
 	}
 };

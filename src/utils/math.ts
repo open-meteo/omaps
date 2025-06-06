@@ -1,13 +1,4 @@
-import { domains } from './domains';
-
-const domain = domains.find((dm) => dm.value === import.meta.env.VITE_DOMAIN);
-
-const nx = domain.grid.nx;
-const ny = domain.grid.ny;
-const lonMin = domain.grid.lonMin;
-const latMin = domain.grid.latMin;
-const dx = domain.grid.dx;
-const dy = domain.grid.dy;
+import { type Domain } from '../types';
 
 const r2d = 180 / Math.PI;
 export const tile2lon = (x: number, z: number): number => {
@@ -29,7 +20,8 @@ const interpolateLinear = (
 	data: Float32Array<ArrayBufferLike>,
 	index: number,
 	xFraction: number,
-	yFraction: number
+	yFraction: number,
+	nx: number
 ): number => {
 	const p0 = data[index];
 	const p1 = data[index + 1];
@@ -70,7 +62,7 @@ export const interpolate2DHermite = (
 	let y = index / nx;
 	let ny = data.length / nx;
 	if (x <= 1 || y <= 1 || x >= nx - 3 || y >= ny - 3) {
-		return interpolateLinear(data, index, xFraction, yFraction);
+		return interpolateLinear(data, index, xFraction, yFraction, nx);
 	}
 
 	// Interpolate along X for each of the 4 rows
@@ -160,12 +152,17 @@ export const quinticHermite2D = (
 	return quinticHermite(yFraction, f0, f1, m0, m1, c0, c1);
 };
 
-export const getIndexFromLatLong = (lat: number, lon: number) => {
-	if (lat < latMin || lat > latMin + dy * ny || lon < lonMin || lon > lonMin + dx * nx) {
+export const getIndexFromLatLong = (lat: number, lon: number, domain: Domain) => {
+	if (
+		lat < domain.grid.latMin ||
+		lat > domain.grid.latMin + domain.grid.dy * domain.grid.ny ||
+		lon < domain.grid.lonMin ||
+		lon > domain.grid.lonMin + domain.grid.dx * domain.grid.nx
+	) {
 		return { index: NaN, xFraction: 0, yFraction: 0 };
 	} else {
-		const x = (lon - lonMin) / dx;
-		const y = (lat - latMin) / dy;
+		const x = (lon - domain.grid.lonMin) / domain.grid.dx;
+		const y = (lat - domain.grid.latMin) / domain.grid.dy;
 
 		const xFraction = x - Math.floor(x);
 		const yFraction = y - Math.floor(y);
