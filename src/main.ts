@@ -1,22 +1,29 @@
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import './style.css';
+import omProtocol from './om-protocol';
+
+import { getValueFromLatLong } from './om-protocol';
 
 import { pad } from './utils/pad';
 
-import omProtocol from './om-protocol';
+import { domains } from './utils/domains';
 
-import { getValueFromLatLong, domain } from './om-protocol';
+import './style.css';
 
-export const TILE_SIZE = 256;
+const domain = domains.find((dm) => dm.value === import.meta.env.VITE_DOMAIN) ?? domains[0];
+const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
 
 let map: maplibregl.Map;
 const infoBox: HTMLElement | null = document.getElementById('info_box');
 const mapContainer: HTMLElement | null = document.getElementById('map_container');
 
-let timeSelected = new Date();
-let variable = { value: 'temperature_2m', label: 'Temperature 2m' };
+const timeSelected = new Date();
+const variable = { value: 'temperature_2m', label: 'Temperature 2m' };
+const center = {
+	lng: domain.grid.lonMin + domain.grid.dx * (domain.grid.nx * 0.5),
+	lat: domain.grid.latMin + domain.grid.dy * (domain.grid.ny * 0.5)
+};
 
 if (mapContainer) {
 	maplibregl.addProtocol('om', omProtocol);
@@ -24,8 +31,8 @@ if (mapContainer) {
 	map = new maplibregl.Map({
 		container: mapContainer,
 		style: `https://maptiler.servert.nl/styles/basic-world-no-labels/style.json`,
-		center: [8.6, 46.9],
-		zoom: 4,
+		center: center,
+		zoom: domain?.grid.zoom,
 		attributionControl: false,
 		hash: true
 	});
@@ -49,22 +56,24 @@ if (mapContainer) {
 			type: 'raster'
 		});
 
-		map.on('click', function (e) {
-			var coordinates = e.lngLat;
-			const temp = getValueFromLatLong(coordinates.lat, coordinates.lng, omUrl);
-			if (temp) {
-				console.log(temp.toFixed(2) + 'C°');
-				new maplibregl.Popup()
-					.setLngLat(coordinates)
-					.setHTML(
-						`<span style="color:black;">${temp.toFixed(2) + 'C°'}</span>`
-					)
-					.addTo(map);
-			} else {
-				new maplibregl.Popup()
+		let popup: maplibregl.Popup | undefined;
+		map.on('mousemove', function (e) {
+			const coordinates = e.lngLat;
+			if (!popup) {
+				popup = new maplibregl.Popup()
 					.setLngLat(coordinates)
 					.setHTML(`<span style="color:black;">Outside domain</span>`)
 					.addTo(map);
+			}
+			const temp = getValueFromLatLong(coordinates.lat, coordinates.lng, omUrl);
+			if (temp) {
+				popup.setLngLat(coordinates).setHTML(
+					`<span style="color:black;">${temp.toFixed(1) + 'C°'}</span>`
+				);
+			} else {
+				popup.setLngLat(coordinates).setHTML(
+					`<span style="color:black;">Outside domain</span>`
+				);
 			}
 		});
 	});
