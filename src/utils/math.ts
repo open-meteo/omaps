@@ -58,21 +58,23 @@ export const interpolate2DHermite = (
 	xFraction: number,
 	yFraction: number
 ) => {
-	if (xFraction < 0.05 && yFraction < 0.05) {
-		return 40
-	}
-	if (xFraction < 0.05 && yFraction > 0.95) {
-		return 0
-	}
-	if (xFraction > 0.95 && yFraction > 0.95) {
-		return 40
-	}
-	if (yFraction < 0.05 && xFraction > 0.95) {
-		return 0
+	if (import.meta.env.DEV) {
+		if (xFraction < 0.05 && yFraction < 0.05) {
+			return 40;
+		}
+		if (xFraction < 0.05 && yFraction > 0.95) {
+			return 0;
+		}
+		if (xFraction > 0.95 && yFraction > 0.95) {
+			return 40;
+		}
+		if (yFraction < 0.05 && xFraction > 0.95) {
+			return 0;
+		}
 	}
 	// tension = 0 is Hermite with Catmull-Rom. Tension = 1 is bilinear interpolation
 	// 0.5 is somewhat in the middle
-	return interpolateCardinal2D(data, nx, index, xFraction, yFraction, 0.3)
+	return interpolateCardinal2D(data, nx, index, xFraction, yFraction, 0.3);
 	//return interpolateRBF3x3(data, nx, index, xFraction, yFraction)
 	//return interpolateRBF4x4(data, nx, index, xFraction, yFraction)
 	//return interpolateSmoothBilinear(data, index, xFraction, yFraction, nx)
@@ -271,8 +273,6 @@ export const degreesToRadians = (degree: number) => {
 export const radiansToDegrees = (rad: number) => {
 	return rad * (180 / Math.PI);
 };
-
-
 
 const interpolateRBF4x4 = (
 	data: Float32Array | (Float32Array & ArrayBufferLike),
