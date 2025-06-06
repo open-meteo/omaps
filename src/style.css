@@ -79,8 +79,9 @@ body {
 	pointer-events: none;
 }
 
+.domain-selection,
 .variable-selection,
-.domain-selection {
+.date-time-selection {
 	background-color: white;
 	color: black;
 	padding: 5px;

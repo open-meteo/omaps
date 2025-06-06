@@ -20,7 +20,7 @@ const infoBox: HTMLElement | null = document.getElementById('info_box');
 const mapContainer: HTMLElement | null = document.getElementById('map_container');
 
 let omUrl;
-const timeSelected = new Date();
+let timeSelected = new Date();
 let variable = variables.find((v) => v.value === import.meta.env.VITE_VARIABLE) ?? variables[0];
 const center = {
 	lng: domain.grid.lonMin + domain.grid.dx * (domain.grid.nx * 0.5),
@@ -43,13 +43,24 @@ const getVariableOptions = () => {
 	return string;
 };
 
-const changeOMfileURL = () => {
-	omUrl = `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z/${variable.value}.om`;
+const getOMUrl = () => {
+	return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours()))}00Z/${variable.value}.om`;
+};
 
+let source;
+let domainSelector, variableSelector, dateTimeSelector;
+let checkSourceLoadedInterval;
+let checked = 0;
+const changeOMfileURL = () => {
+	omUrl = getOMUrl();
 	map.removeLayer('omFileLayer');
 	map.removeSource('omFileSource');
 
-	map.addSource('omFileSource', {
+	domainSelector.disabled = true;
+	variableSelector.disabled = true;
+	dateTimeSelector.disabled = true;
+
+	source = map.addSource('omFileSource', {
 		type: 'raster',
 		url: 'om://' + omUrl,
 		tileSize: TILE_SIZE
@@ -63,6 +74,17 @@ const changeOMfileURL = () => {
 		},
 		'waterway'
 	);
+
+	checkSourceLoadedInterval = setInterval(() => {
+		checked++;
+		if (source.loaded() || checked >= 30) {
+			domainSelector.disabled = null;
+			variableSelector.disabled = null;
+			dateTimeSelector.disabled = null;
+			checked = 0;
+			clearInterval(checkSourceLoadedInterval);
+		}
+	}, 100);
 };
 
 let showTemp = false;
@@ -79,9 +101,8 @@ if (mapContainer) {
 	});
 
 	map.on('load', () => {
-		omUrl = `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z/${variable.value}.om`;
-
-		map.addSource('omFileSource', {
+		omUrl = getOMUrl();
+		source = map.addSource('omFileSource', {
 			type: 'raster',
 			url: 'om://' + omUrl,
 			tileSize: TILE_SIZE
@@ -137,8 +158,8 @@ if (mapContainer) {
 		});
 
 		if (infoBox) {
-			infoBox.innerHTML = `<div>Selected domain: <select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">${getDomainOptions()}</select><br>Selected variable: <select id="variable_selection" class="variable-selection" name="variables" value="${variable.value}">${getVariableOptions()}</select><br>Selected time: ${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())} ${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z</div>`;
-			const domainSelector = document.querySelector('#domain_selection');
+			infoBox.innerHTML = `<div>Selected domain: <select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">${getDomainOptions()}</select><br>Selected variable: <select id="variable_selection" class="variable-selection" name="variables" value="${variable.value}">${getVariableOptions()}</select><br>Selected time: <input class="date-time-selection" type="datetime-local"  id="date_time_selection" value="${timeSelected.getFullYear() + '-' + pad(timeSelected.getMonth() + 1) + '-' + pad(timeSelected.getDate()) + 'T' + Number(timeSelected.getHours() + 1) + ':00'}"/></div>`;
+			domainSelector = document.querySelector('#domain_selection');
 			domainSelector?.addEventListener('change', (e) => {
 				domain =
 					domains.find((dm) => dm.value === e.target.value) ??
@@ -146,11 +167,17 @@ if (mapContainer) {
 				changeOMfileURL();
 			});
 
-			const variableSelector = document.querySelector('#variable_selection');
+			variableSelector = document.querySelector('#variable_selection');
 			variableSelector?.addEventListener('change', (e) => {
 				variable =
 					variables.find((v) => v.value === e.target.value) ??
 					variables[0];
+				changeOMfileURL();
+			});
+
+			dateTimeSelector = document.querySelector('#date_time_selection');
+			dateTimeSelector?.addEventListener('change', (e) => {
+				timeSelected = new Date(e.target.value);
 				changeOMfileURL();
 			});
 		}
