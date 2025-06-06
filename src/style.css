@@ -28,7 +28,7 @@ body {
 #map_container {
 	position: relative;
 	width: 100%;
-	height: calc(100vh); /* calculate height of the screen minus the heading */
+	height: calc(100vh);
 }
 
 .map {
@@ -68,9 +68,7 @@ body {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	/*min-height: 75px;*/
 	background: rgba(255, 255, 255, 0.8);
-	/*min-width: 25%;*/
 	border-radius: 15px;
 	padding: 15px 20px;
 	color: black;

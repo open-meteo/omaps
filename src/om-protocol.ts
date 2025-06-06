@@ -148,14 +148,9 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 			});
 			const data = await fileReader.reader.read(OmDataType.FloatArray, ranges);
 			omFileDataCache.set(omUrl, data);
-
-			// worker.postMessage({ type: 'SD', omData: data });
 		}
-
-		const tileJson = await getTilejson(params.url);
-
 		return {
-			data: tileJson
+			data: await getTilejson(params.url)
 		};
 	} else if (params.type == 'image') {
 		return {

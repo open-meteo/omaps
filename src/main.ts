@@ -45,11 +45,14 @@ const changeOMfileURL = () => {
 		tileSize: TILE_SIZE
 	});
 
-	map.addLayer({
-		source: 'omFileSource',
-		id: 'omFileLayer',
-		type: 'raster'
-	});
+	map.addLayer(
+		{
+			source: 'omFileSource',
+			id: 'omFileLayer',
+			type: 'raster'
+		},
+		'admin_sub'
+	);
 };
 
 let showTemp = false;
@@ -74,11 +77,14 @@ if (mapContainer) {
 			tileSize: TILE_SIZE
 		});
 
-		map.addLayer({
-			source: 'omFileSource',
-			id: 'omFileLayer',
-			type: 'raster'
-		});
+		map.addLayer(
+			{
+				source: 'omFileSource',
+				id: 'omFileLayer',
+				type: 'raster'
+			},
+			'admin_sub'
+		);
 
 		let popup: maplibregl.Popup | undefined;
 		map.on('mousemove', function (e) {
