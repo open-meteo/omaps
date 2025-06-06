@@ -18,6 +18,7 @@ let map: maplibregl.Map;
 const infoBox: HTMLElement | null = document.getElementById('info_box');
 const mapContainer: HTMLElement | null = document.getElementById('map_container');
 
+let omUrl;
 const timeSelected = new Date();
 const variable = { value: 'temperature_2m', label: 'Temperature 2m' };
 const center = {
@@ -34,7 +35,7 @@ const getDomainOptions = () => {
 };
 
 const changeOMfileURL = () => {
-	let omUrl = `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z/${variable.value}.om`;
+	omUrl = `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z/${variable.value}.om`;
 
 	map.removeLayer('omFileLayer');
 	map.removeSource('omFileSource');
@@ -69,7 +70,7 @@ if (mapContainer) {
 	});
 
 	map.on('load', () => {
-		let omUrl = `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z/${variable.value}.om`;
+		omUrl = `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z/${variable.value}.om`;
 
 		map.addSource('omFileSource', {
 			type: 'raster',

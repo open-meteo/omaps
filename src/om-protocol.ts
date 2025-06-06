@@ -53,7 +53,7 @@ export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => 
 
 	if (data && index) {
 		//const px = interpolateLinear(data, index, xFraction, yFraction);
-		const px = interpolate2DHermite(data, nx, index, xFraction, yFraction);
+		const px = interpolate2DHermite(data, domain.grid.nx, index, xFraction, yFraction);
 		return px;
 	} else {
 		return NaN;
@@ -68,7 +68,7 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 	} else {
 		const worker = new TileWorker();
 
-		const data = omFileDataCache.get(omUrl)!;
+		const data = omFileDataCache.get(omUrl);
 		worker.postMessage({ type: 'GT', x, y, z, key, data, domain });
 		const tilePromise = new Promise<ImageBitmap>((resolve) => {
 			worker.onmessage = (message) => {
@@ -119,6 +119,7 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 		// Parse OMfile here to cache data
 		const omUrl = params.url.replace('om://', '');
 
+		omFileDataCache.clear();
 		if (fileReader.reader) {
 			fileReader.reader.dispose();
 		}
