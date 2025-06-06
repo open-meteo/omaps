@@ -134,15 +134,36 @@ export const domains = [
 		}
 	},
 	{
-		value: 'meteofrance_arome_france',
+		value: 'meteofrance_arome_france0025',
 		label: 'MF AROME France',
 		grid: {
-			nx: 741,
-			ny: 521,
-			latMin: 20,
-			lonMin: -32,
-			dx: 0.1,
-			dy: 0.1,
+			nx: 1121,
+			ny: 717,
+			latMin: 37.5,
+			lonMin: -12,
+			dx: 0.025,
+			dy: 0.025,
+			zoom: 3.5,
+			center: function () {
+				this.center = {
+					lng: this.lonMin + this.dx * (this.nx * 0.5),
+					lat: this.latMin + this.dy * (this.ny * 0.5)
+				};
+				return this;
+			}
+		}
+	},
+
+	{
+		value: 'meteofrance_arome_france_hd',
+		label: 'MF AROME France HD',
+		grid: {
+			nx: 2801,
+			ny: 1791,
+			latMin: 37.5,
+			lonMin: -12,
+			dx: 0.01,
+			dy: 0.01,
 			zoom: 3.5,
 			center: function () {
 				this.center = {

@@ -101,7 +101,7 @@ const changeOMfileURL = () => {
 			id: 'omFileLayer',
 			type: 'raster'
 		},
-		'waterway'
+		'road_area_pier'
 	);
 
 	checkSourceLoadedInterval = setInterval(() => {
@@ -143,7 +143,7 @@ if (mapContainer) {
 				id: 'omFileLayer',
 				type: 'raster'
 			},
-			'waterway'
+			'road_area_pier'
 		);
 
 		let popup: maplibregl.Popup | undefined;

@@ -64,25 +64,21 @@ export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => 
 
 const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitmap> => {
 	const key = `${omUrl}/${TILE_SIZE}/${z}/${x}/${y}`;
-	const cachedTile = tileCache.get(key);
-	if (cachedTile) {
-		return cachedTile;
-	} else {
-		const worker = new TileWorker();
 
-		const data = omFileDataCache.get(omUrl);
-		worker.postMessage({ type: 'GT', x, y, z, key, data, domain, variable });
-		const tilePromise = new Promise<ImageBitmap>((resolve) => {
-			worker.onmessage = (message) => {
-				if (message.data.type == 'RT' && key == message.data.key) {
-					tileCache.set(key, message.data.tile);
-					resolve(message.data.tile);
-				}
-			};
-		});
+	const worker = new TileWorker();
 
-		return tilePromise;
-	}
+	const data = omFileDataCache.get(omUrl);
+	worker.postMessage({ type: 'GT', x, y, z, key, data, domain, variable });
+	const tilePromise = new Promise<ImageBitmap>((resolve) => {
+		worker.onmessage = (message) => {
+			if (message.data.type == 'RT' && key == message.data.key) {
+				tileCache.set(key, message.data.tile);
+				resolve(message.data.tile);
+			}
+		};
+	});
+
+	return tilePromise;
 };
 
 const renderTile = async (url: string) => {
