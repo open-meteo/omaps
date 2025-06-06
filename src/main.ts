@@ -7,12 +7,21 @@ import { getValueFromLatLong } from './om-protocol';
 
 import { pad } from './utils/pad';
 
-import { domains } from './utils/domains';
+import { domains, domainGroups } from './utils/domains';
 import { variables } from './utils/variables';
 
 import './style.css';
 
-let domain = domains.find((dm) => dm.value === import.meta.env.VITE_DOMAIN) ?? domains[0];
+let url = new URL(document.location);
+let params = new URLSearchParams(url.search);
+
+let domain;
+if (params.get('domain')) {
+	domain = domains.find((dm) => dm.value === params.get('domain')) ?? domains[0];
+} else {
+	domain = domains.find((dm) => dm.value === import.meta.env.VITE_DOMAIN) ?? domains[0];
+}
+
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
 
 let map: maplibregl.Map;
@@ -21,16 +30,36 @@ const mapContainer: HTMLElement | null = document.getElementById('map_container'
 
 let omUrl;
 let timeSelected = new Date();
-let variable = variables.find((v) => v.value === import.meta.env.VITE_VARIABLE) ?? variables[0];
-const center = {
-	lng: domain.grid.lonMin + domain.grid.dx * (domain.grid.nx * 0.5),
-	lat: domain.grid.latMin + domain.grid.dy * (domain.grid.ny * 0.5)
-};
+if (params.get('time')) {
+	const timeString = params.get('time').slice(0, 13) + ':' + params.get('time').slice(13);
+	timeSelected = new Date(timeString);
+}
+
+let variable;
+if (params.get('variable')) {
+	variable = variables.find((v) => v.value === params.get('variable')) ?? variables[0];
+} else {
+	variable = variables.find((v) => v.value === import.meta.env.VITE_VARIABLE) ?? variables[0];
+}
 
 const getDomainOptions = () => {
+	let optGroups = {};
+	for (let dg of domainGroups) {
+		const dgArray = [];
+		for (let d of domains) {
+			if (d.value.startsWith(dg)) {
+				dgArray.push(d);
+			}
+		}
+		optGroups[dg] = dgArray;
+	}
 	let string = '';
-	for (let d of domains) {
-		string += `<option value=${d.value} ${domain.value === d.value ? 'selected' : ''}>${d.label}</option>`;
+	for (let [og, doms] of Object.entries(optGroups)) {
+		string += `<optgroup label="${og.replace('_', ' ')}">`;
+		for (let d of doms) {
+			string += `<option value=${d.value} ${domain.value === d.value ? 'selected' : ''}>${d.label}</option>`;
+		}
+		string += `</optgroup>`;
 	}
 	return string;
 };
@@ -94,10 +123,10 @@ if (mapContainer) {
 	map = new maplibregl.Map({
 		container: mapContainer,
 		style: `https://maptiler.servert.nl/styles/basic-world-maps/style.json`,
-		center: center,
+		center: domain.grid.center,
 		zoom: domain?.grid.zoom,
-		attributionControl: false,
-		hash: true
+		attributionControl: false
+		// hash: true
 	});
 
 	map.on('load', () => {
@@ -158,12 +187,16 @@ if (mapContainer) {
 		});
 
 		if (infoBox) {
-			infoBox.innerHTML = `<div>Selected domain: <select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">${getDomainOptions()}</select><br>Selected variable: <select id="variable_selection" class="variable-selection" name="variables" value="${variable.value}">${getVariableOptions()}</select><br>Selected time: <input class="date-time-selection" type="datetime-local"  id="date_time_selection" value="${timeSelected.getFullYear() + '-' + pad(timeSelected.getMonth() + 1) + '-' + pad(timeSelected.getDate()) + 'T' + Number(timeSelected.getHours() + 1) + ':00'}"/></div>`;
+			infoBox.innerHTML = `<div>Selected domain: <select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">${getDomainOptions()}</select><br>Selected variable: <select id="variable_selection" class="variable-selection" name="variables" value="${variable.value}">${getVariableOptions()}</select><br>Selected time: <input class="date-time-selection" type="datetime-local"  id="date_time_selection" value="${timeSelected.getFullYear() + '-' + pad(timeSelected.getMonth() + 1) + '-' + pad(timeSelected.getDate()) + 'T' + pad(Number(timeSelected.getHours() + (timeSelected.getMinutes() > 1 ? 1 : 0))) + ':00'}"/></div>`;
 			domainSelector = document.querySelector('#domain_selection');
 			domainSelector?.addEventListener('change', (e) => {
 				domain =
 					domains.find((dm) => dm.value === e.target.value) ??
 					domains[0];
+
+				map.flyTo({ center: domain.grid.center, zoom: domain.grid.zoom });
+				url.searchParams.set('domain', e.target.value);
+				history.pushState({}, '', url);
 				changeOMfileURL();
 			});
 
@@ -172,12 +205,17 @@ if (mapContainer) {
 				variable =
 					variables.find((v) => v.value === e.target.value) ??
 					variables[0];
+				url.searchParams.set('variable', e.target.value);
+				history.pushState({}, '', url);
 				changeOMfileURL();
 			});
 
 			dateTimeSelector = document.querySelector('#date_time_selection');
 			dateTimeSelector?.addEventListener('change', (e) => {
 				timeSelected = new Date(e.target.value);
+				url.searchParams.set('time', e.target.value.replace(':', ''));
+				history.pushState({}, '', url);
+
 				changeOMfileURL();
 			});
 		}

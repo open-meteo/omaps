@@ -9,7 +9,7 @@ const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
 let colors;
 self.onmessage = async (message) => {
 	if (message.data.type == 'GT') {
-		const start = performance.now();
+		// const start = performance.now();
 
 		const key = message.data.key;
 		const x = message.data.x;
@@ -98,9 +98,9 @@ self.onmessage = async (message) => {
 		const tile = await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
 
 		postMessage({ type: 'RT', tile: tile, key: key });
-		console.log(
-			`getTileWorker(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`
-		);
+		// console.log(
+		// 	`getTileWorker(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`
+		// );
 		self.close();
 	}
 };
