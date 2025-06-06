@@ -10,6 +10,8 @@ import { tile2lat, tile2lon, getIndexFromLatLong, interpolate2DHermite } from '.
 
 import { domains } from './utils/domains';
 
+import TileWorker from './worker?worker';
+
 import { type TileJSON, type TileIndex } from './types';
 
 const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
@@ -53,59 +55,32 @@ const getTile = async (
 	omUrl: string
 	//tileSize: number = TILE_SIZE
 ): Promise<ImageBitmap> => {
-	// const key = `${omUrl}/${tileSize}/${z}/${x}/${y}`;
+	const key = `${omUrl}/${TILE_SIZE}/${z}/${x}/${y}`;
 	// const cachedTile = tileCache.get(key);
 	// if (cachedTile) {
 	// 	return cachedTile;
 	// } else {
-	const start = performance.now();
+	// const start = performance.now();
+	//
+	const worker = new TileWorker();
 
 	const data = omFileDataCache.get(omUrl)!;
-	const pixels = TILE_SIZE * TILE_SIZE;
-	const rgba = new Uint8ClampedArray(pixels * 4);
-
-	for (let i = 0; i < TILE_SIZE; i++) {
-		const lat = tile2lat(y + i / TILE_SIZE, z);
-		for (let j = 0; j < TILE_SIZE; j++) {
-			const ind = j + i * TILE_SIZE;
-			const lon = tile2lon(x + j / TILE_SIZE, z);
-
-			const { index, xFraction, yFraction } = getIndexFromLatLong(lat, lon);
-			//const px = interpolateLinear(data, index, xFraction, yFraction);
-			const px = interpolate2DHermite(data, nx, index, xFraction, yFraction);
-			//const px = quinticHermite2D(data, nx, index, xFraction, yFraction);
-
-			if (isNaN(px) || px === Infinity) {
-				rgba[4 * ind] = 0;
-				rgba[4 * ind + 1] = 0;
-				rgba[4 * ind + 2] = 0;
-				rgba[4 * ind + 3] = 0;
-			} else {
-				const color =
-					colors[
-						Math.min(
-							colors.length - 1,
-							Math.max(0, Math.floor(px))
-						)
-					];
-				if (color) {
-					rgba[4 * ind] = color[0];
-					rgba[4 * ind + 1] = color[1];
-					rgba[4 * ind + 2] = color[2];
-					rgba[4 * ind + 3] = 255 * (OPACITY / 100);
-				}
+	worker.postMessage({ type: 'GT', x, y, z, key, data });
+	const tilePromise = new Promise((resolve, reject) => {
+		worker.onmessage = async (message) => {
+			if (message.data.type == 'RT' && key == message.data.key) {
+				resolve(message.data.tile);
 			}
-		}
-	}
+		};
+	});
 
-	const tile = await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
+	return tilePromise;
 
-	console.log(
-		`getTile(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`
-	);
+	// console.log(
+	// 	`getTile(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`
+	// );
 
 	//tileCache.set(key, tile);
-	return tile;
 	//}
 };
 
@@ -158,6 +133,8 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 			});
 			const data = await reader.read(OmDataType.FloatArray, ranges);
 			omFileDataCache.set(omUrl, data);
+
+			// worker.postMessage({ type: 'SD', omData: data });
 		}
 
 		return {
