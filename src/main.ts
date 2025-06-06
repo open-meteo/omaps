@@ -8,6 +8,7 @@ import { getValueFromLatLong } from './om-protocol';
 import { pad } from './utils/pad';
 
 import { domains } from './utils/domains';
+import { variables } from './utils/variables';
 
 import './style.css';
 
@@ -20,7 +21,7 @@ const mapContainer: HTMLElement | null = document.getElementById('map_container'
 
 let omUrl;
 const timeSelected = new Date();
-const variable = { value: 'temperature_2m', label: 'Temperature 2m' };
+let variable = variables.find((v) => v.value === import.meta.env.VITE_VARIABLE) ?? variables[0];
 const center = {
 	lng: domain.grid.lonMin + domain.grid.dx * (domain.grid.nx * 0.5),
 	lat: domain.grid.latMin + domain.grid.dy * (domain.grid.ny * 0.5)
@@ -30,6 +31,14 @@ const getDomainOptions = () => {
 	let string = '';
 	for (let d of domains) {
 		string += `<option value=${d.value} ${domain.value === d.value ? 'selected' : ''}>${d.label}</option>`;
+	}
+	return string;
+};
+
+const getVariableOptions = () => {
+	let string = '';
+	for (let v of variables) {
+		string += `<option value=${v.value} ${variable.value === v.value ? 'selected' : ''}>${v.label}</option>`;
 	}
 	return string;
 };
@@ -106,7 +115,7 @@ if (mapContainer) {
 				);
 				if (temp) {
 					popup.setLngLat(coordinates).setHTML(
-						`<span style="color:black;">${temp.toFixed(1) + 'C°'}</span>`
+						`<span style="color:black;">${temp.toFixed(1) + (variable.value.startsWith('temperature') ? 'C°' : '')}</span>`
 					);
 				} else {
 					popup.setLngLat(coordinates).setHTML(
@@ -128,12 +137,20 @@ if (mapContainer) {
 		});
 
 		if (infoBox) {
-			infoBox.innerHTML = `<div>Selected domain: <select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">${getDomainOptions()}</select><br>Selected variable: ${variable.value}<br>Selected time: ${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())} ${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z</div>`;
+			infoBox.innerHTML = `<div>Selected domain: <select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">${getDomainOptions()}</select><br>Selected variable: <select id="variable_selection" class="variable-selection" name="variables" value="${variable.value}">${getVariableOptions()}</select><br>Selected time: ${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())} ${pad(Math.ceil(timeSelected.getUTCHours() / 3.0) * 3)}00Z</div>`;
 			const domainSelector = document.querySelector('#domain_selection');
 			domainSelector?.addEventListener('change', (e) => {
 				domain =
 					domains.find((dm) => dm.value === e.target.value) ??
 					domains[0];
+				changeOMfileURL();
+			});
+
+			const variableSelector = document.querySelector('#variable_selection');
+			variableSelector?.addEventListener('change', (e) => {
+				variable =
+					variables.find((v) => v.value === e.target.value) ??
+					variables[0];
 				changeOMfileURL();
 			});
 		}

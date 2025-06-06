@@ -84,5 +84,11 @@ body {
 	background-color: white;
 	color: black;
 	padding: 5px;
-	border-radius: 3px;
+	border-radius: 5px;
+	font-size: 15px;
+}
+
+.variable-selection {
+	margin-top: 5px;
+	margin-bottom: 5px;
 }

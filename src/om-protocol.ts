@@ -9,6 +9,7 @@ import { colorScale } from './utils/color-scales';
 import { tile2lat, tile2lon, getIndexFromLatLong, interpolate2DHermite } from './utils/math';
 
 import { domains } from './utils/domains';
+import { variables } from './utils/variables';
 
 import TileWorker from './worker?worker';
 
@@ -17,6 +18,7 @@ import { type TileJSON, type TileIndex } from './types';
 const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 
 let domain;
+let variable;
 
 let nx;
 let ny;
@@ -69,7 +71,7 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 		const worker = new TileWorker();
 
 		const data = omFileDataCache.get(omUrl);
-		worker.postMessage({ type: 'GT', x, y, z, key, data, domain });
+		worker.postMessage({ type: 'GT', x, y, z, key, data, domain, variable });
 		const tilePromise = new Promise<ImageBitmap>((resolve) => {
 			worker.onmessage = (message) => {
 				if (message.data.type == 'RT' && key == message.data.key) {
@@ -127,6 +129,10 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 		delete fileReader.backend;
 
 		domain = domains.find((dm) => dm.value === omUrl.split('/')[4]) ?? domains[0];
+		const variableString = omUrl
+			.split('/')
+			[omUrl.split('/').length - 1].replace('.om', '');
+		variable = variables.find((v) => v.value === variableString) ?? variables[0];
 
 		nx = domain.grid.nx;
 		ny = domain.grid.ny;
