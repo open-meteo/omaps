@@ -83,7 +83,7 @@ let source: maplibregl.Map;
 let domainSelector: HTMLInputElement,
 	variableSelector: HTMLInputElement,
 	dateTimeSelector: HTMLInputElement;
-let checkSourceLoadedInterval: number;
+let checkSourceLoadedInterval: ReturnType<typeof setInterval>;
 let checked = 0;
 const changeOMfileURL = () => {
 	omUrl = getOMUrl();
