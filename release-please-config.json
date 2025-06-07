@@ -4,5 +4,11 @@
 	"bump-minor-pre-major": true,
 	"bump-patch-for-minor-pre-major": true,
 	"bootstrap-sha": "HEAD",
-	"include-v-in-tag": true
+	"include-v-in-tag": true,
+	"packages": {
+		"omaps": {
+			"path": "./",
+			"release-type": "node"
+		}
+	}
 }
