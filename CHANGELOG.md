@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.4](https://github.com/open-meteo/omaps/compare/omaps-v0.0.3...omaps-v0.0.4) (2025-06-07)
+
+
+### Bug Fixes
+
+* Publish command ([6af6f96](https://github.com/open-meteo/omaps/commit/6af6f965f9b2355eaed89fbaa89d3e75899e8ca0))
+
 ## [0.0.3](https://github.com/open-meteo/omaps/compare/omaps-v0.0.2...omaps-v0.0.3) (2025-06-07)
 
 
