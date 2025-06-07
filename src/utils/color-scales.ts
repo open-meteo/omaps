@@ -21,7 +21,7 @@ export type ColorScaleParams = {
 	isContinuous?: boolean;
 };
 
-function interpolateColorScaleHSL(colors, steps) {
+function interpolateColorScaleHSL(colors: Array<string>, steps: number) {
 	const segments = colors.length - 1;
 	const stepsPerSegment = Math.floor(steps / segments);
 	const remainder = steps % segments;
@@ -37,8 +37,11 @@ function interpolateColorScaleHSL(colors, steps) {
 
 		for (let j = 0; j < numSteps; j++) {
 			const t = j / (numSteps - 1); // range [0, 1]
-			const color = d3.color(interpolate(t)).rgb();
-			rgbArray.push([color.r, color.g, color.b]);
+			let color = d3.color(interpolate(t));
+			if (color) {
+				color = color.rgb();
+				rgbArray.push([color.r, color.g, color.b]);
+			}
 		}
 	}
 

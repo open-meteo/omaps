@@ -3,18 +3,22 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"types": "dist/index.d.js",
+	"author": "Open-Meteo <info@open-meteo.com>",
 	"module": "dist/index.js",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build -l info",
+		"build": "tsc && vite build -l info",
 		"preview": "vite preview",
 		"publish": "npm run build s && npm publish --access public"
 	},
 	"devDependencies": {
+		"@types/d3": "^7.4.3",
+		"maplibre-gl": "^5.5.0",
 		"typescript": "~5.8.3",
 		"vite": "^6.3.5",
-		"vite-plugin-wasm": "^3.4.1",
-		"maplibre-gl": "^5.5.0"
+		"vite-plugin-dts": "^4.5.4",
+		"vite-plugin-wasm": "^3.4.1"
 	},
 	"dependencies": {
 		"@openmeteo/file-reader": "^0.0.5",

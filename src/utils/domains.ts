@@ -1,4 +1,4 @@
-import { Projection } from './projection';
+import { type Domain } from '../types';
 
 export const domainGroups = [
 	'dwd',
@@ -12,7 +12,7 @@ export const domainGroups = [
 	'dmi'
 ];
 
-export const domains = [
+export const domains: Array<Domain> = [
 	// DWD
 	{
 		value: 'dwd_icon',
@@ -352,5 +352,7 @@ export const domains = [
 ];
 
 for (let domain of domains) {
-	domain.grid.center();
+	if (domain.grid.center && typeof domain.grid.center == 'function') {
+		domain.grid.center();
+	}
 }

@@ -12,10 +12,12 @@ import { variables } from './utils/variables';
 
 import './style.css';
 
-let url = new URL(document.location);
+import type { Variable, Domain, DomainGroups } from './types';
+
+let url = new URL(document.location.href);
 let params = new URLSearchParams(url.search);
 
-let domain;
+let domain: Domain;
 if (params.get('domain')) {
 	domain = domains.find((dm) => dm.value === params.get('domain')) ?? domains[0];
 } else {
@@ -28,14 +30,15 @@ let map: maplibregl.Map;
 const infoBox: HTMLElement | null = document.getElementById('info_box');
 const mapContainer: HTMLElement | null = document.getElementById('map_container');
 
-let omUrl;
+let omUrl: string;
 let timeSelected = new Date();
-if (params.get('time')) {
-	const timeString = params.get('time').slice(0, 13) + ':' + params.get('time').slice(13);
+let urlTime = params.get('time');
+if (urlTime) {
+	const timeString = urlTime.slice(0, 13) + ':' + urlTime.slice(13);
 	timeSelected = new Date(timeString);
 }
 
-let variable;
+let variable: Variable;
 if (params.get('variable')) {
 	variable = variables.find((v) => v.value === params.get('variable')) ?? variables[0];
 } else {
@@ -43,7 +46,7 @@ if (params.get('variable')) {
 }
 
 const getDomainOptions = () => {
-	let optGroups = {};
+	let optGroups: DomainGroups = {};
 	for (let dg of domainGroups) {
 		const dgArray = [];
 		for (let d of domains) {
@@ -76,9 +79,11 @@ const getOMUrl = () => {
 	return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours()))}00Z/${variable.value}.om`;
 };
 
-let source;
-let domainSelector, variableSelector, dateTimeSelector;
-let checkSourceLoadedInterval;
+let source: maplibregl.Map;
+let domainSelector: HTMLInputElement,
+	variableSelector: HTMLInputElement,
+	dateTimeSelector: HTMLInputElement;
+let checkSourceLoadedInterval: number;
 let checked = 0;
 const changeOMfileURL = () => {
 	omUrl = getOMUrl();
@@ -103,13 +108,12 @@ const changeOMfileURL = () => {
 		},
 		'road_area_pier'
 	);
-
 	checkSourceLoadedInterval = setInterval(() => {
 		checked++;
 		if (source.loaded() || checked >= 30) {
-			domainSelector.disabled = null;
-			variableSelector.disabled = null;
-			dateTimeSelector.disabled = null;
+			domainSelector.disabled = false;
+			variableSelector.disabled = false;
+			dateTimeSelector.disabled = false;
 			checked = 0;
 			clearInterval(checkSourceLoadedInterval);
 		}
@@ -123,15 +127,13 @@ if (mapContainer) {
 	map = new maplibregl.Map({
 		container: mapContainer,
 		style: `https://maptiler.servert.nl/styles/basic-world-maps/style.json`,
-		center: domain.grid.center,
+		center: typeof domain.grid.center == 'object' ? domain.grid.center : [0, 0],
 		zoom: domain?.grid.zoom,
 		attributionControl: false
 		// hash: true
 	});
 
 	map.on('load', () => {
-		console.log(domain);
-
 		omUrl = getOMUrl();
 		source = map.addSource('omFileSource', {
 			type: 'raster',
@@ -190,35 +192,57 @@ if (mapContainer) {
 
 		if (infoBox) {
 			infoBox.innerHTML = `<div>Selected domain: <select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">${getDomainOptions()}</select><br>Selected variable: <select id="variable_selection" class="variable-selection" name="variables" value="${variable.value}">${getVariableOptions()}</select><br>Selected time: <input class="date-time-selection" type="datetime-local"  id="date_time_selection" value="${timeSelected.getFullYear() + '-' + pad(timeSelected.getMonth() + 1) + '-' + pad(timeSelected.getDate()) + 'T' + pad(Number(timeSelected.getHours() + (timeSelected.getMinutes() > 1 ? 1 : 0))) + ':00'}"/></div>`;
-			domainSelector = document.querySelector('#domain_selection');
+
+			domainSelector = document.querySelector(
+				'#domain_selection'
+			) as HTMLInputElement;
 			domainSelector?.addEventListener('change', (e) => {
-				domain =
-					domains.find((dm) => dm.value === e.target.value) ??
-					domains[0];
+				const target = e.target as HTMLInputElement;
+				if (target) {
+					domain =
+						domains.find((dm) => dm.value === target.value) ??
+						domains[0];
 
-				map.flyTo({ center: domain.grid.center, zoom: domain.grid.zoom });
-				url.searchParams.set('domain', e.target.value);
-				history.pushState({}, '', url);
-				changeOMfileURL();
+					map.flyTo({
+						center:
+							typeof domain.grid.center == 'object'
+								? domain.grid.center
+								: [0, 0],
+						zoom: domain.grid.zoom
+					});
+					url.searchParams.set('domain', target.value);
+					history.pushState({}, '', url);
+					changeOMfileURL();
+				}
 			});
 
-			variableSelector = document.querySelector('#variable_selection');
+			variableSelector = document.querySelector(
+				'#variable_selection'
+			) as HTMLInputElement;
 			variableSelector?.addEventListener('change', (e) => {
-				variable =
-					variables.find((v) => v.value === e.target.value) ??
-					variables[0];
-				url.searchParams.set('variable', e.target.value);
-				history.pushState({}, '', url);
-				changeOMfileURL();
+				const target = e.target as HTMLInputElement;
+				if (target) {
+					variable =
+						variables.find((v) => v.value === target.value) ??
+						variables[0];
+					url.searchParams.set('variable', target.value);
+					history.pushState({}, '', url);
+					changeOMfileURL();
+				}
 			});
 
-			dateTimeSelector = document.querySelector('#date_time_selection');
+			dateTimeSelector = document.querySelector(
+				'#date_time_selection'
+			) as HTMLInputElement;
 			dateTimeSelector?.addEventListener('change', (e) => {
-				timeSelected = new Date(e.target.value);
-				url.searchParams.set('time', e.target.value.replace(':', ''));
-				history.pushState({}, '', url);
+				const target = e.target as HTMLInputElement;
+				if (target) {
+					timeSelected = new Date(target.value);
+					url.searchParams.set('time', target.value.replace(':', ''));
+					history.pushState({}, '', url);
 
-				changeOMfileURL();
+					changeOMfileURL();
+				}
 			});
 		}
 	});

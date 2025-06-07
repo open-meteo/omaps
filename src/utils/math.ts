@@ -1,3 +1,4 @@
+import type { TypedArray } from '@openmeteo/file-reader';
 import { type Domain } from '../types';
 
 const r2d = 180 / Math.PI;
@@ -16,24 +17,24 @@ export const tileToBBOX = (tile: [x: number, y: number, z: number]) => {
 	return [w, s, e, n];
 };
 
-const interpolateLinear = (
-	data: Float32Array<ArrayBufferLike>,
-	index: number,
-	xFraction: number,
-	yFraction: number,
-	nx: number
-): number => {
-	const p0 = data[index];
-	const p1 = data[index + 1];
-	const p2 = data[index + nx];
-	const p3 = data[index + 1 + nx];
-	return (
-		p0 * (1 - xFraction) * (1 - yFraction) +
-		p1 * xFraction * (1 - yFraction) +
-		p2 * (1 - xFraction) * yFraction +
-		p3 * xFraction * yFraction
-	);
-};
+// const interpolateLinear = (
+// 	data: Float32Array<ArrayBufferLike>,
+// 	index: number,
+// 	xFraction: number,
+// 	yFraction: number,
+// 	nx: number
+// ): number => {
+// 	const p0 = data[index];
+// 	const p1 = data[index + 1];
+// 	const p2 = data[index + nx];
+// 	const p3 = data[index + 1 + nx];
+// 	return (
+// 		p0 * (1 - xFraction) * (1 - yFraction) +
+// 		p1 * xFraction * (1 - yFraction) +
+// 		p2 * (1 - xFraction) * yFraction +
+// 		p3 * xFraction * yFraction
+// 	);
+// };
 
 export const hermite = (t: number, p0: number, p1: number, m0: number, m1: number) => {
 	const t2 = t * t;
@@ -52,7 +53,7 @@ export const getDerivative = (fPrev: number, fNext: number) => {
 };
 
 export const interpolate2DHermite = (
-	data: Float32Array<ArrayBufferLike>,
+	data: TypedArray,
 	nx: number,
 	index: number,
 	xFraction: number,
@@ -221,7 +222,7 @@ const cardinalSpline = (
 };
 
 const interpolateCardinal2D = (
-	data: Float32Array | (Float32Array & ArrayBufferLike),
+	data: TypedArray,
 	nx: number,
 	index: number,
 	xFraction: number,
@@ -274,88 +275,88 @@ export const radiansToDegrees = (rad: number) => {
 	return rad * (180 / Math.PI);
 };
 
-const interpolateRBF4x4 = (
-	data: Float32Array | (Float32Array & ArrayBufferLike),
-	nx: number,
-	index: number,
-	xFraction: number,
-	yFraction: number
-): number => {
-	const sigma = 0.65;
-	const denom = 2 * sigma * sigma;
+// const interpolateRBF4x4 = (
+// 	data: Float32Array | (Float32Array & ArrayBufferLike),
+// 	nx: number,
+// 	index: number,
+// 	xFraction: number,
+// 	yFraction: number
+// ): number => {
+// 	const sigma = 0.65;
+// 	const denom = 2 * sigma * sigma;
 
-	const ny = data.length / nx;
-	const x = (index % nx) + xFraction;
-	const y = Math.floor(index / nx) + yFraction;
+// 	const ny = data.length / nx;
+// 	const x = (index % nx) + xFraction;
+// 	const y = Math.floor(index / nx) + yFraction;
 
-	const ix = Math.floor(x);
-	const iy = Math.floor(y);
+// 	const ix = Math.floor(x);
+// 	const iy = Math.floor(y);
 
-	let sum = 0;
-	let weightSum = 0;
+// 	let sum = 0;
+// 	let weightSum = 0;
 
-	for (let dy = -1; dy <= 2; dy++) {
-		for (let dx = -1; dx <= 2; dx++) {
-			const px = ix + dx;
-			const py = iy + dy;
+// 	for (let dy = -1; dy <= 2; dy++) {
+// 		for (let dx = -1; dx <= 2; dx++) {
+// 			const px = ix + dx;
+// 			const py = iy + dy;
 
-			if (px < 0 || px >= nx || py < 0 || py >= ny) continue;
+// 			if (px < 0 || px >= nx || py < 0 || py >= ny) continue;
 
-			const fx = x - px;
-			const fy = y - py;
-			const dist2 = fx * fx + fy * fy;
-			const weight = Math.exp(-dist2 / denom);
+// 			const fx = x - px;
+// 			const fy = y - py;
+// 			const dist2 = fx * fx + fy * fy;
+// 			const weight = Math.exp(-dist2 / denom);
 
-			const sampleIndex = py * nx + px;
-			const value = data[sampleIndex];
+// 			const sampleIndex = py * nx + px;
+// 			const value = data[sampleIndex];
 
-			sum += value * weight;
-			weightSum += weight;
-		}
-	}
+// 			sum += value * weight;
+// 			weightSum += weight;
+// 		}
+// 	}
 
-	return weightSum > 0 ? sum / weightSum : 0;
-};
+// 	return weightSum > 0 ? sum / weightSum : 0;
+// };
 
-const interpolateRBF3x3 = (
-	data: Float32Array | (Float32Array & ArrayBufferLike),
-	nx: number,
-	index: number,
-	xFraction: number,
-	yFraction: number
-): number => {
-	const sigma = 0.4;
-	const denom = 2 * sigma * sigma;
+// const interpolateRBF3x3 = (
+// 	data: Float32Array | (Float32Array & ArrayBufferLike),
+// 	nx: number,
+// 	index: number,
+// 	xFraction: number,
+// 	yFraction: number
+// ): number => {
+// 	const sigma = 0.4;
+// 	const denom = 2 * sigma * sigma;
 
-	const ny = data.length / nx;
-	const x = (index % nx) + xFraction;
-	const y = Math.floor(index / nx) + yFraction;
+// 	const ny = data.length / nx;
+// 	const x = (index % nx) + xFraction;
+// 	const y = Math.floor(index / nx) + yFraction;
 
-	const ix = Math.floor(x);
-	const iy = Math.floor(y);
+// 	const ix = Math.floor(x);
+// 	const iy = Math.floor(y);
 
-	let sum = 0;
-	let weightSum = 0;
+// 	let sum = 0;
+// 	let weightSum = 0;
 
-	for (let dy = -1; dy <= 1; dy++) {
-		for (let dx = -1; dx <= 1; dx++) {
-			const px = ix + dx;
-			const py = iy + dy;
+// 	for (let dy = -1; dy <= 1; dy++) {
+// 		for (let dx = -1; dx <= 1; dx++) {
+// 			const px = ix + dx;
+// 			const py = iy + dy;
 
-			if (px < 0 || px >= nx || py < 0 || py >= ny) continue;
+// 			if (px < 0 || px >= nx || py < 0 || py >= ny) continue;
 
-			const fx = x - px;
-			const fy = y - py;
-			const dist2 = fx * fx + fy * fy;
-			const weight = Math.exp(-dist2 / denom);
+// 			const fx = x - px;
+// 			const fy = y - py;
+// 			const dist2 = fx * fx + fy * fy;
+// 			const weight = Math.exp(-dist2 / denom);
 
-			const sampleIndex = py * nx + px;
-			const value = data[sampleIndex];
+// 			const sampleIndex = py * nx + px;
+// 			const value = data[sampleIndex];
 
-			sum += value * weight;
-			weightSum += weight;
-		}
-	}
+// 			sum += value * weight;
+// 			weightSum += weight;
+// 		}
+// 	}
 
-	return weightSum > 0 ? sum / weightSum : 0;
-};
+// 	return weightSum > 0 ? sum / weightSum : 0;
+// };
