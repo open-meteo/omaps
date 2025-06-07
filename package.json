@@ -11,7 +11,8 @@
 	"keywords": [
 		"open-meteo",
 		"meteorological-data",
-		"weather-maps"
+		"weather-maps",
+		"omfile"
 	],
 	"files": [
 		"dist/**/*"
