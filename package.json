@@ -1,5 +1,6 @@
 {
 	"name": "@openmeteo/maplibre-om-protocol",
+	"private": true,
 	"version": "0.0.4",
 	"type": "module",
 	"main": "dist/index.js",
