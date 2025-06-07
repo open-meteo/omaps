@@ -37,11 +37,6 @@ const fileReader: FileReader = {
 	backend: undefined
 };
 
-const tileCache = new QuickLRU<string, ImageBitmap>({
-	maxSize: 1024,
-	maxAge: ONE_HOUR_IN_MILLISECONDS
-});
-
 const omFileDataCache = new QuickLRU<string, Float32Array<ArrayBufferLike>>({
 	maxSize: 1024,
 	maxAge: ONE_HOUR_IN_MILLISECONDS
@@ -72,7 +67,6 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 	const tilePromise = new Promise<ImageBitmap>((resolve) => {
 		worker.onmessage = (message) => {
 			if (message.data.type == 'RT' && key == message.data.key) {
-				tileCache.set(key, message.data.tile);
 				resolve(message.data.tile);
 			}
 		};
