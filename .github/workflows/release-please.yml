@@ -9,6 +9,7 @@ permissions:
         contents: write # to create release commit (googleapis/release-please-action)
         pull-requests: write # to create release PR (googleapis/release-please-action)
         issues: write # to create labels (googleapis/release-please-action)
+        id-token: write
 
 jobs:
         release-please:
