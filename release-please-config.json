@@ -6,7 +6,8 @@
 	"bootstrap-sha": "HEAD",
 	"include-v-in-tag": true,
 	"packages": {
-		"omaps": {
+		".": {
+			"package-name": "omaps",
 			"path": "./",
 			"release-type": "node"
 		}
