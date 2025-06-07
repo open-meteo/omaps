@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.5](https://github.com/open-meteo/omaps/compare/omaps-v0.0.4...omaps-v0.0.5) (2025-06-07)
+
+
+### Bug Fixes
+
+* release please env secret ([92e052c](https://github.com/open-meteo/omaps/commit/92e052c7844fae7f00595137ca69aea9ae180626))
+
 ## [0.0.4](https://github.com/open-meteo/omaps/compare/omaps-v0.0.3...omaps-v0.0.4) (2025-06-07)
 
 
