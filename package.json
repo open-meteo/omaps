@@ -17,7 +17,7 @@
 		"dev": "vite",
 		"test": "vitest",
 		"build": "tsc && vite build -l info",
-		"publish": "npm run build s && npm publish --access public",
+		"publish": "npm run build s && npm publish",
 		"preview": "vite preview"
 	},
 	"devDependencies": {
