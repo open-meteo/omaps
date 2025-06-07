@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.6](https://github.com/open-meteo/omaps/compare/omaps-v0.0.5...omaps-v0.0.6) (2025-06-07)
+
+
+### Bug Fixes
+
+* add keyword ([01f9712](https://github.com/open-meteo/omaps/commit/01f9712a10f20082a5a3faf9c0cf1ad9daf26825))
+
 ## [0.0.5](https://github.com/open-meteo/omaps/compare/omaps-v0.0.4...omaps-v0.0.5) (2025-06-07)
 
 
