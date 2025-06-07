@@ -135,7 +135,7 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 			url: omUrl,
 			maxFileSize: 500 * 1024 * 1024 // 500 MB
 		});
-		fileReader.reader = await OmFileReader.create(fileReader.backend).catch((err) => {
+		fileReader.reader = await OmFileReader.create(fileReader.backend).catch(() => {
 			throw new Error(`OMFile error: 404 file not found`);
 		});
 		if (fileReader.reader) {

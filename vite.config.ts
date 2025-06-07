@@ -9,6 +9,18 @@ export default defineConfig({
 	},
 	base: '/omaps/',
 	build: {
-		chunkSizeWarningLimit: 1200
+		chunkSizeWarningLimit: 1200,
+		rollupOptions: {
+			// input: {
+			// 	worker: 'src/worker.ts',
+			// 	index: 'src/main.ts',
+			// 	om_protocol: 'src/om-protocol.ts'
+			// },
+			output: {
+				entryFileNames: `[name].js`,
+				chunkFileNames: `[name].js`,
+				assetFileNames: `[name].[ext]`
+			}
+		}
 	}
 });

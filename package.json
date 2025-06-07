@@ -1,24 +1,24 @@
 {
-	"name": "omaps",
+	"name": "@openmeteo/maplibre-om-protocol",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"module": "dist/index.js",
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build -l info",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"publish": "npm run build s && npm publish --access public"
 	},
 	"devDependencies": {
-		"d3-scale": "^4.0.2",
 		"typescript": "~5.8.3",
 		"vite": "^6.3.5",
-		"vite-plugin-wasm": "^3.4.1"
+		"vite-plugin-wasm": "^3.4.1",
+		"maplibre-gl": "^5.5.0"
 	},
 	"dependencies": {
-		"@mapbox/tilebelt": "^2.0.2",
 		"@openmeteo/file-reader": "^0.0.5",
 		"d3": "^7.9.0",
-		"maplibre-gl": "^5.5.0",
 		"quick-lru": "^7.0.1"
 	}
 }
