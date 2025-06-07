@@ -98,12 +98,14 @@ export class ProjectionGrid {
 	}
 
 	findPointInterpolated(lat: number, lon: number) {
-		let [x, y] = this.projection.forward(lat, lon);
+		let [ypos, xpos] = this.projection.forward(lat, lon);
+		let x = (xpos - this.origin[0]) / this.dx;
+		let y = (ypos - this.origin[1]) / this.dy;
+		let xFraction = x - Math.floor(x);
+		let yFraction = y - Math.floor(y);
 		if (y < 0 || x < 0 || y >= this.ny || x >= this.nx) {
 			return null;
 		}
-		let xFraction = x / 1 - Math.floor(x / 1);
-		let yFraction = y / 1 - Math.floor(y / 1);
 		return { index: Math.floor(y) * this.nx + Math.floor(x), xFraction, yFraction };
 	}
 }
