@@ -1,24 +1,37 @@
 {
-	"name": "omaps",
+	"name": "@openmeteo/maplibre-om-protocol",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.js",
+	"author": "Open-Meteo <info@open-meteo.com>",
+	"module": "dist/index.js",
+	"description": "Protocol to read OMfiles and parse them to tiles for Mapbox / Maplibre",
+	"keywords": [
+		"open-meteo",
+		"meteorological-data",
+		"weather-maps"
+	],
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build -l info",
+		"test": "vitest",
+		"build": "tsc && vite build -l info",
+		"publish": "npm run build s && npm publish --access public",
 		"preview": "vite preview"
 	},
 	"devDependencies": {
-		"d3-scale": "^4.0.2",
+		"@types/d3": "^7.4.3",
+		"maplibre-gl": "^5.5.0",
 		"typescript": "~5.8.3",
 		"vite": "^6.3.5",
-		"vite-plugin-wasm": "^3.4.1"
+		"vite-plugin-dts": "^4.5.4",
+		"vite-plugin-wasm": "^3.4.1",
+		"vitest": "^3.2.2"
 	},
 	"dependencies": {
-		"@mapbox/tilebelt": "^2.0.2",
 		"@openmeteo/file-reader": "^0.0.5",
 		"d3": "^7.9.0",
-		"maplibre-gl": "^5.5.0",
 		"quick-lru": "^7.0.1"
 	}
 }

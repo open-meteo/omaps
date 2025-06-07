@@ -81,7 +81,12 @@ self.onmessage = async (message) => {
 				} else {
 					indexObject = getIndexFromLatLong(lat, lon, domain);
 				}
-				const { index, xFraction, yFraction } = indexObject;
+
+				const { index, xFraction, yFraction } = indexObject ?? {
+					index: 0,
+					xFraction: 0,
+					yFraction: 0
+				};
 
 				let px = interpolate2DHermite(
 					data,

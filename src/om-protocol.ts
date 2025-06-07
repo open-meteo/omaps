@@ -1,31 +1,34 @@
 import { type GetResourceResponse, type RequestParameters } from 'maplibre-gl';
 
-import { OmFileReader, OmDataType, MemoryHttpBackend } from '@openmeteo/file-reader';
+import {
+	OmFileReader,
+	OmDataType,
+	MemoryHttpBackend,
+	type TypedArray
+} from '@openmeteo/file-reader';
 
 import QuickLRU from 'quick-lru';
 
-import { colorScale } from './utils/color-scales';
-
-import { tile2lat, tile2lon, getIndexFromLatLong, interpolate2DHermite } from './utils/math';
+import { getIndexFromLatLong, interpolate2DHermite } from './utils/math';
 
 import { domains } from './utils/domains';
 import { variables } from './utils/variables';
 
 import TileWorker from './worker?worker';
 
-import { type TileJSON, type TileIndex } from './types';
+import type { TileJSON, TileIndex, Domain, Variable } from './types';
 
 const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 
-let domain;
-let variable;
+let domain: Domain;
+let variable: Variable;
 
-let nx;
-let ny;
-let lonMin;
-let latMin;
-let dx;
-let dy;
+let nx: number;
+let ny: number;
+let lonMin: number;
+let latMin: number;
+let dx: number;
+let dy: number;
 
 interface FileReader {
 	reader: OmFileReader | undefined;
@@ -37,7 +40,7 @@ const fileReader: FileReader = {
 	backend: undefined
 };
 
-const omFileDataCache = new QuickLRU<string, Float32Array<ArrayBufferLike>>({
+const omFileDataCache = new QuickLRU<string, TypedArray>({
 	maxSize: 1024,
 	maxAge: ONE_HOUR_IN_MILLISECONDS
 });
@@ -106,7 +109,9 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 	};
 };
 
-const omProtocol = async (params: RequestParameters): Promise<GetResourceResponse<ImageBitmap>> => {
+const omProtocol = async (
+	params: RequestParameters
+): Promise<GetResourceResponse<TileJSON | ImageBitmap>> => {
 	if (params.type == 'json') {
 		// Parse OMfile here to cache data
 		const omUrl = params.url.replace('om://', '');
@@ -135,7 +140,7 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 			url: omUrl,
 			maxFileSize: 500 * 1024 * 1024 // 500 MB
 		});
-		fileReader.reader = await OmFileReader.create(fileReader.backend).catch((err) => {
+		fileReader.reader = await OmFileReader.create(fileReader.backend).catch(() => {
 			throw new Error(`OMFile error: 404 file not found`);
 		});
 		if (fileReader.reader) {
@@ -148,6 +153,7 @@ const omProtocol = async (params: RequestParameters): Promise<GetResourceRespons
 			const data = await fileReader.reader.read(OmDataType.FloatArray, ranges);
 			omFileDataCache.set(omUrl, data);
 		}
+
 		return {
 			data: await getTilejson(params.url)
 		};

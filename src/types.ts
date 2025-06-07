@@ -41,9 +41,14 @@ export type TilePixel = {
 	column: number;
 };
 
+export type Variable = {
+	value: string;
+	label: string;
+};
+
 export interface Domain {
-	value: 'string';
-	label: 'string';
+	value: string;
+	label: string;
 	grid: {
 		nx: number;
 		ny: number;
@@ -51,6 +56,23 @@ export interface Domain {
 		latMin: number;
 		dx: number;
 		dy: number;
-		zoom: number;
+		zoom?: number;
+		projection?: {
+			λ0: number;
+			ϕ0: number;
+			ϕ1: number;
+			ϕ2: number;
+			radius: number;
+		};
+		center?:
+			| {
+					lng: number;
+					lat: number;
+			  }
+			| Function;
 	};
+}
+
+export interface DomainGroups {
+	[key: string]: Domain[];
 }

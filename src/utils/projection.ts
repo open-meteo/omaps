@@ -99,7 +99,6 @@ export class ProjectionGrid {
 
 	findPointInterpolated(lat: number, lon: number) {
 		let [x, y] = this.projection.forward(lat, lon);
-		console.log(x, y, this);
 		if (y < 0 || x < 0 || y >= this.ny || x >= this.nx) {
 			return null;
 		}
