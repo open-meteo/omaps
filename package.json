@@ -21,6 +21,7 @@
 		"dev": "vite",
 		"test": "vitest",
 		"build": "tsc && vite build -l info",
+		"build-pages": "GH_PAGES=true vite build -l info && node scripts/replace_index.js",
 		"preview": "vite preview"
 	},
 	"devDependencies": {
