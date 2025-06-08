@@ -109,7 +109,7 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 	};
 };
 
-const omProtocol = async (
+export const omProtocol = async (
 	params: RequestParameters
 ): Promise<GetResourceResponse<TileJSON | ImageBitmap>> => {
 	if (params.type == 'json') {
@@ -165,5 +165,3 @@ const omProtocol = async (
 		throw new Error(`Unsupported request type '${params.type}'`);
 	}
 };
-
-export default omProtocol;

@@ -1,11 +1,11 @@
 import { defineConfig } from 'vite';
 
 import dts from 'vite-plugin-dts';
-import wasm from 'vite-plugin-wasm';
+
+// import { wasm } from '@rollup/plugin-wasm';
 
 export default defineConfig({
 	plugins: [
-		wasm(),
 		dts({
 			insertTypesEntry: true
 		})
@@ -17,16 +17,21 @@ export default defineConfig({
 	build: {
 		chunkSizeWarningLimit: 1200,
 		rollupOptions: {
-			// input: {
-			// 	worker: 'src/worker.ts',
-			// 	index: 'src/main.ts',
-			// 	om_protocol: 'src/om-protocol.ts'
-			// },
+			input: {
+				'om-protocol': 'src/om-protocol.ts'
+			},
 			output: {
 				entryFileNames: `[name].js`,
 				chunkFileNames: `[name].js`,
-				assetFileNames: `[name].[ext]`
-			}
-		}
+				assetFileNames: `[name].[ext]`,
+
+				name: 'MaplibreOMProtocol',
+				format: 'umd',
+				sourcemap: true,
+				inlineDynamicImports: true
+			},
+			preserveEntrySignatures: 'strict'
+		},
+		minify: false
 	}
 });

@@ -1,7 +1,7 @@
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import omProtocol from './om-protocol';
+import { omProtocol } from './om-protocol';
 
 import { getValueFromLatLong } from './om-protocol';
 
