@@ -38,7 +38,7 @@ jobs:
                         - name: Install dependencies
                           run: npm ci
                         - name: Build
-                          run: npm run build
+                          run: npm run build-pages
                         - name: Run tests
                           run: npm run test
                         - name: Setup Pages

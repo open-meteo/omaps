@@ -1,4 +1,4 @@
-import * as d3 from 'd3';
+import { interpolateHsl, color } from 'd3';
 
 export type HEXColor = `#${string}`;
 
@@ -31,16 +31,16 @@ function interpolateColorScaleHSL(colors: Array<string>, steps: number) {
 	for (let i = 0; i < segments; i++) {
 		const startColor = colors[i];
 		const endColor = colors[i + 1];
-		const interpolate = d3.interpolateHsl(startColor, endColor);
+		const interpolate = interpolateHsl(startColor, endColor);
 
 		const numSteps = stepsPerSegment + (i < remainder ? 1 : 0);
 
 		for (let j = 0; j < numSteps; j++) {
 			const t = j / (numSteps - 1); // range [0, 1]
-			let color = d3.color(interpolate(t));
-			if (color) {
-				color = color.rgb();
-				rgbArray.push([color.r, color.g, color.b]);
+			let c = color(interpolate(t));
+			if (c) {
+				c = c.rgb();
+				rgbArray.push([c.r, c.g, c.b]);
 			}
 		}
 	}
