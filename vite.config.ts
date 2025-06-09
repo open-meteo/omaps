@@ -1,8 +1,13 @@
 import { defineConfig, loadEnv } from 'vite';
 
 import dts from 'vite-plugin-dts';
+import { externalizeDeps } from 'vite-plugin-externalize-deps';
 
-// import { wasm } from '@rollup/plugin-wasm';
+import { wasm } from '@rollup/plugin-wasm';
+import resolve from '@rollup/plugin-node-resolve';
+import typescript from '@rollup/plugin-typescript';
+import commonjs from '@rollup/plugin-commonjs';
+import webWorkerLoader from 'rollup-plugin-web-worker-loader';
 
 export default ({ mode }) => {
 	process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
@@ -12,7 +17,7 @@ export default ({ mode }) => {
 					index: 'src/main.ts'
 				}
 			: {
-					'om-protocol': 'src/om-protocol.ts'
+					index: 'src/index.ts'
 				};
 	return defineConfig({
 		plugins: [
@@ -34,13 +39,13 @@ export default ({ mode }) => {
 					assetFileNames: `[name].[ext]`,
 
 					name: 'MaplibreOMProtocol',
-					format: 'umd',
-					sourcemap: true,
-					inlineDynamicImports: true
+					format: 'umd'
+					//inlineDynamicImports: true
 				},
 				preserveEntrySignatures: 'strict'
 			},
-			minify: false
+			minify: false,
+			sourcemap: true
 		}
 	});
 };
