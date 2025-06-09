@@ -15,7 +15,7 @@ export class Projection {
 		ϕ2_dec: number,
 		radius = 6370.997
 	) {
-		this.λ0 = degreesToRadians((λ0_dec + 180) / 360 - Math.floor((λ0_dec + 180) / 360));
+		this.λ0 = degreesToRadians(((λ0_dec + 180) % 360) - 180);
 
 		let ϕ0 = degreesToRadians(ϕ0_dec);
 		let ϕ1 = degreesToRadians(ϕ1_dec);
@@ -98,7 +98,7 @@ export class ProjectionGrid {
 	}
 
 	findPointInterpolated(lat: number, lon: number) {
-		let [ypos, xpos] = this.projection.forward(lat, lon);
+		let [xpos, ypos] = this.projection.forward(lat, lon);
 		let x = (xpos - this.origin[0]) / this.dx;
 		let y = (ypos - this.origin[1]) / this.dy;
 		let xFraction = x - Math.floor(x);
