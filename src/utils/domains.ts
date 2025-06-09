@@ -116,6 +116,67 @@ export const domains: Array<Domain> = [
 			}
 		}
 	},
+	{
+		value: 'ncep_hrrr_conus',
+		label: 'GFS HRRR Conus',
+		grid: {
+			nx: 1799,
+			ny: 1059,
+			latMin: 21.138,
+			lonMin: -122.72,
+			dx: 1,
+			dy: 1,
+			zoom: 1,
+			projection: {
+				λ0: -97.5,
+				ϕ0: 0,
+				ϕ1: 38.5,
+				ϕ2: 38.5
+			},
+			center: function () {
+				this.center = {
+					lng: this.lonMin + this.dx * (this.nx * 0.5),
+					lat: this.latMin + this.dy * (this.ny * 0.5)
+				};
+				return this;
+			}
+		}
+	},
+	{
+		value: 'ncep_nbm_conus',
+		label: 'GFS NBM Conus',
+		grid: {
+			nx: 2345,
+			ny: 1597,
+			latMin: 19.229,
+			lonMin: 233.723 - 360,
+			dx: 2539.7,
+			dy: 2539.7,
+			zoom: 1,
+			projection: {
+				λ0: 265 - 360,
+				ϕ0: 0,
+				ϕ1: 25,
+				ϕ2: 25,
+				radius: 6371200
+			},
+			center: function () {
+				if (this.projection) {
+					this.center = {
+						lng: 0,
+						lat: 0
+					};
+				} else {
+					this.center = {
+						lng: this.lonMin + this.dx * (this.nx * 0.5),
+						lat: this.latMin + this.dy * (this.ny * 0.5)
+					};
+				}
+
+				return this;
+			}
+		}
+	},
 
 	// ECWMF
 	{
@@ -158,6 +219,7 @@ export const domains: Array<Domain> = [
 			}
 		}
 	},
+
 	// ItaliaMeteo
 	{
 		value: 'italia_meteo_arpae_icon_2i',
@@ -338,7 +400,8 @@ export const domains: Array<Domain> = [
 				ϕ0: 55.5,
 				ϕ1: 55.5,
 				ϕ2: 55.5,
-				radius: 6371229
+				radius: 6371229,
+				name: 'LambertConformalConicProjection'
 			},
 			center: function () {
 				this.center = {

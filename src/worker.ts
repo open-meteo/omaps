@@ -1,7 +1,7 @@
 import { colorScale } from './utils/color-scales';
 
 import { tile2lat, tile2lon, getIndexFromLatLong, interpolate2DHermite } from './utils/math';
-import { Projection, ProjectionGrid } from './utils/projection';
+import { DynamicProjection, ProjectionGrid } from './utils/projection';
 import { hideZero } from './utils/variables';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
@@ -44,6 +44,39 @@ self.onmessage = async (message) => {
 			});
 		}
 
+		let projectionGrid;
+		if (domain.grid.projection) {
+			const ny = domain.grid.ny;
+			const latMin = domain.grid.latMin;
+			const lonMin = domain.grid.lonMin;
+			const dx = domain.grid.dx;
+			const dy = domain.grid.dy;
+
+			let λ0 = domain.grid.projection.λ0;
+			let ϕ0 = domain.grid.projection.ϕ0;
+			let ϕ1 = domain.grid.projection.ϕ1;
+			let ϕ2 = domain.grid.projection.ϕ2;
+			let radius = domain.grid.projection.radius;
+			let projectionName = domain.grid.projection.name;
+
+			const projection = new DynamicProjection(projectionName, [
+				λ0,
+				ϕ0,
+				ϕ1,
+				ϕ2,
+				radius
+			]);
+			projectionGrid = new ProjectionGrid(
+				projection,
+				nx,
+				ny,
+				latMin,
+				lonMin,
+				dx,
+				dy
+			);
+		}
+
 		for (let i = 0; i < TILE_SIZE; i++) {
 			const lat = tile2lat(y + i / TILE_SIZE, z);
 			for (let j = 0; j < TILE_SIZE; j++) {
@@ -52,28 +85,6 @@ self.onmessage = async (message) => {
 
 				let indexObject;
 				if (domain.grid.projection) {
-					const ny = domain.grid.ny;
-					const latMin = domain.grid.latMin;
-					const lonMin = domain.grid.lonMin;
-					const dx = domain.grid.dx;
-					const dy = domain.grid.dy;
-
-					let λ0 = domain.grid.projection.λ0;
-					let ϕ0 = domain.grid.projection.ϕ0;
-					let ϕ1 = domain.grid.projection.ϕ1;
-					let ϕ2 = domain.grid.projection.ϕ2;
-					let radius = domain.grid.projection.radius;
-
-					const projection = new Projection(λ0, ϕ0, ϕ1, ϕ2, radius);
-					const projectionGrid = new ProjectionGrid(
-						nx,
-						ny,
-						latMin,
-						lonMin,
-						dx,
-						dy,
-						projection
-					);
 					indexObject = projectionGrid.findPointInterpolated(
 						lat,
 						lon

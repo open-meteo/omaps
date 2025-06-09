@@ -58,11 +58,12 @@ export interface Domain {
 		dy: number;
 		zoom?: number;
 		projection?: {
+			name: string;
 			λ0: number;
 			ϕ0: number;
 			ϕ1: number;
 			ϕ2: number;
-			radius: number;
+			radius?: number;
 		};
 		center?:
 			| {
