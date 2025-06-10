@@ -40,7 +40,7 @@ export default ({ mode }) => {
 					assetFileNames: `[name].[ext]`,
 
 					name: 'MaplibreOMProtocol',
-					format: 'es'
+					format: 'umd'
 					//inlineDynamicImports: true
 				},
 				preserveEntrySignatures: 'strict'

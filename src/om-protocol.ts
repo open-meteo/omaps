@@ -17,7 +17,7 @@ import { variables } from './utils/variables';
 import TileWorker from './worker?worker';
 
 import type { TileJSON, TileIndex, Domain, Variable } from './types';
-import { DynamicProjection, Projection, ProjectionGrid } from './utils/projection';
+import { DynamicProjection, ProjectionGrid } from './utils/projection';
 
 const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 
@@ -34,12 +34,6 @@ let lonMin: number;
 let latMin: number;
 let dx: number;
 let dy: number;
-
-let λ0: number;
-let ϕ0: number;
-let ϕ1: number;
-let ϕ2: number;
-let radius: number;
 
 interface FileReader {
 	reader: OmFileReader | undefined;
@@ -134,7 +128,6 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 		console.log(projection.reverse(dx * nx, 0));
 		console.log(projection.reverse(dx * nx, dy * ny));
 		if (Array === lonMin.constructor) {
-			console.log(lonMin[0]);
 			minLon = lonMin[0];
 			minLat = latMin[0];
 			maxLon = lonMin[1];

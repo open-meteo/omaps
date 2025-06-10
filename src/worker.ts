@@ -1,7 +1,7 @@
 import { colorScale } from './utils/color-scales';
 
 import { tile2lat, tile2lon, getIndexFromLatLong, interpolate2DHermite } from './utils/math';
-import { DynamicProjection, Projection, ProjectionGrid } from './utils/projection';
+import { DynamicProjection, ProjectionGrid } from './utils/projection';
 import { hideZero } from './utils/variables';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
