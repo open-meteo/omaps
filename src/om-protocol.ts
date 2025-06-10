@@ -7,8 +7,6 @@ import {
 	type TypedArray
 } from '@openmeteo/file-reader';
 
-import QuickLRU from 'quick-lru';
-
 import { getIndexFromLatLong, interpolate2DHermite } from './utils/math';
 
 import { domains } from './utils/domains';
@@ -244,7 +242,11 @@ const initOMFile = async (url: string) => {
 		fileReader.readerv.dispose();
 	}
 	delete fileReader.reader;
+	delete fileReader.readeru;
+	delete fileReader.readerv;
 	delete fileReader.backend;
+	delete fileReader.backendu;
+	delete fileReader.backendv;
 
 	domain = domains.find((dm) => dm.value === omUrl.split('/')[4]) ?? domains[0];
 	const variableString = omUrl.split('/')[omUrl.split('/').length - 1].replace('.om', '');
@@ -349,7 +351,7 @@ export const omProtocol = async (
 	params: RequestParameters
 ): Promise<GetResourceResponse<TileJSON | ImageBitmap>> => {
 	if (params.type == 'json') {
-		// Parse OMfile here to cache data
+		// Parse OMfile here to intermediately save data
 		await initOMFile(params.url);
 		return {
 			data: await getTilejson(params.url)
