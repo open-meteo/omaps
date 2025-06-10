@@ -34,18 +34,16 @@ export default ({ mode }) => {
 			rollupOptions: {
 				input: input,
 				output: {
-					//preserveModules: true,
+					//preserveModules: true, only for es format
 					entryFileNames: `[name].js`,
 					chunkFileNames: `[name].js`,
 					assetFileNames: `[name].[ext]`,
 
 					name: 'MaplibreOMProtocol',
 					format: 'umd'
-					//inlineDynamicImports: true
 				},
 				preserveEntrySignatures: 'strict'
 			},
-			// minify: false,
 			sourcemap: true
 		}
 	});

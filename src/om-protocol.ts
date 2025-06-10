@@ -17,7 +17,7 @@ import { variables } from './utils/variables';
 import TileWorker from './worker?worker';
 
 import type { TileJSON, TileIndex, Domain, Variable } from './types';
-import { DynamicProjection, ProjectionGrid } from './utils/projection';
+import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
 
 const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 

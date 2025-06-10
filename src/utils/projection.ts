@@ -1,7 +1,7 @@
 import { degreesToRadians, radiansToDegrees } from './math';
 import type { Domain } from '../types';
 
-interface Projection {
+export interface Projection {
 	forward(latitude: number, longitude: number): [x: number, y: number];
 	reverse(x: number, y: number): [latitude: number, longitude: number];
 }

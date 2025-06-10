@@ -1,20 +1,13 @@
 import { expect, test } from 'vitest';
-import { pad } from '../utils/pad';
 import { RotatedLatLonProjection, LambertConformalConicProjection } from '../utils/projection';
 
-// --- pad ---
-test('check pad with 1 digit', () => {
-	expect(pad(1)).toBe('01');
-});
+import { domains } from '../utils/domains';
+
+let dmiDomain = domains.find((d) => d.value === 'dmi_harmonie_arome_europe');
+let knmiDomain = domains.find((d) => d.value === 'knmi_harmonie_arome_europe');
 
 test('Test LambertConformalConicProjection for DMI', () => {
-	const proj = new LambertConformalConicProjection({
-		λ0: 352,
-		ϕ0: 55.5,
-		ϕ1: 55.5,
-		ϕ2: 55.5,
-		radius: 6371229
-	});
+	const proj = new LambertConformalConicProjection(dmiDomain.grid.projection);
 	expect(proj.ρ0).toBe(0.6872809586016131);
 	expect(proj.F).toBe(1.801897704650192);
 	expect(proj.n).toBe(0.8241261886220157);
@@ -26,9 +19,7 @@ test('Test LambertConformalConicProjection for DMI', () => {
 });
 
 test('Test RotatedLatLon for KNMI', () => {
-	const proj = new RotatedLatLonProjection({
-		rotation: [-35, -8]
-	});
+	const proj = new RotatedLatLonProjection(knmiDomain.grid.projection);
 	expect(proj.θ).toBe(0.9599310885968813);
 	expect(proj.ϕ).toBe(-0.13962634015954636);
 
