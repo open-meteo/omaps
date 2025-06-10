@@ -346,10 +346,15 @@ export const omProtocol = async (
 				const ranges = dimensions.map((dim, _) => {
 					return { start: 0, end: dim };
 				});
-				const data = await fileReader.reader.read(
+				let data = await fileReader.reader.read(
 					OmDataType.FloatArray,
 					ranges
 				);
+
+				if (variable.value == 'wind_gusts_10m') {
+					data = data.map((val) => val * 1.94384);
+				}
+
 				omFileDataCache.set(omUrl, { values: data });
 			}
 		}
