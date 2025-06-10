@@ -203,13 +203,13 @@ if (mapContainer) {
 						domains.find((dm) => dm.value === target.value) ??
 						domains[0];
 
-					map.flyTo({
-						center:
-							typeof domain.grid.center == 'object'
-								? domain.grid.center
-								: [0, 0],
-						zoom: domain.grid.zoom
-					});
+					// map.flyTo({
+					// 	center:
+					// 		typeof domain.grid.center == 'object'
+					// 			? domain.grid.center
+					// 			: [0, 0],
+					// 	zoom: domain.grid.zoom
+					// });
 					url.searchParams.set('domain', target.value);
 					history.pushState({}, '', url);
 					changeOMfileURL();

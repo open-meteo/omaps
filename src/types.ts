@@ -52,17 +52,18 @@ export interface Domain {
 	grid: {
 		nx: number;
 		ny: number;
-		lonMin: number;
-		latMin: number;
+		lonMin: number | number[];
+		latMin: number | number[];
 		dx: number;
 		dy: number;
 		zoom?: number;
 		projection?: {
 			name: string;
-			λ0: number;
-			ϕ0: number;
-			ϕ1: number;
-			ϕ2: number;
+			λ0?: number;
+			ϕ0?: number;
+			ϕ1?: number;
+			ϕ2?: number;
+			rotation?: number[];
 			radius?: number;
 		};
 		center?:

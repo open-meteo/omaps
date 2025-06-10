@@ -122,13 +122,37 @@ const renderTile = async (url: string) => {
 };
 
 const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
-	console.log([lonMin, latMin]);
-	console.log();
+	let minLon;
+	let minLat;
+	let maxLon;
+	let maxLat;
 
-	console.log(projection.reverse(0, dy * ny));
-	console.log(projection.reverse(dx * nx, 0));
-	console.log(projection.reverse(dx * nx, dy * ny));
-	console.log(projection.reverse(dy * ny, dx * nx));
+	if (domain.grid.projection) {
+		// loop over all border points to get max / min lat / lon
+
+		console.log(projection.reverse(0, dy * ny));
+		console.log(projection.reverse(dx * nx, 0));
+		console.log(projection.reverse(dx * nx, dy * ny));
+		if (Array === lonMin.constructor) {
+			console.log(lonMin[0]);
+			minLon = lonMin[0];
+			minLat = latMin[0];
+			maxLon = lonMin[1];
+			maxLat = latMin[1];
+		} else {
+			minLon = lonMin;
+			minLat = latMin;
+			maxLon = minLon + projection.reverse(dx * nx, dy * ny)[1];
+			maxLat = minLat + projection.reverse(dx * nx, dy * ny)[0];
+		}
+	} else {
+		minLon = lonMin;
+		minLat = latMin;
+		maxLon = minLon + dx * nx;
+		maxLat = minLat + dy * ny;
+	}
+	const bounds = [minLon, minLat, maxLon, maxLat];
+	console.log(bounds);
 
 	return {
 		tilejson: '2.2.0',
@@ -136,22 +160,7 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 		attribution: 'open-meteo',
 		minzoom: 1,
 		maxzoom: 15,
-		bounds: domain.grid.projection
-			? [
-					// Math.min(
-					// 	lonMin,
-					// 	lonMin + projection.reverse(0, dy * ny)[0]
-					// ),
-					// Math.min(
-					// 	latMin,
-					// 	latMin + projection.reverse(dx * nx, 0)[1]
-					// ),
-					lonMin,
-					latMin,
-					lonMin + projection.reverse(dx * nx, dy * ny)[1],
-					latMin + projection.reverse(dx * nx, dy * ny)[0]
-				]
-			: [lonMin, latMin, lonMin + dx * nx, latMin + dy * ny]
+		bounds: bounds
 	};
 };
 
@@ -183,19 +192,11 @@ export const omProtocol = async (
 		dy = domain.grid.dy;
 
 		if (domain.grid.projection) {
-			λ0 = domain.grid.projection.λ0;
-			ϕ0 = domain.grid.projection.ϕ0;
-			ϕ1 = domain.grid.projection.ϕ1;
-			ϕ2 = domain.grid.projection.ϕ2;
-			radius = domain.grid.projection.radius;
 			projectionName = domain.grid.projection.name;
-			projection = new DynamicProjection(projectionName, [
-				λ0,
-				ϕ0,
-				ϕ1,
-				ϕ2,
-				radius
-			]) as Projection;
+			projection = new DynamicProjection(
+				projectionName,
+				domain.grid.projection
+			) as Projection;
 			projectionGrid = new ProjectionGrid(
 				projection,
 				nx,

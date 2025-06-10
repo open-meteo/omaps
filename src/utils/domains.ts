@@ -122,22 +122,31 @@ export const domains: Array<Domain> = [
 		grid: {
 			nx: 1799,
 			ny: 1059,
-			latMin: 21.138,
-			lonMin: -122.72,
-			dx: 1,
-			dy: 1,
+			latMin: [21.138, 47.8424],
+			lonMin: [-122.72, -60.918],
+			dx: 0,
+			dy: 0,
 			zoom: 1,
 			projection: {
 				λ0: -97.5,
 				ϕ0: 0,
 				ϕ1: 38.5,
-				ϕ2: 38.5
+				ϕ2: 38.5,
+				name: 'LambertConformalConicProjection'
 			},
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				if (this.projection) {
+					this.center = {
+						lng: 0,
+						lat: 0
+					};
+				} else {
+					this.center = {
+						lng: this.lonMin + this.dx * (this.nx * 0.5),
+						lat: this.latMin + this.dy * (this.ny * 0.5)
+					};
+				}
+
 				return this;
 			}
 		}
@@ -158,7 +167,8 @@ export const domains: Array<Domain> = [
 				ϕ0: 0,
 				ϕ1: 25,
 				ϕ2: 25,
-				radius: 6371200
+				radius: 6371200,
+				name: 'LambertConformalConicProjection'
 			},
 			center: function () {
 				if (this.projection) {
@@ -362,6 +372,38 @@ export const domains: Array<Domain> = [
 	// }
 
 	// KNMI
+	{
+		value: 'knmi_harmonie_arome_europe',
+		label: 'KNMI Harmonie Arome Europe',
+		grid: {
+			nx: 676,
+			ny: 564,
+			latMin: [39.740627, 62.619324],
+			lonMin: [-25.162262, 38.75702],
+			dx: 0,
+			dy: 0,
+			zoom: 6,
+			projection: {
+				rotation: [-35, -8],
+				name: 'RotatedLatLonProjection'
+			},
+			center: function () {
+				if (this.projection) {
+					this.center = {
+						lng: 0,
+						lat: 0
+					};
+				} else {
+					this.center = {
+						lng: this.lonMin + this.dx * (this.nx * 0.5),
+						lat: this.latMin + this.dy * (this.ny * 0.5)
+					};
+				}
+
+				return this;
+			}
+		}
+	},
 	{
 		value: 'knmi_harmonie_arome_netherlands',
 		label: 'KNMI Harmonie Arome Netherlands',

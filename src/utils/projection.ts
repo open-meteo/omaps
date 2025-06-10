@@ -1,51 +1,100 @@
 import { degreesToRadians, radiansToDegrees } from './math';
+import type { Domain } from '../types';
 
-export class Projection {
-	ρ0 = 0;
-	F = 0;
-	n = 0;
-	λ0 = 0;
+interface Projection {
+	forward(latitude: number, longitude: number): [x: number, y: number];
+	reverse(x: number, y: number): [latitude: number, longitude: number];
+}
 
-	R = 6370.997; // Radius of the Earth
+export class RotatedLatLonProjection implements Projection {
+	θ: number;
+	ϕ: number;
+	constructor(projectionData: Domain['grid']['projection']) {
+		if (projectionData) {
+			const rotation = projectionData.rotation;
+			this.θ = degreesToRadians(90 + rotation[0]);
+			this.ϕ = degreesToRadians(rotation[1]);
+		}
+	}
 
 	forward(latitude: number, longitude: number): [x: number, y: number] {
-		return [latitude * 0, longitude * 0];
+		let lon = degreesToRadians(longitude);
+		let lat = degreesToRadians(latitude);
+
+		let x = Math.cos(lon) * Math.cos(lat);
+		let y = Math.sin(lon) * Math.cos(lat);
+		let z = Math.sin(lat);
+
+		let x2 =
+			Math.cos(this.θ) * Math.cos(this.ϕ) * x +
+			Math.cos(this.θ) * Math.sin(this.ϕ) * y +
+			Math.sin(this.θ) * z;
+		let y2 = -Math.sin(this.ϕ) * x + Math.cos(this.ϕ) * y;
+		let z2 =
+			-Math.sin(this.θ) * Math.cos(this.ϕ) * x -
+			Math.sin(this.θ) * Math.sin(this.ϕ) * y +
+			Math.cos(this.θ) * z;
+
+		return [radiansToDegrees(Math.atan2(y2, x2)), radiansToDegrees(Math.asin(z2))];
 	}
 
 	reverse(x: number, y: number): [latitude: number, longitude: number] {
-		return [x * 0, y * 0];
+		let lon = degreesToRadians(x);
+		let lat = degreesToRadians(y);
+
+		let θ = -1 * this.θ;
+		let ϕ = -1 * this.ϕ;
+
+		// quick solution without conversion in cartesian space
+		let lat2 = Math.asin(
+			Math.cos(θ) * Math.sin(lat) - Math.cos(lon) * Math.sin(θ) * Math.cos(lat)
+		);
+		let lon2 =
+			Math.atan2(
+				Math.sin(lon),
+				Math.tan(lat) * Math.sin(θ) + Math.cos(lon) * Math.cos(θ)
+			) - ϕ;
+		return [radiansToDegrees(lat2), radiansToDegrees(lon2)];
 	}
 }
 
-export class LambertConformalConicProjection extends Projection {
-	constructor(
-		λ0_dec: number,
-		ϕ0_dec: number,
-		ϕ1_dec: number,
-		ϕ2_dec: number,
-		radius = 6370.997
-	) {
-		super();
-		this.λ0 = degreesToRadians(((λ0_dec + 180) % 360) - 180);
-		let ϕ0 = degreesToRadians(ϕ0_dec);
-		let ϕ1 = degreesToRadians(ϕ1_dec);
-		let ϕ2 = degreesToRadians(ϕ2_dec);
+export class LambertConformalConicProjection implements Projection {
+	ρ0;
+	F;
+	n;
+	λ0;
 
-		if (ϕ1 == ϕ2) {
-			this.n = Math.sin(ϕ1);
-		} else {
-			this.n =
-				Math.log(Math.cos(ϕ1) / Math.cos(ϕ2)) /
-				Math.log(
-					Math.tan(Math.PI / 4 + ϕ2 / 2) /
-						Math.tan(Math.PI / 4 + ϕ1 / 2)
-				);
-		}
-		this.F = (Math.cos(ϕ1) * Math.pow(Math.tan(Math.PI / 4 + ϕ1 / 2), this.n)) / this.n;
-		this.ρ0 = this.F / Math.pow(Math.tan(Math.PI / 4 + ϕ0 / 2), this.n);
+	R = 6370.997; // Radius of the Earth
+	constructor(projectionData: Domain['grid']['projection']) {
+		if (projectionData) {
+			const λ0_dec = projectionData.λ0;
+			const ϕ0_dec = projectionData.ϕ0;
+			const ϕ1_dec = projectionData.ϕ1;
+			const ϕ2_dec = projectionData.ϕ2;
+			const radius = projectionData.radius;
+			this.λ0 = degreesToRadians(((λ0_dec + 180) % 360) - 180);
+			let ϕ0 = degreesToRadians(ϕ0_dec);
+			let ϕ1 = degreesToRadians(ϕ1_dec);
+			let ϕ2 = degreesToRadians(ϕ2_dec);
 
-		if (radius) {
-			this.R = radius;
+			if (ϕ1 == ϕ2) {
+				this.n = Math.sin(ϕ1);
+			} else {
+				this.n =
+					Math.log(Math.cos(ϕ1) / Math.cos(ϕ2)) /
+					Math.log(
+						Math.tan(Math.PI / 4 + ϕ2 / 2) /
+							Math.tan(Math.PI / 4 + ϕ1 / 2)
+					);
+			}
+			this.F =
+				(Math.cos(ϕ1) * Math.pow(Math.tan(Math.PI / 4 + ϕ1 / 2), this.n)) /
+				this.n;
+			this.ρ0 = this.F / Math.pow(Math.tan(Math.PI / 4 + ϕ0 / 2), this.n);
+
+			if (radius) {
+				this.R = radius;
+			}
 		}
 	}
 
@@ -84,12 +133,13 @@ export class LambertConformalConicProjection extends Projection {
 }
 
 const projections = {
+	RotatedLatLonProjection,
 	LambertConformalConicProjection
 };
 
 export class DynamicProjection {
-	constructor(projName: string, opts: any[]) {
-		return new projections[projName](...opts);
+	constructor(projName: string, opts: Domain['grid']['projection']) {
+		return new projections[projName](opts);
 	}
 }
 

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { pad } from '../utils/pad';
-import { Projection } from '../utils/projection';
+import { LambertConformalConicProjection } from '../utils/projection';
 
 // --- pad ---
 test('check pad with 1 digit', () => {
@@ -8,7 +8,13 @@ test('check pad with 1 digit', () => {
 });
 
 test('Test LambertConformalConicProjection for DMI', () => {
-	const proj = new Projection(352, 55.5, 55.5, 55.5, 6371229);
+	const proj = new LambertConformalConicProjection({
+		λ0: 352,
+		ϕ0: 55.5,
+		ϕ1: 55.5,
+		ϕ2: 55.5,
+		radius: 6371229
+	});
 	expect(proj.ρ0).toBe(0.6872809586016131);
 	expect(proj.F).toBe(1.801897704650192);
 	expect(proj.n).toBe(0.8241261886220157);
