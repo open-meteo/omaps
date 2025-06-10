@@ -52,8 +52,8 @@ export interface Domain {
 	grid: {
 		nx: number;
 		ny: number;
-		lonMin: number | number[];
-		latMin: number | number[];
+		lonMin: number;
+		latMin: number;
 		dx: number;
 		dy: number;
 		zoom?: number;
@@ -65,6 +65,9 @@ export interface Domain {
 			ϕ2?: number;
 			rotation?: number[];
 			radius?: number;
+			latitude?: number[];
+			longitude?: number[];
+			bounds?: number[];
 		};
 		center?:
 			| {

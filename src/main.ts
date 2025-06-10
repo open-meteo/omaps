@@ -162,14 +162,28 @@ if (mapContainer) {
 						)
 						.addTo(map);
 				}
-				const temp = getValueFromLatLong(
+				let value = getValueFromLatLong(
 					coordinates.lat,
 					coordinates.lng,
 					omUrl
 				);
-				if (temp) {
+				if (value) {
+					let string;
+					if (Array === value.constructor) {
+						string = '';
+						for (let val of value) {
+							string += val.toFixed(1) + '  ';
+						}
+					} else {
+						string =
+							value.toFixed(1) +
+							(variable.value.startsWith('temperature')
+								? 'C°'
+								: '');
+					}
+
 					popup.setLngLat(coordinates).setHTML(
-						`<span style="color:black;">${temp.toFixed(1) + (variable.value.startsWith('temperature') ? 'C°' : '')}</span>`
+						`<span style="color:black;">${string}</span>`
 					);
 				} else {
 					popup.setLngLat(coordinates).setHTML(

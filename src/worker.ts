@@ -1,7 +1,7 @@
 import { colorScale } from './utils/color-scales';
 
 import { tile2lat, tile2lon, getIndexFromLatLong, interpolate2DHermite } from './utils/math';
-import { DynamicProjection, ProjectionGrid } from './utils/projection';
+import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
 import { hideZero } from './utils/variables';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
@@ -10,13 +10,11 @@ const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
 let colors;
 self.onmessage = async (message) => {
 	if (message.data.type == 'GT') {
-		// const start = performance.now();
-
 		const key = message.data.key;
 		const x = message.data.x;
 		const y = message.data.y;
 		const z = message.data.z;
-		const data = message.data.data;
+		const values = message.data.data.values;
 
 		const domain = message.data.domain;
 		const variable = message.data.variable;
@@ -47,8 +45,8 @@ self.onmessage = async (message) => {
 		let projectionGrid;
 		if (domain.grid.projection) {
 			const ny = domain.grid.ny;
-			const latMin = domain.grid.latMin;
-			const lonMin = domain.grid.lonMin;
+			const latitude = domain.grid.projection.latitude ?? domain.grid.latMin;
+			const longitude = domain.grid.projection.longitude ?? domain.grid.lonMin;
 			const dx = domain.grid.dx;
 			const dy = domain.grid.dy;
 
@@ -62,8 +60,8 @@ self.onmessage = async (message) => {
 				projection,
 				nx,
 				ny,
-				latMin,
-				lonMin,
+				latitude,
+				longitude,
 				dx,
 				dy
 			);
@@ -92,12 +90,13 @@ self.onmessage = async (message) => {
 				};
 
 				let px = interpolate2DHermite(
-					data,
+					values,
 					nx,
 					index,
 					xFraction,
 					yFraction
 				);
+
 				if (hideZero.includes(variable.value)) {
 					if (Math.floor(px) <= 0.1) {
 						px = NaN;
@@ -134,9 +133,6 @@ self.onmessage = async (message) => {
 		const tile = await createImageBitmap(new ImageData(rgba, TILE_SIZE, TILE_SIZE));
 
 		postMessage({ type: 'RT', tile: tile, key: key });
-		// console.log(
-		// 	`getTileWorker(${x}/${y}/${z}): elapsed time: ${(performance.now() - start).toFixed(3)} ms`
-		// );
 		self.close();
 	}
 };

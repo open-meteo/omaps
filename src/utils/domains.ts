@@ -122,8 +122,8 @@ export const domains: Array<Domain> = [
 		grid: {
 			nx: 1799,
 			ny: 1059,
-			latMin: [21.138, 47.8424],
-			lonMin: [-122.72, -60.918],
+			latMin: 21.138,
+			lonMin: -122.72,
 			dx: 0,
 			dy: 0,
 			zoom: 1,
@@ -132,7 +132,10 @@ export const domains: Array<Domain> = [
 				ϕ0: 0,
 				ϕ1: 38.5,
 				ϕ2: 38.5,
-				name: 'LambertConformalConicProjection'
+				latitude: [21.138, 47.8424],
+				longitude: [-122.72, -60.918],
+				name: 'LambertConformalConicProjection',
+				bounds: [-122.72, 21.138, -60.918, 47.8424]
 			},
 			center: function () {
 				if (this.projection) {
@@ -378,14 +381,17 @@ export const domains: Array<Domain> = [
 		grid: {
 			nx: 676,
 			ny: 564,
-			latMin: [39.740627, 62.619324],
-			lonMin: [-25.162262, 38.75702],
+			latMin: 39.740627,
+			lonMin: -25.162262,
 			dx: 0,
 			dy: 0,
 			zoom: 6,
 			projection: {
 				rotation: [-35, -8],
-				name: 'RotatedLatLonProjection'
+				latitude: [39.740627, 62.619324],
+				longitude: [-25.162262, 38.75702],
+				name: 'RotatedLatLonProjection',
+				bounds: [-25.162262, 39.740627, 38.75702, 62.619324]
 			},
 			center: function () {
 				if (this.projection) {
