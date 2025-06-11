@@ -5,6 +5,7 @@ export const domainGroups = [
 	'ncep',
 	'ecmwf',
 	'italia_meteo',
+	'jma',
 	'meteofrance',
 	'ukmo',
 	//'kma',
@@ -254,6 +255,49 @@ export const domains: Array<Domain> = [
 			}
 		}
 	},
+
+	// JMA
+	{
+		value: 'jma_gsm',
+		label: 'JMA GSM',
+		grid: {
+			nx: 720,
+			ny: 361,
+			latMin: -90,
+			lonMin: -180,
+			dx: 0.5,
+			dy: 0.5,
+			zoom: 1,
+			center: function () {
+				this.center = {
+					lng: this.lonMin + this.dx * (this.nx * 0.5),
+					lat: this.latMin + this.dy * (this.ny * 0.5)
+				};
+				return this;
+			}
+		}
+	},
+	{
+		value: 'jma_msm',
+		label: 'JMA MSM',
+		grid: {
+			nx: 481,
+			ny: 505,
+			latMin: 22.4,
+			lonMin: 120,
+			dx: 0.0625,
+			dy: 0.05,
+			zoom: 1,
+			center: function () {
+				this.center = {
+					lng: this.lonMin + this.dx * (this.nx * 0.5),
+					lat: this.latMin + this.dy * (this.ny * 0.5)
+				};
+				return this;
+			}
+		}
+	},
+
 	// MeteoFrance
 	{
 		value: 'meteofrance_arpege_world025',
@@ -359,20 +403,27 @@ export const domains: Array<Domain> = [
 		}
 	},
 	// Needs reprojection
-	// {
-	// 	value: 'ukmo_uk_deterministic_2km',
-	// 	label: 'UK Met Office 2km',
-	// 	grid: {
-	// 		nx: 1042,
-	// 		ny: 970,
-	// 		latMin: -1036000,
-	// 		lonMin: -1158000,
-	// 		dx: 2000,
-	// 		dy: 2000,
-	// 		zoom: 1,
-	//		projection: LambertAzimuthalEqualAreaProjection(λ0: -2.5, ϕ1: 54.9, radius: 6371229)
-	// 	}
-	// }
+	{
+		value: 'ukmo_uk_deterministic_2km',
+		label: 'UK Met Office 2km',
+		grid: {
+			nx: 1042,
+			ny: 970,
+			latMin: 0, //-1036000
+			lonMin: 0, //-1158000
+			dx: 2000,
+			dy: 2000,
+			zoom: 1,
+			projection: {
+				λ0: -2.5,
+				ϕ1: 54.9,
+				// latitude: -1036000,
+				// longitude: -1158000,
+				radius: 6371229,
+				name: 'LambertAzimuthalEqualAreaProjection'
+			}
+		}
+	},
 
 	// KNMI
 	{

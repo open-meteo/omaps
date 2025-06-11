@@ -132,9 +132,71 @@ export class LambertConformalConicProjection implements Projection {
 	}
 }
 
+export class LambertAzimuthalEqualAreaProjection implements Projection {
+	λ0;
+	ϕ1;
+	R = 6371229; // Radius of the Earth
+	constructor(projectionData: Domain['grid']['projection']) {
+		if (projectionData) {
+			const λ0_dec = projectionData.λ0;
+			const ϕ1_dec = projectionData.ϕ1;
+			const radius = projectionData.radius;
+			this.λ0 = degreesToRadians(λ0_dec);
+			this.ϕ1 = degreesToRadians(ϕ1_dec);
+			if (radius) {
+				this.R = radius;
+			}
+		}
+	}
+
+	forward(latitude: number, longitude: number): [x: number, y: number] {
+		let ϕ = degreesToRadians(latitude);
+		let λ = degreesToRadians(longitude);
+
+		let k = Math.sqrt(
+			2 /
+				(1 +
+					Math.sin(this.ϕ1) * Math.sin(ϕ) +
+					Math.cos(this.ϕ1) * Math.cos(ϕ) * Math.cos(λ - this.λ0))
+		);
+
+		let x = this.R * k * Math.cos(ϕ) * Math.sin(λ - this.λ0);
+		let y =
+			this.R *
+			k *
+			(Math.cos(this.ϕ1) * Math.sin(ϕ) -
+				Math.sin(this.ϕ1) * Math.cos(ϕ) * Math.cos(λ - this.λ0));
+
+		return [x, y];
+	}
+
+	reverse(x: number, y: number): [latitude: number, longitude: number] {
+		x = x / this.R;
+		y = y / this.R;
+		let p = Math.sqrt(x * x + y * y);
+		let c = 2 * Math.asin(0.5 * p);
+		let ϕ = Math.asin(
+			Math.cos(c) * Math.sin(this.ϕ1) + (y * Math.sin(c) * Math.cos(this.ϕ1)) / p
+		);
+		let λ =
+			this.λ0 +
+			Math.atan(
+				(x * Math.sin(c)) /
+					(p * Math.cos(this.ϕ1) * Math.cos(c) -
+						y * Math.sin(this.ϕ1) * Math.sin(c))
+			);
+
+		ϕ = radiansToDegrees(ϕ);
+		λ = radiansToDegrees(λ);
+
+		return [ϕ, λ];
+	}
+}
+
 const projections = {
 	RotatedLatLonProjection,
-	LambertConformalConicProjection
+	LambertConformalConicProjection,
+	LambertAzimuthalEqualAreaProjection
 };
 
 export class DynamicProjection {
