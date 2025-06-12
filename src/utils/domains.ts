@@ -1,6 +1,7 @@
 import { type Domain } from '../types';
 
 export const domainGroups = [
+	'bom',
 	'dwd',
 	'ncep',
 	'ecmwf',
@@ -8,12 +9,33 @@ export const domainGroups = [
 	'jma',
 	'meteofrance',
 	'ukmo',
-	//'kma',
 	'knmi',
 	'dmi'
 ];
 
 export const domains: Array<Domain> = [
+	// BOM
+	{
+		value: 'bom_access_global',
+		label: 'BOM Global',
+		grid: {
+			nx: 2048,
+			ny: 1536,
+			latMin: -89.941406,
+			lonMin: -179.912109,
+			dx: 360 / 2048,
+			dy: 180 / 1536,
+			zoom: 1,
+			center: function () {
+				this.center = {
+					lng: this.lonMin + this.dx * (this.nx * 0.5),
+					lat: this.latMin + this.dy * (this.ny * 0.5)
+				};
+				return this;
+			}
+		}
+	},
+
 	// DWD
 	{
 		value: 'dwd_icon',
@@ -135,8 +157,7 @@ export const domains: Array<Domain> = [
 				ϕ2: 38.5,
 				latitude: [21.138, 47.8424],
 				longitude: [-122.72, -60.918],
-				name: 'LambertConformalConicProjection',
-				bounds: [-122.72, 21.138, -60.918, 47.8424]
+				name: 'LambertConformalConicProjection'
 			},
 			center: function () {
 				if (this.projection) {
@@ -402,7 +423,6 @@ export const domains: Array<Domain> = [
 			}
 		}
 	},
-	// Needs reprojection
 	{
 		value: 'ukmo_uk_deterministic_2km',
 		label: 'UK Met Office 2km',
@@ -441,8 +461,7 @@ export const domains: Array<Domain> = [
 				rotation: [-35, -8],
 				latitude: [39.740627, 62.619324],
 				longitude: [-25.162262, 38.75702],
-				name: 'RotatedLatLonProjection',
-				bounds: [-25.162262, 39.740627, 38.75702, 62.619324]
+				name: 'RotatedLatLonProjection'
 			},
 			center: function () {
 				if (this.projection) {

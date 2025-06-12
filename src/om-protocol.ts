@@ -183,34 +183,31 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 
 	let bounds;
 	if (domain.grid.projection) {
-		if (domain.grid.projection.bounds) {
-			bounds = domain.grid.projection.bounds;
-		} else {
-			// loop over all border points to get max / min lat / lon
-			const borderPoints = getBorderPoints();
-			//const origin = projectionGrid.origin;
-			//const originLatLon = projection.reverse(origin[0], origin[1]);
-			minLon = 180;
-			minLat = 90;
-			maxLon = -180;
-			maxLat = -90;
-			for (let borderPoint of borderPoints) {
-				const borderPointLatLon = projection.reverse(borderPoint[0], borderPoint[1]);
-				if (borderPointLatLon[0] < minLat) {
-					minLat = borderPointLatLon[0];
-				}
-				if (borderPointLatLon[0] > maxLat) {
-					maxLat = borderPointLatLon[0];
-				}
-				if (borderPointLatLon[1] < minLon) {
-					minLon = borderPointLatLon[1];
-				}
-				if (borderPointLatLon[1] > maxLon) {
-					maxLon = borderPointLatLon[1];
-				}
+		// loop over all border points to get max / min lat / lon
+		const borderPoints = getBorderPoints();
+		minLon = 180;
+		minLat = 90;
+		maxLon = -180;
+		maxLat = -90;
+		for (let borderPoint of borderPoints) {
+			const borderPointLatLon = projection.reverse(
+				borderPoint[0],
+				borderPoint[1]
+			);
+			if (borderPointLatLon[0] < minLat) {
+				minLat = borderPointLatLon[0];
 			}
-			bounds = [minLon, minLat, maxLon, maxLat];
+			if (borderPointLatLon[0] > maxLat) {
+				maxLat = borderPointLatLon[0];
+			}
+			if (borderPointLatLon[1] < minLon) {
+				minLon = borderPointLatLon[1];
+			}
+			if (borderPointLatLon[1] > maxLon) {
+				maxLon = borderPointLatLon[1];
+			}
 		}
+		bounds = [minLon, minLat, maxLon, maxLat];
 	} else {
 		minLon = lonMin;
 		minLat = latMin;
