@@ -49,7 +49,7 @@ self.onmessage = async (message) => {
 			const longitude = domain.grid.projection.longitude ?? domain.grid.lonMin;
 			const dx = domain.grid.dx;
 			const dy = domain.grid.dy;
-			const projectOrigin = domain.grid.projection.projectOrigin ?? false;
+			const projectOrigin = domain.grid.projection.projectOrigin ?? true;
 
 			let projectionName = domain.grid.projection.name;
 

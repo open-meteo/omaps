@@ -259,7 +259,7 @@ const initOMFile = async (url: string) => {
 	if (domain.grid.projection) {
 		const latitude = domain.grid.projection.latitude ?? domain.grid.latMin;
 		const longitude = domain.grid.projection.longitude ?? domain.grid.lonMin;
-		const projectOrigin = domain.grid.projection.projectOrigin ?? false;
+		const projectOrigin = domain.grid.projection.projectOrigin ?? true;
 
 		projectionName = domain.grid.projection.name;
 		projection = new DynamicProjection(
