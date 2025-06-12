@@ -16,6 +16,9 @@ test('Test LambertConformalConicProjection for DMI', () => {
 
 	expect(proj.forward(39.671, -25.421997)[0]).toBe(-1527524.6244234492);
 	expect(proj.forward(39.671, -25.421997)[1]).toBe(-1588681.0428292789);
+
+	expect(proj.reverse(-1527524.6244234492, -1588681.0428292789)[0]).toBe(39.671000000000014);
+	expect(proj.reverse(-1527524.6244234492, -1588681.0428292789)[1]).toBe(-25.421996999999998);
 });
 
 test('Test RotatedLatLon for KNMI', () => {

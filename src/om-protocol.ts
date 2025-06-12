@@ -188,14 +188,14 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 		} else {
 			// loop over all border points to get max / min lat / lon
 			const borderPoints = getBorderPoints();
-			const origin = projectionGrid.origin;
-			const originLatLon = projection.reverse(origin);
-			minLon = lonMin;
-			minLat = latMin;
-			maxLon = lonMin;
-			maxLat = latMin;
+			//const origin = projectionGrid.origin;
+			//const originLatLon = projection.reverse(origin[0], origin[1]);
+			minLon = 180;
+			minLat = 90;
+			maxLon = -180;
+			maxLat = -90;
 			for (let borderPoint of borderPoints) {
-				const borderPointLatLon = projection.reverse(borderPoint);
+				const borderPointLatLon = projection.reverse(borderPoint[0], borderPoint[1]);
 				if (borderPointLatLon[0] < minLat) {
 					minLat = borderPointLatLon[0];
 				}
