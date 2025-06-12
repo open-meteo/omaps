@@ -26,6 +26,8 @@ if (params.get('domain')) {
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
 
+console.log(TILE_SIZE);
+
 let map: maplibregl.Map;
 const infoBox: HTMLElement | null = document.getElementById('info_box');
 const mapContainer: HTMLElement | null = document.getElementById('map_container');

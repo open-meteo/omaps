@@ -37,12 +37,12 @@ const drawArrow = (
 	domain: Domain,
 	projectionGrid: ProjectionGrid,
 	directions: TypedArray,
-	boxSize = TILE_SIZE / 8,
+	boxSize = TILE_SIZE / 16,
 	arrowTipLength = 6
 ): void => {
 	const arrowCoords = [];
 
-	for (let bs = 0; bs < boxSize; bs++) {
+	for (let bs = 1; bs < boxSize - 2; bs++) {
 		arrowCoords.push([iBase + bs, jBase + boxSize / 2]);
 	}
 	for (let at = 0; at < arrowTipLength; at++) {
@@ -194,6 +194,32 @@ self.onmessage = async (message) => {
 					}
 				}
 
+				// if (
+				// 	import.meta.env.DEV &&
+				// 	(i === 0 ||
+				// 		i === TILE_SIZE ||
+				// 		j === 0 ||
+				// 		j === TILE_SIZE ||
+				// 		i % (TILE_SIZE / 16) === 0 ||
+				// 		j % (TILE_SIZE / 16) === 0)
+				// ) {
+				// 	if (
+				// 		i === 0 ||
+				// 		i === TILE_SIZE ||
+				// 		j === 0 ||
+				// 		j === TILE_SIZE
+				// 	) {
+				// 		rgba[4 * ind] = 255;
+				// 		rgba[4 * ind + 1] = 0;
+				// 		rgba[4 * ind + 2] = 255;
+				// 		rgba[4 * ind + 3] = 255;
+				// 	} else {
+				// 		rgba[4 * ind] = 0;
+				// 		rgba[4 * ind + 1] = 0;
+				// 		rgba[4 * ind + 2] = 255;
+				// 		rgba[4 * ind + 3] = 255;
+				// 	}
+				// } else {
 				if (isNaN(px) || px === Infinity) {
 					rgba[4 * ind] = 0;
 					rgba[4 * ind + 1] = 0;
@@ -218,12 +244,13 @@ self.onmessage = async (message) => {
 						}
 					}
 				}
+				//}
 			}
 		}
 
 		if (variable.value === 'wind') {
-			for (let i = 0; i < TILE_SIZE; i += TILE_SIZE / 8) {
-				for (let j = 0; j < TILE_SIZE; j += TILE_SIZE / 8) {
+			for (let i = 0; i < TILE_SIZE; i += TILE_SIZE / 16) {
+				for (let j = 0; j < TILE_SIZE; j += TILE_SIZE / 16) {
 					drawArrow(
 						rgba,
 						i,
