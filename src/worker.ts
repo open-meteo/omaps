@@ -1,11 +1,108 @@
 import { colorScale } from './utils/color-scales';
 
-import { tile2lat, tile2lon, getIndexFromLatLong, interpolate2DHermite } from './utils/math';
-import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
 import { hideZero } from './utils/variables';
+
+import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
+
+import {
+	tile2lat,
+	tile2lon,
+	getIndexFromLatLong,
+	interpolateLinear,
+	interpolate2DHermite,
+	degreesToRadians
+} from './utils/math';
+
+import type { TypedArray } from '@openmeteo/file-reader';
+import type { Domain } from './types';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
 const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
+
+const rotatePoint = (cx: number, cy: number, theta: number, x: number, y: number) => {
+	let xt = Math.cos(theta) * (x - cx) - Math.sin(theta) * (y - cy) + cx;
+	let yt = Math.sin(theta) * (x - cx) + Math.cos(theta) * (y - cy) + cy;
+
+	return [xt, yt];
+};
+
+const drawArrow = (
+	rgba: Uint8ClampedArray,
+	iBase: number,
+	jBase: number,
+	x: number,
+	y: number,
+	z: number,
+	nx: number,
+	domain: Domain,
+	projectionGrid: ProjectionGrid,
+	directions: TypedArray,
+	boxSize = TILE_SIZE / 8,
+	arrowTipLength = 6
+): void => {
+	const arrowCoords = [];
+
+	for (let bs = 0; bs < boxSize; bs++) {
+		arrowCoords.push([iBase + bs, jBase + boxSize / 2]);
+	}
+	for (let at = 0; at < arrowTipLength; at++) {
+		arrowCoords.push([iBase + at, jBase + (boxSize / 2 + at)]);
+		arrowCoords.push([iBase + at, jBase + (boxSize / 2 - at)]);
+	}
+
+	const arrowCoordsRotated = [];
+	const arrowIndices = [];
+
+	let iCenter = iBase + boxSize / 2;
+	let jCenter = jBase + boxSize / 2;
+
+	const lat = tile2lat(y + iCenter / TILE_SIZE, z);
+	const lon = tile2lon(x + jCenter / TILE_SIZE, z);
+
+	const { index, xFraction, yFraction } = getIndexAndFractions(
+		lat,
+		lon,
+		domain,
+		projectionGrid
+	);
+
+	let direction = degreesToRadians(
+		interpolateLinear(directions, nx, index, xFraction, yFraction)
+	);
+
+	for (let arrow of arrowCoords) {
+		let rotatedPoint = rotatePoint(iCenter, jCenter, -direction, arrow[0], arrow[1]);
+		arrowCoordsRotated.push([Math.floor(rotatedPoint[0]), Math.floor(rotatedPoint[1])]);
+	}
+
+	for (let arrow of arrowCoordsRotated) {
+		arrowIndices.push(arrow[1] + arrow[0] * TILE_SIZE);
+	}
+
+	for (let arrowIndex of arrowIndices) {
+		rgba[4 * arrowIndex] = 0;
+		rgba[4 * arrowIndex + 1] = 0;
+		rgba[4 * arrowIndex + 2] = 0;
+		rgba[4 * arrowIndex + 3] = 155;
+	}
+};
+
+const getIndexAndFractions = (lat: number, lon: number, domain: Domain, projectionGrid) => {
+	let indexObject;
+	if (domain.grid.projection && projectionGrid) {
+		indexObject = projectionGrid.findPointInterpolated(lat, lon);
+	} else {
+		indexObject = getIndexFromLatLong(lat, lon, domain);
+	}
+
+	return (
+		indexObject ?? {
+			index: 0,
+			xFraction: 0,
+			yFraction: 0
+		}
+	);
+};
 
 let colors;
 self.onmessage = async (message) => {
@@ -15,6 +112,7 @@ self.onmessage = async (message) => {
 		const y = message.data.y;
 		const z = message.data.z;
 		const values = message.data.data.values;
+		const direction = message.data.data.direction;
 
 		const domain = message.data.domain;
 		const variable = message.data.variable;
@@ -75,21 +173,12 @@ self.onmessage = async (message) => {
 				const ind = j + i * TILE_SIZE;
 				const lon = tile2lon(x + j / TILE_SIZE, z);
 
-				let indexObject;
-				if (domain.grid.projection && projectionGrid) {
-					indexObject = projectionGrid.findPointInterpolated(
-						lat,
-						lon
-					);
-				} else {
-					indexObject = getIndexFromLatLong(lat, lon, domain);
-				}
-
-				const { index, xFraction, yFraction } = indexObject ?? {
-					index: 0,
-					xFraction: 0,
-					yFraction: 0
-				};
+				const { index, xFraction, yFraction } = getIndexAndFractions(
+					lat,
+					lon,
+					domain,
+					projectionGrid
+				);
 
 				let px = interpolate2DHermite(
 					values,
@@ -128,6 +217,25 @@ self.onmessage = async (message) => {
 							rgba[4 * ind + 3] = 255 * (OPACITY / 100);
 						}
 					}
+				}
+			}
+		}
+
+		if (variable.value === 'wind') {
+			for (let i = 0; i < TILE_SIZE; i += TILE_SIZE / 8) {
+				for (let j = 0; j < TILE_SIZE; j += TILE_SIZE / 8) {
+					drawArrow(
+						rgba,
+						i,
+						j,
+						x,
+						y,
+						z,
+						nx,
+						domain,
+						projectionGrid,
+						direction
+					);
 				}
 			}
 		}

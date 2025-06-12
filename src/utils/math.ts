@@ -17,24 +17,24 @@ export const tileToBBOX = (tile: [x: number, y: number, z: number]) => {
 	return [w, s, e, n];
 };
 
-// const interpolateLinear = (
-// 	data: Float32Array<ArrayBufferLike>,
-// 	index: number,
-// 	xFraction: number,
-// 	yFraction: number,
-// 	nx: number
-// ): number => {
-// 	const p0 = data[index];
-// 	const p1 = data[index + 1];
-// 	const p2 = data[index + nx];
-// 	const p3 = data[index + 1 + nx];
-// 	return (
-// 		p0 * (1 - xFraction) * (1 - yFraction) +
-// 		p1 * xFraction * (1 - yFraction) +
-// 		p2 * (1 - xFraction) * yFraction +
-// 		p3 * xFraction * yFraction
-// 	);
-// };
+export const interpolateLinear = (
+	values: TypedArray,
+	nx: number,
+	index: number,
+	xFraction: number,
+	yFraction: number
+): number => {
+	const p0 = values[index];
+	const p1 = values[index + 1];
+	const p2 = values[index + nx];
+	const p3 = values[index + 1 + nx];
+	return (
+		p0 * (1 - xFraction) * (1 - yFraction) +
+		p1 * xFraction * (1 - yFraction) +
+		p2 * (1 - xFraction) * yFraction +
+		p3 * xFraction * yFraction
+	);
+};
 
 export const hermite = (t: number, p0: number, p1: number, m0: number, m1: number) => {
 	const t2 = t * t;
@@ -53,7 +53,7 @@ export const getDerivative = (fPrev: number, fNext: number) => {
 };
 
 export const interpolate2DHermite = (
-	data: TypedArray,
+	values: TypedArray,
 	nx: number,
 	index: number,
 	xFraction: number,
@@ -75,29 +75,29 @@ export const interpolate2DHermite = (
 	}
 	// tension = 0 is Hermite with Catmull-Rom. Tension = 1 is bilinear interpolation
 	// 0.5 is somewhat in the middle
-	return interpolateCardinal2D(data, nx, index, xFraction, yFraction, 0.3);
-	//return interpolateRBF3x3(data, nx, index, xFraction, yFraction)
-	//return interpolateRBF4x4(data, nx, index, xFraction, yFraction)
-	//return interpolateSmoothBilinear(data, index, xFraction, yFraction, nx)
-	//return interpolateMonotonicHermite(data, nx, index, xFraction, yFraction)
-	//return interpolateGaussianBilinear(data, index, xFraction, yFraction, nx)
-	//return interpolateLinear(data, index, xFraction, yFraction, nx)
-	//return quinticHermite2D(data, nx, index, xFraction, yFraction)
+	return interpolateCardinal2D(values, nx, index, xFraction, yFraction, 0.3);
+	//return interpolateRBF3x3(values, nx, index, xFraction, yFraction)
+	//return interpolateRBF4x4(values, nx, index, xFraction, yFraction)
+	//return interpolateSmoothBilinear(values, index, xFraction, yFraction, nx)
+	//return interpolateMonotonicHermite(values, nx, index, xFraction, yFraction)
+	//return interpolateGaussianBilinear(values, index, xFraction, yFraction, nx)
+	//return interpolateLinear(values, index, xFraction, yFraction, nx)
+	//return quinticHermite2D(values, nx, index, xFraction, yFraction)
 
 	/*let x = index % nx;
 	let y = index / nx;
-	let ny = data.length / nx;
+	let ny = values.length / nx;
 	if (x <= 1 || y <= 1 || x >= nx - 3 || y >= ny - 3) {
-		return interpolateLinear(data, index, xFraction, yFraction, nx);
+		return interpolateLinear(values, index, xFraction, yFraction, nx);
 	}
 
 	// Interpolate along X for each of the 4 rows
 	const interpRow = [];
 	for (let j = -1; j < 3; j++) {
-		const p0 = data[index + j * nx];
-		const p1 = data[index + j * nx + 1];
-		const m0 = getDerivative(data[index + j * nx - 1], data[index + j * nx + 1]);
-		const m1 = getDerivative(data[index + j * nx + 0], data[index + j * nx + 2]);
+		const p0 = values[index + j * nx];
+		const p1 = values[index + j * nx + 1];
+		const m0 = getDerivative(values[index + j * nx - 1], values[index + j * nx + 1]);
+		const m1 = getDerivative(values[index + j * nx + 0], values[index + j * nx + 2]);
 		interpRow[j + 1] = hermite(xFraction, p0, p1, m0, m1);
 	}
 
@@ -146,7 +146,7 @@ export const secondDerivative = (fm1: number, f0: number, fp1: number): number =
 
 // 2D Quintic Hermite Interpolation on a 6x6 or larger grid
 export const quinticHermite2D = (
-	data: Float32Array<ArrayBufferLike>,
+	values: Float32Array<ArrayBufferLike>,
 	nx: number,
 	index: number,
 	xFraction: number,
@@ -156,12 +156,12 @@ export const quinticHermite2D = (
 	const colValues = [];
 
 	for (let j = -2; j <= 3; j++) {
-		const f0 = data[index + j * nx];
-		const f1 = data[index + j * nx + 1];
-		const m0 = derivative(data[index + j * nx - 1], data[index + j * nx + 1]);
-		const m1 = derivative(data[index + j * nx], data[index + j * nx + 2]);
-		const c0 = secondDerivative(data[index + j * nx - 1], f0, f1);
-		const c1 = secondDerivative(f0, f1, data[index + j * nx + 2]);
+		const f0 = values[index + j * nx];
+		const f1 = values[index + j * nx + 1];
+		const m0 = derivative(values[index + j * nx - 1], values[index + j * nx + 1]);
+		const m1 = derivative(values[index + j * nx], values[index + j * nx + 2]);
+		const c0 = secondDerivative(values[index + j * nx - 1], f0, f1);
+		const c1 = secondDerivative(f0, f1, values[index + j * nx + 2]);
 
 		const interpolatedX = quinticHermite(xFraction, f0, f1, m0, m1, c0, c1);
 		colValues.push(interpolatedX);
@@ -222,7 +222,7 @@ const cardinalSpline = (
 };
 
 const interpolateCardinal2D = (
-	data: TypedArray,
+	values: TypedArray,
 	nx: number,
 	index: number,
 	xFraction: number,
@@ -232,34 +232,34 @@ const interpolateCardinal2D = (
 	// Interpolate 4 rows in X
 	const r0 = cardinalSpline(
 		xFraction,
-		data[index + -1 * nx - 1],
-		data[index + -1 * nx + 0],
-		data[index + -1 * nx + 1],
-		data[index + -1 * nx + 2],
+		values[index + -1 * nx - 1],
+		values[index + -1 * nx + 0],
+		values[index + -1 * nx + 1],
+		values[index + -1 * nx + 2],
 		tension
 	);
 	const r1 = cardinalSpline(
 		xFraction,
-		data[index + +0 * nx - 1],
-		data[index + +0 * nx + 0],
-		data[index + +0 * nx + 1],
-		data[index + +0 * nx + 2],
+		values[index + +0 * nx - 1],
+		values[index + +0 * nx + 0],
+		values[index + +0 * nx + 1],
+		values[index + +0 * nx + 2],
 		tension
 	);
 	const r2 = cardinalSpline(
 		xFraction,
-		data[index + +1 * nx - 1],
-		data[index + +1 * nx + 0],
-		data[index + +1 * nx + 1],
-		data[index + +1 * nx + 2],
+		values[index + +1 * nx - 1],
+		values[index + +1 * nx + 0],
+		values[index + +1 * nx + 1],
+		values[index + +1 * nx + 2],
 		tension
 	);
 	const r3 = cardinalSpline(
 		xFraction,
-		data[index + +2 * nx - 1],
-		data[index + +2 * nx + 0],
-		data[index + +2 * nx + 1],
-		data[index + +2 * nx + 2],
+		values[index + +2 * nx - 1],
+		values[index + +2 * nx + 0],
+		values[index + +2 * nx + 1],
+		values[index + +2 * nx + 2],
 		tension
 	);
 
@@ -276,7 +276,7 @@ export const radiansToDegrees = (rad: number) => {
 };
 
 // const interpolateRBF4x4 = (
-// 	data: Float32Array | (Float32Array & ArrayBufferLike),
+// 	values: Float32Array | (Float32Array & ArrayBufferLike),
 // 	nx: number,
 // 	index: number,
 // 	xFraction: number,
@@ -285,7 +285,7 @@ export const radiansToDegrees = (rad: number) => {
 // 	const sigma = 0.65;
 // 	const denom = 2 * sigma * sigma;
 
-// 	const ny = data.length / nx;
+// 	const ny = values.length / nx;
 // 	const x = (index % nx) + xFraction;
 // 	const y = Math.floor(index / nx) + yFraction;
 
@@ -308,7 +308,7 @@ export const radiansToDegrees = (rad: number) => {
 // 			const weight = Math.exp(-dist2 / denom);
 
 // 			const sampleIndex = py * nx + px;
-// 			const value = data[sampleIndex];
+// 			const value = values[sampleIndex];
 
 // 			sum += value * weight;
 // 			weightSum += weight;
@@ -319,7 +319,7 @@ export const radiansToDegrees = (rad: number) => {
 // };
 
 // const interpolateRBF3x3 = (
-// 	data: Float32Array | (Float32Array & ArrayBufferLike),
+// 	values: Float32Array | (Float32Array & ArrayBufferLike),
 // 	nx: number,
 // 	index: number,
 // 	xFraction: number,
@@ -328,7 +328,7 @@ export const radiansToDegrees = (rad: number) => {
 // 	const sigma = 0.4;
 // 	const denom = 2 * sigma * sigma;
 
-// 	const ny = data.length / nx;
+// 	const ny = values.length / nx;
 // 	const x = (index % nx) + xFraction;
 // 	const y = Math.floor(index / nx) + yFraction;
 
@@ -351,7 +351,7 @@ export const radiansToDegrees = (rad: number) => {
 // 			const weight = Math.exp(-dist2 / denom);
 
 // 			const sampleIndex = py * nx + px;
-// 			const value = data[sampleIndex];
+// 			const value = values[sampleIndex];
 
 // 			sum += value * weight;
 // 			weightSum += weight;
