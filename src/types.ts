@@ -65,9 +65,10 @@ export interface Domain {
 			ϕ2?: number;
 			rotation?: number[];
 			radius?: number;
-			latitude?: number[];
-			longitude?: number[];
+			latitude?: number[] | number;
+			longitude?: number[] | number;
 			bounds?: number[];
+			projectOrigin?: boolean;
 		};
 		center?:
 			| {

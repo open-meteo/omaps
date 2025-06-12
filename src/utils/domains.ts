@@ -437,10 +437,11 @@ export const domains: Array<Domain> = [
 			projection: {
 				λ0: -2.5,
 				ϕ1: 54.9,
-				// latitude: -1036000,
-				// longitude: -1158000,
+				latitude: -1036000,
+				longitude: -1158000,
 				radius: 6371229,
-				name: 'LambertAzimuthalEqualAreaProjection'
+				name: 'LambertAzimuthalEqualAreaProjection',
+				projectOrigin: false
 			}
 		}
 	},
