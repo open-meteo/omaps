@@ -2,15 +2,16 @@ import { type Domain } from '../types';
 
 export const domainGroups = [
 	'bom',
+	'dmi',
 	'dwd',
-	'ncep',
 	'ecmwf',
+	'ncep',
 	'italia_meteo',
 	'jma',
-	'meteofrance',
-	'ukmo',
 	'knmi',
-	'dmi'
+	'meteofrance',
+	'metno',
+	'ukmo'
 ];
 
 export const domains: Array<Domain> = [
@@ -30,6 +31,35 @@ export const domains: Array<Domain> = [
 				this.center = {
 					lng: this.lonMin + this.dx * (this.nx * 0.5),
 					lat: this.latMin + this.dy * (this.ny * 0.5)
+				};
+				return this;
+			}
+		}
+	},
+	// DMI
+	{
+		value: 'dmi_harmonie_arome_europe',
+		label: 'DMI Harmonie Arome Europe',
+		grid: {
+			nx: 1906,
+			ny: 1606,
+			latMin: 39.671,
+			lonMin: -25.421997,
+			dx: 2000,
+			dy: 2000,
+			zoom: 6,
+			projection: {
+				λ0: 352,
+				ϕ0: 55.5,
+				ϕ1: 55.5,
+				ϕ2: 55.5,
+				radius: 6371229,
+				name: 'LambertConformalConicProjection'
+			},
+			center: function () {
+				this.center = {
+					lng: this.lonMin, // +??
+					lat: this.latMin // +??
 				};
 				return this;
 			}
@@ -401,6 +431,43 @@ export const domains: Array<Domain> = [
 			}
 		}
 	},
+	// MetNo
+	{
+		value: 'metno_nordic_pp',
+		label: 'MET Norway Nordic',
+		grid: {
+			nx: 1796,
+			ny: 2321,
+			latMin: 52.30272,
+			lonMin: 1.9184653,
+			dx: 0.25,
+			dy: 0.25,
+			zoom: 1,
+			projection: {
+				λ0: 15,
+				ϕ0: 63,
+				ϕ1: 63,
+				ϕ2: 63,
+				latitude: [52.30272, 72.18527],
+				longitude: [1.9184653, 41.764282],
+				name: 'LambertConformalConicProjection'
+			},
+			center: function () {
+				if (this.projection) {
+					this.center = {
+						lng: 0,
+						lat: 0
+					};
+				} else {
+					this.center = {
+						lng: this.lonMin + this.dx * (this.nx * 0.5),
+						lat: this.latMin + this.dy * (this.ny * 0.5)
+					};
+				}
+				return this;
+			}
+		}
+	},
 
 	// UKMO
 	{
@@ -496,36 +563,6 @@ export const domains: Array<Domain> = [
 				this.center = {
 					lng: this.lonMin + this.dx * (this.nx * 0.5),
 					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
-				return this;
-			}
-		}
-	},
-
-	// DMI
-	{
-		value: 'dmi_harmonie_arome_europe',
-		label: 'DMI Harmonie Arome Europe',
-		grid: {
-			nx: 1906,
-			ny: 1606,
-			latMin: 39.671,
-			lonMin: -25.421997,
-			dx: 2000,
-			dy: 2000,
-			zoom: 6,
-			projection: {
-				λ0: 352,
-				ϕ0: 55.5,
-				ϕ1: 55.5,
-				ϕ2: 55.5,
-				radius: 6371229,
-				name: 'LambertConformalConicProjection'
-			},
-			center: function () {
-				this.center = {
-					lng: this.lonMin, // +??
-					lat: this.latMin // +??
 				};
 				return this;
 			}

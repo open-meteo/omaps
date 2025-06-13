@@ -125,7 +125,6 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 };
 
 const renderTile = async (url: string) => {
-	console.log(url);
 	// Read URL parameters
 	const re = new RegExp(/om:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
 	const result = url.match(re);
@@ -147,7 +146,6 @@ const renderTile = async (url: string) => {
 
 const getBorderPoints = () => {
 	const points = [];
-	console.log(nx, ny, dx, dy, projectionGrid);
 	for (let i = 0; i < projectionGrid.ny; i++) {
 		points.push([
 			projectionGrid.origin[0],

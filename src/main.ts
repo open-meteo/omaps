@@ -94,8 +94,6 @@ const changeOMfileURL = () => {
 	variableSelector.disabled = true;
 	dateTimeSelector.disabled = true;
 
-	console.log(import.meta.env.DEV);
-
 	source = map.addSource('omFileSource', {
 		type: 'raster',
 		url: 'om://' + omUrl,
