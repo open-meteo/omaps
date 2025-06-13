@@ -60,7 +60,7 @@ interface Data {
 
 let data: Data;
 
-const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
+const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
 
 export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => {
 	if (data) {
@@ -125,6 +125,7 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 };
 
 const renderTile = async (url: string) => {
+	console.log(url);
 	// Read URL parameters
 	const re = new RegExp(/om:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
 	const result = url.match(re);

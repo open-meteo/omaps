@@ -26,8 +26,6 @@ if (params.get('domain')) {
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
 
-console.log(TILE_SIZE);
-
 let map: maplibregl.Map;
 const infoBox: HTMLElement | null = document.getElementById('info_box');
 const mapContainer: HTMLElement | null = document.getElementById('map_container');
@@ -96,10 +94,13 @@ const changeOMfileURL = () => {
 	variableSelector.disabled = true;
 	dateTimeSelector.disabled = true;
 
+	console.log(import.meta.env.DEV);
+
 	source = map.addSource('omFileSource', {
 		type: 'raster',
 		url: 'om://' + omUrl,
-		tileSize: TILE_SIZE
+		tileSize: TILE_SIZE,
+		volatile: import.meta.env.DEV
 	});
 
 	map.addLayer(
@@ -140,7 +141,8 @@ if (mapContainer) {
 		source = map.addSource('omFileSource', {
 			type: 'raster',
 			url: 'om://' + omUrl,
-			tileSize: TILE_SIZE
+			tileSize: TILE_SIZE,
+			volatile: import.meta.env.DEV
 		});
 
 		map.addLayer(

@@ -16,7 +16,7 @@ import {
 import type { TypedArray } from '@openmeteo/file-reader';
 import type { Domain } from './types';
 
-const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
+const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
 const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
 
 const rotatePoint = (cx: number, cy: number, theta: number, x: number, y: number) => {
