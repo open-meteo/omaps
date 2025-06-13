@@ -1,5 +1,6 @@
 import type { TypedArray } from '@openmeteo/file-reader';
-import { type Domain } from '../types';
+import type { Domain, Bounds, Center } from '../types';
+import type { Projection, ProjectionGrid } from './projection';
 
 const r2d = 180 / Math.PI;
 export const tile2lon = (x: number, z: number): number => {
@@ -265,6 +266,91 @@ const interpolateCardinal2D = (
 
 	// Interpolate in Y
 	return cardinalSpline(yFraction, r0, r1, r2, r3, tension);
+};
+
+export const getBorderPoints = (projectionGrid: ProjectionGrid) => {
+	const points = [];
+	for (let i = 0; i < projectionGrid.ny; i++) {
+		points.push([
+			projectionGrid.origin[0],
+			projectionGrid.origin[1] + i * projectionGrid.dy
+		]);
+	}
+	for (let i = 0; i < projectionGrid.nx; i++) {
+		points.push([
+			projectionGrid.origin[0] + i * projectionGrid.dx,
+			projectionGrid.origin[1] + projectionGrid.ny * projectionGrid.dy
+		]);
+	}
+	for (let i = projectionGrid.ny; i >= 0; i--) {
+		points.push([
+			projectionGrid.origin[0] + projectionGrid.nx * projectionGrid.dx,
+			projectionGrid.origin[1] + i * projectionGrid.dy
+		]);
+	}
+	for (let i = projectionGrid.nx; i >= 0; i--) {
+		points.push([
+			projectionGrid.origin[0] + i * projectionGrid.dx,
+			projectionGrid.origin[1]
+		]);
+	}
+
+	return points;
+};
+
+export const getBoundsFromGrid = (
+	lonMin: number,
+	latMin: number,
+	dx: number,
+	dy: number,
+	nx: number,
+	ny: number
+): Bounds => {
+	let minLon = lonMin;
+	let minLat = latMin;
+	let maxLon = minLon + dx * nx;
+	let maxLat = minLat + dy * ny;
+	return [minLon, minLat, maxLon, maxLat];
+};
+
+export const getBoundsFromBorderPoints = (
+	borderPoints: number[][],
+	projection: Projection
+): Bounds => {
+	let minLon = 180;
+	let minLat = 90;
+	let maxLon = -180;
+	let maxLat = -90;
+	for (let borderPoint of borderPoints) {
+		const borderPointLatLon = projection.reverse(borderPoint[0], borderPoint[1]);
+		if (borderPointLatLon[0] < minLat) {
+			minLat = borderPointLatLon[0];
+		}
+		if (borderPointLatLon[0] > maxLat) {
+			maxLat = borderPointLatLon[0];
+		}
+		if (borderPointLatLon[1] < minLon) {
+			minLon = borderPointLatLon[1];
+		}
+		if (borderPointLatLon[1] > maxLon) {
+			maxLon = borderPointLatLon[1];
+		}
+	}
+	return [minLon, minLat, maxLon, maxLat];
+};
+
+export const getCenterFromBounds = (bounds: Bounds): Center => {
+	return {
+		lng: (bounds[2] - bounds[0]) / 2 + bounds[0],
+		lat: (bounds[3] - bounds[1]) / 2 + bounds[1]
+	};
+};
+
+export const getCenterFromGrid = (grid: Domain['grid']): Center => {
+	return {
+		lng: grid.lonMin + grid.dx * (grid.nx * 0.5),
+		lat: grid.latMin + grid.dy * (grid.ny * 0.5)
+	};
 };
 
 export const degreesToRadians = (degree: number) => {

@@ -1,5 +1,13 @@
 import { type Domain } from '../types';
 
+import {
+	getBorderPoints,
+	getBoundsFromBorderPoints,
+	getCenterFromBounds,
+	getCenterFromGrid
+} from './math';
+import { DynamicProjection, ProjectionGrid, type Projection } from './projection';
+
 export const domainGroups = [
 	'bom',
 	'dmi',
@@ -13,6 +21,37 @@ export const domainGroups = [
 	'metno',
 	'ukmo'
 ];
+
+const getCenterPoint = (grid: Domain['grid']) => {
+	let center;
+	if (grid.projection) {
+		const projection = new DynamicProjection(
+			grid.projection.name,
+			grid.projection
+		) as Projection;
+		const projectionGrid = new ProjectionGrid(
+			projection,
+			grid.nx,
+			grid.ny,
+			grid.projection.latitude,
+			grid.projection.longitude,
+			grid.dx,
+			grid.dy,
+			grid.projection.projectOrigin
+		);
+		const borderPoints = getBorderPoints(projectionGrid);
+		const bounds = getBoundsFromBorderPoints(borderPoints, projection);
+		center = getCenterFromBounds(bounds);
+	} else {
+		center = getCenterFromGrid(grid);
+	}
+
+	if (center.lng < 0.2 && center.lat < 0.2) {
+		return { lng: 0, lat: 0 };
+	} else {
+		return center;
+	}
+};
 
 export const domains: Array<Domain> = [
 	// BOM
@@ -28,10 +67,7 @@ export const domains: Array<Domain> = [
 			dy: 180 / 1536,
 			zoom: 1,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -57,10 +93,7 @@ export const domains: Array<Domain> = [
 				name: 'LambertConformalConicProjection'
 			},
 			center: function () {
-				this.center = {
-					lng: this.lonMin, // +??
-					lat: this.latMin // +??
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -79,10 +112,7 @@ export const domains: Array<Domain> = [
 			dy: 0.125,
 			zoom: 1,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -99,10 +129,7 @@ export const domains: Array<Domain> = [
 			dy: 0.0625,
 			zoom: 3.2,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -119,10 +146,7 @@ export const domains: Array<Domain> = [
 			dy: 0.02,
 			zoom: 5.2,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -141,10 +165,7 @@ export const domains: Array<Domain> = [
 			dy: 0.25,
 			zoom: 1,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -161,10 +182,7 @@ export const domains: Array<Domain> = [
 			dy: 0.11714935,
 			zoom: 1,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -179,7 +197,7 @@ export const domains: Array<Domain> = [
 			lonMin: -122.72,
 			dx: 0,
 			dy: 0,
-			zoom: 1,
+			zoom: 3.5,
 			projection: {
 				λ0: -97.5,
 				ϕ0: 0,
@@ -190,18 +208,7 @@ export const domains: Array<Domain> = [
 				name: 'LambertConformalConicProjection'
 			},
 			center: function () {
-				if (this.projection) {
-					this.center = {
-						lng: 0,
-						lat: 0
-					};
-				} else {
-					this.center = {
-						lng: this.lonMin + this.dx * (this.nx * 0.5),
-						lat: this.latMin + this.dy * (this.ny * 0.5)
-					};
-				}
-
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -216,28 +223,19 @@ export const domains: Array<Domain> = [
 			lonMin: 233.723 - 360,
 			dx: 2539.7,
 			dy: 2539.7,
-			zoom: 1,
+			zoom: 3.5,
 			projection: {
 				λ0: 265 - 360,
 				ϕ0: 0,
 				ϕ1: 25,
 				ϕ2: 25,
 				radius: 6371200,
+				latitude: 19.229,
+				longitude: 233.723 - 360,
 				name: 'LambertConformalConicProjection'
 			},
 			center: function () {
-				if (this.projection) {
-					this.center = {
-						lng: 0,
-						lat: 0
-					};
-				} else {
-					this.center = {
-						lng: this.lonMin + this.dx * (this.nx * 0.5),
-						lat: this.latMin + this.dy * (this.ny * 0.5)
-					};
-				}
-
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -256,10 +254,7 @@ export const domains: Array<Domain> = [
 			dy: 180 / (721 - 1),
 			zoom: 1,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -276,10 +271,7 @@ export const domains: Array<Domain> = [
 			dy: 180 / (451 - 1),
 			zoom: 1,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -298,10 +290,7 @@ export const domains: Array<Domain> = [
 			dy: 0.02,
 			zoom: 5.2,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -320,10 +309,7 @@ export const domains: Array<Domain> = [
 			dy: 0.5,
 			zoom: 1,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -340,10 +326,7 @@ export const domains: Array<Domain> = [
 			dy: 0.05,
 			zoom: 1,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -362,10 +345,7 @@ export const domains: Array<Domain> = [
 			dy: 0.25,
 			zoom: 1,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -382,10 +362,7 @@ export const domains: Array<Domain> = [
 			dy: 0.1,
 			zoom: 3.5,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -402,10 +379,7 @@ export const domains: Array<Domain> = [
 			dy: 0.025,
 			zoom: 5.2,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -423,10 +397,7 @@ export const domains: Array<Domain> = [
 			dy: 0.01,
 			zoom: 5.2,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -442,7 +413,7 @@ export const domains: Array<Domain> = [
 			lonMin: 1.9184653,
 			dx: 0.25,
 			dy: 0.25,
-			zoom: 1,
+			zoom: 4,
 			projection: {
 				λ0: 15,
 				ϕ0: 63,
@@ -453,17 +424,7 @@ export const domains: Array<Domain> = [
 				name: 'LambertConformalConicProjection'
 			},
 			center: function () {
-				if (this.projection) {
-					this.center = {
-						lng: 0,
-						lat: 0
-					};
-				} else {
-					this.center = {
-						lng: this.lonMin + this.dx * (this.nx * 0.5),
-						lat: this.latMin + this.dy * (this.ny * 0.5)
-					};
-				}
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -482,10 +443,7 @@ export const domains: Array<Domain> = [
 			dy: 180 / 1920,
 			zoom: 1,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -500,7 +458,7 @@ export const domains: Array<Domain> = [
 			lonMin: 0, //-1158000
 			dx: 2000,
 			dy: 2000,
-			zoom: 1,
+			zoom: 4,
 			projection: {
 				λ0: -2.5,
 				ϕ1: 54.9,
@@ -509,6 +467,10 @@ export const domains: Array<Domain> = [
 				radius: 6371229,
 				name: 'LambertAzimuthalEqualAreaProjection',
 				projectOrigin: false
+			},
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
 			}
 		}
 	},
@@ -524,7 +486,7 @@ export const domains: Array<Domain> = [
 			lonMin: -25.162262,
 			dx: 0,
 			dy: 0,
-			zoom: 6,
+			zoom: 3.5,
 			projection: {
 				rotation: [-35, -8],
 				latitude: [39.740627, 62.619324],
@@ -532,18 +494,7 @@ export const domains: Array<Domain> = [
 				name: 'RotatedLatLonProjection'
 			},
 			center: function () {
-				if (this.projection) {
-					this.center = {
-						lng: 0,
-						lat: 0
-					};
-				} else {
-					this.center = {
-						lng: this.lonMin + this.dx * (this.nx * 0.5),
-						lat: this.latMin + this.dy * (this.ny * 0.5)
-					};
-				}
-
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}
@@ -560,10 +511,7 @@ export const domains: Array<Domain> = [
 			dy: 0.018,
 			zoom: 6,
 			center: function () {
-				this.center = {
-					lng: this.lonMin + this.dx * (this.nx * 0.5),
-					lat: this.latMin + this.dy * (this.ny * 0.5)
-				};
+				this.center = getCenterPoint(this);
 				return this;
 			}
 		}

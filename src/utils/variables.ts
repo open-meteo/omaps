@@ -10,3 +10,4 @@ export const variables = [
 ];
 
 export const hideZero = ['precipitation', 'cloud_cover'];
+export const requestMultiple = ['wind'];

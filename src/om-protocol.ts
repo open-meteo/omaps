@@ -7,17 +7,21 @@ import {
 	type TypedArray
 } from '@openmeteo/file-reader';
 
-import { getIndexFromLatLong, interpolate2DHermite } from './utils/math';
+import {
+	interpolate2DHermite,
+	getBorderPoints,
+	getBoundsFromGrid,
+	getIndexFromLatLong,
+	getBoundsFromBorderPoints
+} from './utils/math';
 
 import { domains } from './utils/domains';
-import { variables } from './utils/variables';
+import { variables, requestMultiple } from './utils/variables';
 
 import TileWorker from './worker?worker';
 
-import type { TileJSON, TileIndex, Domain, Variable } from './types';
+import type { TileJSON, TileIndex, Domain, Variable, Bounds } from './types';
 import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
-
-const ONE_HOUR_IN_MILLISECONDS = 60 * 60 * 1000;
 
 let domain: Domain;
 let variable: Variable;
@@ -144,75 +148,13 @@ const renderTile = async (url: string) => {
 	return tile;
 };
 
-const getBorderPoints = () => {
-	const points = [];
-	for (let i = 0; i < projectionGrid.ny; i++) {
-		points.push([
-			projectionGrid.origin[0],
-			projectionGrid.origin[1] + i * projectionGrid.dy
-		]);
-	}
-	for (let i = 0; i < projectionGrid.nx; i++) {
-		points.push([
-			projectionGrid.origin[0] + i * projectionGrid.dx,
-			projectionGrid.origin[1] + projectionGrid.ny * projectionGrid.dy
-		]);
-	}
-	for (let i = projectionGrid.ny; i >= 0; i--) {
-		points.push([
-			projectionGrid.origin[0] + projectionGrid.nx * projectionGrid.dx,
-			projectionGrid.origin[1] + i * projectionGrid.dy
-		]);
-	}
-	for (let i = projectionGrid.nx; i >= 0; i--) {
-		points.push([
-			projectionGrid.origin[0] + i * projectionGrid.dx,
-			projectionGrid.origin[1]
-		]);
-	}
-
-	return points;
-};
-
 const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
-	let minLon;
-	let minLat;
-	let maxLon;
-	let maxLat;
-
-	let bounds;
+	let bounds: Bounds;
 	if (domain.grid.projection) {
-		// loop over all border points to get max / min lat / lon
-		const borderPoints = getBorderPoints();
-		minLon = 180;
-		minLat = 90;
-		maxLon = -180;
-		maxLat = -90;
-		for (let borderPoint of borderPoints) {
-			const borderPointLatLon = projection.reverse(
-				borderPoint[0],
-				borderPoint[1]
-			);
-			if (borderPointLatLon[0] < minLat) {
-				minLat = borderPointLatLon[0];
-			}
-			if (borderPointLatLon[0] > maxLat) {
-				maxLat = borderPointLatLon[0];
-			}
-			if (borderPointLatLon[1] < minLon) {
-				minLon = borderPointLatLon[1];
-			}
-			if (borderPointLatLon[1] > maxLon) {
-				maxLon = borderPointLatLon[1];
-			}
-		}
-		bounds = [minLon, minLat, maxLon, maxLat];
+		const borderPoints = getBorderPoints(projectionGrid);
+		bounds = getBoundsFromBorderPoints(borderPoints, projection);
 	} else {
-		minLon = lonMin;
-		minLat = latMin;
-		maxLon = minLon + dx * nx;
-		maxLat = minLat + dy * ny;
-		bounds = [minLon, minLat, maxLon, maxLat];
+		bounds = getBoundsFromGrid(lonMin, latMin, dx, dy, nx, ny);
 	}
 
 	return {
@@ -277,7 +219,7 @@ const initOMFile = async (url: string) => {
 		);
 	}
 
-	if (variable.value === 'wind') {
+	if (requestMultiple.includes(variable.value)) {
 		fileReader.backendu = new MemoryHttpBackend({
 			url: omUrl.replace('wind.om', 'wind_u_component_10m.om'),
 			maxFileSize: 500 * 1024 * 1024 // 500 MB

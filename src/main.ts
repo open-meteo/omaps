@@ -125,6 +125,8 @@ let showTemp = false;
 if (mapContainer) {
 	maplibregl.addProtocol('om', omProtocol);
 
+	console.log(domains);
+
 	map = new maplibregl.Map({
 		container: mapContainer,
 		style: `https://maptiler.servert.nl/styles/basic-world-maps/style.json`,

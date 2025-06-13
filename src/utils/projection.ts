@@ -14,6 +14,9 @@ export class RotatedLatLonProjection implements Projection {
 			const rotation = projectionData.rotation;
 			this.θ = degreesToRadians(90 + rotation[0]);
 			this.ϕ = degreesToRadians(rotation[1]);
+		} else {
+			this.θ = 0;
+			this.ϕ = 0;
 		}
 	}
 
@@ -146,12 +149,15 @@ export class LambertAzimuthalEqualAreaProjection implements Projection {
 			if (radius) {
 				this.R = radius;
 			}
+		} else {
+			this.λ0 = 0;
+			this.ϕ1 = 0;
 		}
 	}
 
 	forward(latitude: number, longitude: number): [x: number, y: number] {
-		let ϕ = degreesToRadians(latitude);
 		let λ = degreesToRadians(longitude);
+		let ϕ = degreesToRadians(latitude);
 
 		let k = Math.sqrt(
 			2 /
@@ -229,7 +235,9 @@ export class ProjectionGrid {
 		this.projection = projection;
 		this.nx = nx;
 		this.ny = ny;
-		if (Array === latitude.constructor) {
+		if (latitude && Array === latitude.constructor) {
+			latitude as number[];
+			longitude as number[];
 			let sw = projection.forward(latitude[0], longitude[0]);
 			let ne = projection.forward(latitude[1], longitude[1]);
 			this.origin = sw;
@@ -245,7 +253,7 @@ export class ProjectionGrid {
 		} else {
 			this.dx = dx;
 			this.dy = dy;
-			this.origin = [latitude, longitude];
+			this.origin = [latitude as number, longitude as number];
 		}
 	}
 

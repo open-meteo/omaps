@@ -82,3 +82,15 @@ export interface Domain {
 export interface DomainGroups {
 	[key: string]: Domain[];
 }
+
+export type Bounds = [
+	minimumLongitude: number,
+	minimumLatitude: number,
+	maximumLongitude: number,
+	maximumLatitude: number
+];
+
+export interface Center {
+	lng: number;
+	lat: number;
+}
