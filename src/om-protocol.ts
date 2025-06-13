@@ -18,8 +18,50 @@ import {
 import { domains } from './utils/domains';
 import { variables, requestMultiple } from './utils/variables';
 
-import iconListPixels from './utils/icons';
-import arrowPixels from './utils/arrow';
+import iconListPixelsSource from './utils/icons';
+import arrowPixelsSource from './utils/arrow';
+
+const iconPixelData = {};
+for (let [key, iconUrl] of Object.entries(iconListPixelsSource)) {
+	const response = await fetch(iconUrl);
+	const svgString = await response.text();
+
+	const svg64 = btoa(svgString);
+	const b64Start = 'data:image/svg+xml;base64,';
+
+	const image64 = b64Start + svg64;
+	const canvas = new OffscreenCanvas(64, 64);
+
+	let img = new Image();
+	img.onload = () => {
+		canvas.getContext('2d').drawImage(img, 0, 0);
+		const iconData = canvas.getContext('2d').getImageData(0, 0, 64, 64);
+
+		iconPixelData[key] = iconData.data;
+	};
+	img.src = image64;
+}
+
+const arrowPixels = {};
+for (let [key, iconUrl] of Object.entries(arrowPixelsSource)) {
+	const response = await fetch(iconUrl);
+	const svgString = await response.text();
+
+	const svg64 = btoa(svgString);
+	const b64Start = 'data:image/svg+xml;base64,';
+
+	const image64 = b64Start + svg64;
+	const canvas = new OffscreenCanvas(32, 32);
+
+	let img = new Image();
+	img.onload = () => {
+		canvas.getContext('2d').drawImage(img, 0, 0);
+		const iconData = canvas.getContext('2d').getImageData(0, 0, 32, 32);
+
+		arrowPixels[key] = iconData.data;
+	};
+	img.src = image64;
+}
 
 import TileWorker from './worker?worker';
 
@@ -119,36 +161,11 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 
 	const worker = new TileWorker();
 
-	let iconPixelData = {};
-	if (variable.value === 'weather_code' || variable.value.startsWith('wind')) {
-		let iconList;
-		if (variable.value === 'weather_code') {
-			iconList = iconListPixels;
-		} else {
-			iconList = arrowPixels;
-		}
-
-		for (let [key, icon] of iconList) {
-			const response = await fetch(`images/weather-icons/wi-day-${icon}.svg`);
-			const svgString = await response.text();
-
-			// make it base64
-			const svg64 = btoa(svgString);
-			const b64Start = 'data:image/svg+xml;base64,';
-
-			// prepend a "header"
-			const image64 = b64Start + svg64;
-			const canvas = new OffscreenCanvas(64, 64);
-
-			let img = new Image();
-			img.onload = () => {
-				// draw the image onto the canvas
-				canvas.getContext('2d').drawImage(img, 0, 0);
-				const iconData = canvas.getContext('2d').getImageData(0, 0, 64, 64);
-				iconPixelData[key] = iconData.data;
-			};
-			img.src = image64;
-		}
+	let iconList = {};
+	if (variable.value === 'weather_code') {
+		iconList = iconPixelData;
+	} else if (variable.value.startsWith('wind')) {
+		iconList = arrowPixels;
 	}
 
 	worker.postMessage({
@@ -160,7 +177,7 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 		data,
 		domain,
 		variable,
-		iconPixelData: iconPixelData
+		iconPixelData: iconList
 	});
 	const tilePromise = new Promise<ImageBitmap>((resolve) => {
 		worker.onmessage = async (message) => {

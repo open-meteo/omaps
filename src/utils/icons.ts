@@ -84,10 +84,10 @@ export interface IconListPixels {
 	[key: number]: Uint8ClampedArray;
 }
 
-const iconListPixels: IconListPixels = {};
+const iconListPixelsSource: IconListPixels = {};
 
 for (let [i, map] of Object.entries(mapping)) {
-	iconListPixels[i] = `images/weather-icons/wi-day-${map}.svg`;
+	iconListPixelsSource[i] = `images/weather-icons/wi-day-${map}.svg`;
 }
 
-export default iconListPixels;
+export default iconListPixelsSource;
