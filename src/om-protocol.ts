@@ -120,13 +120,36 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 	const worker = new TileWorker();
 
 	let iconPixelData = {};
-	if (variable.value === 'weather_code') {
-		iconPixelData = iconListPixels;
-	} else if (variable.value.startsWith('wind')) {
-		iconPixelData = arrowPixels;
-	}
+	if (variable.value === 'weather_code' || variable.value.startsWith('wind')) {
+		let iconList;
+		if (variable.value === 'weather_code') {
+			iconList = iconListPixels;
+		} else {
+			iconList = arrowPixels;
+		}
 
-	console.log(iconPixelData);
+		for (let [key, icon] of iconList) {
+			const response = await fetch(`images/weather-icons/wi-day-${icon}.svg`);
+			const svgString = await response.text();
+
+			// make it base64
+			const svg64 = btoa(svgString);
+			const b64Start = 'data:image/svg+xml;base64,';
+
+			// prepend a "header"
+			const image64 = b64Start + svg64;
+			const canvas = new OffscreenCanvas(64, 64);
+
+			let img = new Image();
+			img.onload = () => {
+				// draw the image onto the canvas
+				canvas.getContext('2d').drawImage(img, 0, 0);
+				const iconData = canvas.getContext('2d').getImageData(0, 0, 64, 64);
+				iconPixelData[key] = iconData.data;
+			};
+			img.src = image64;
+		}
+	}
 
 	worker.postMessage({
 		type: 'GT',
