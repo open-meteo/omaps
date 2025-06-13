@@ -70,7 +70,14 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		}
+		},
+		variables: [
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation'
+		]
 	},
 	// DMI
 	{

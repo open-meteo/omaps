@@ -220,12 +220,15 @@ const initOMFile = async (url: string) => {
 	}
 
 	if (requestMultiple.includes(variable.value)) {
+		let reg = new RegExp(/wind_(\d+)m\.om/);
+		const matches = url.match(reg);
+
 		fileReader.backendu = new MemoryHttpBackend({
-			url: omUrl.replace('wind.om', 'wind_u_component_10m.om'),
+			url: omUrl.replace(matches[0], `wind_u_component_${matches[1]}m.om`),
 			maxFileSize: 500 * 1024 * 1024 // 500 MB
 		});
 		fileReader.backendv = new MemoryHttpBackend({
-			url: omUrl.replace('wind.om', 'wind_v_component_10m.om'),
+			url: omUrl.replace(matches[0], `wind_v_component_${matches[1]}m.om`),
 			maxFileSize: 500 * 1024 * 1024 // 500 MB
 		});
 		fileReader.readeru = await OmFileReader.create(fileReader.backendu).catch(() => {
@@ -244,7 +247,7 @@ const initOMFile = async (url: string) => {
 			const datau = await fileReader.readeru.read(OmDataType.FloatArray, ranges);
 			const datav = await fileReader.readerv.read(OmDataType.FloatArray, ranges);
 
-			const dataValues = [];
+			const dataValues: Float32Array<ArrayBuffer> = [];
 			const dataDirection: Float32Array<ArrayBuffer> = [];
 
 			for (let [i, dp] of datau.entries()) {

@@ -77,6 +77,7 @@ export interface Domain {
 			  }
 			| Function;
 	};
+	variables: string[];
 }
 
 export interface DomainGroups {

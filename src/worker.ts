@@ -1,6 +1,6 @@
 import { colorScale } from './utils/color-scales';
 
-import { hideZero } from './utils/variables';
+import { hideZero, requestMultiple } from './utils/variables';
 
 import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
 
@@ -133,10 +133,20 @@ self.onmessage = async (message) => {
 				min: 990,
 				max: 1020
 			});
-		} else {
+		} else if (variable.value == 'relative_humidity_2m') {
 			colors = colorScale({
 				min: 0,
-				max: 30
+				max: 100
+			});
+		} else if (variable.value == 'shortwave_radiation') {
+			colors = colorScale({
+				min: 0,
+				max: 1000
+			});
+		} else {
+			colors = colorScale({
+				min: -5,
+				max: 40
 			});
 		}
 
@@ -248,21 +258,25 @@ self.onmessage = async (message) => {
 			}
 		}
 
-		if (variable.value === 'wind') {
-			for (let i = 0; i < TILE_SIZE; i += TILE_SIZE / 16) {
-				for (let j = 0; j < TILE_SIZE; j += TILE_SIZE / 16) {
-					drawArrow(
-						rgba,
-						i,
-						j,
-						x,
-						y,
-						z,
-						nx,
-						domain,
-						projectionGrid,
-						direction
-					);
+		if (requestMultiple.includes(variable.value)) {
+			let reg = new RegExp(/wind_(\d+)m/);
+			const matches = variable.value.match(reg);
+			if (matches[0]) {
+				for (let i = 0; i < TILE_SIZE; i += TILE_SIZE / 16) {
+					for (let j = 0; j < TILE_SIZE; j += TILE_SIZE / 16) {
+						drawArrow(
+							rgba,
+							i,
+							j,
+							x,
+							y,
+							z,
+							nx,
+							domain,
+							projectionGrid,
+							direction
+						);
+					}
 				}
 			}
 		}
