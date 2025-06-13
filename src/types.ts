@@ -78,6 +78,7 @@ export interface Domain {
 			| Function;
 	};
 	variables: string[];
+	windUVComponents: boolean;
 }
 
 export interface DomainGroups {

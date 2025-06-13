@@ -15,6 +15,7 @@ import {
 
 import type { TypedArray } from '@openmeteo/file-reader';
 import type { Domain } from './types';
+import type { v8 } from 'maplibre-gl';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
 const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
@@ -37,8 +38,8 @@ const drawArrow = (
 	domain: Domain,
 	projectionGrid: ProjectionGrid,
 	directions: TypedArray,
-	boxSize = TILE_SIZE / 16,
-	arrowTipLength = 6
+	boxSize = TILE_SIZE / 8,
+	arrowTipLength = 7
 ): void => {
 	const arrowCoords = [];
 
@@ -53,8 +54,8 @@ const drawArrow = (
 	const arrowCoordsRotated = [];
 	const arrowIndices = [];
 
-	let iCenter = iBase + boxSize / 2;
-	let jCenter = jBase + boxSize / 2;
+	let iCenter = iBase + Math.floor(boxSize / 2);
+	let jCenter = jBase + Math.floor(boxSize / 2);
 
 	const lat = tile2lat(y + iCenter / TILE_SIZE, z);
 	const lon = tile2lon(x + jCenter / TILE_SIZE, z);
@@ -135,6 +136,16 @@ self.onmessage = async (message) => {
 			});
 		} else if (variable.value == 'relative_humidity_2m') {
 			colors = colorScale({
+				colorScheme: '',
+				customColors: [
+					'#009392',
+					'#39b185',
+					'#9ccb86',
+					'#e9e29c',
+					'#eeb479',
+					'#e88471',
+					'#cf597e'
+				].reverse(),
 				min: 0,
 				max: 100
 			});
@@ -142,6 +153,11 @@ self.onmessage = async (message) => {
 			colors = colorScale({
 				min: 0,
 				max: 1000
+			});
+		} else if (variable.value == 'cape') {
+			colors = colorScale({
+				min: 0,
+				max: 4000
 			});
 		} else {
 			colors = colorScale({
@@ -204,32 +220,6 @@ self.onmessage = async (message) => {
 					}
 				}
 
-				// if (
-				// 	import.meta.env.DEV &&
-				// 	(i === 0 ||
-				// 		i === TILE_SIZE ||
-				// 		j === 0 ||
-				// 		j === TILE_SIZE ||
-				// 		i % (TILE_SIZE / 16) === 0 ||
-				// 		j % (TILE_SIZE / 16) === 0)
-				// ) {
-				// 	if (
-				// 		i === 0 ||
-				// 		i === TILE_SIZE ||
-				// 		j === 0 ||
-				// 		j === TILE_SIZE
-				// 	) {
-				// 		rgba[4 * ind] = 255;
-				// 		rgba[4 * ind + 1] = 0;
-				// 		rgba[4 * ind + 2] = 255;
-				// 		rgba[4 * ind + 3] = 255;
-				// 	} else {
-				// 		rgba[4 * ind] = 0;
-				// 		rgba[4 * ind + 1] = 0;
-				// 		rgba[4 * ind + 2] = 255;
-				// 		rgba[4 * ind + 3] = 255;
-				// 	}
-				// } else {
 				if (isNaN(px) || px === Infinity) {
 					rgba[4 * ind] = 0;
 					rgba[4 * ind + 1] = 0;
@@ -254,16 +244,16 @@ self.onmessage = async (message) => {
 						}
 					}
 				}
-				//}
 			}
 		}
 
 		if (requestMultiple.includes(variable.value)) {
 			let reg = new RegExp(/wind_(\d+)m/);
 			const matches = variable.value.match(reg);
+			const boxSize = Math.floor(TILE_SIZE / 16);
 			if (matches[0]) {
-				for (let i = 0; i < TILE_SIZE; i += TILE_SIZE / 16) {
-					for (let j = 0; j < TILE_SIZE; j += TILE_SIZE / 16) {
+				for (let i = 0; i < TILE_SIZE; i += boxSize) {
+					for (let j = 0; j < TILE_SIZE; j += boxSize) {
 						drawArrow(
 							rgba,
 							i,
@@ -274,7 +264,8 @@ self.onmessage = async (message) => {
 							nx,
 							domain,
 							projectionGrid,
-							direction
+							direction,
+							boxSize
 						);
 					}
 				}

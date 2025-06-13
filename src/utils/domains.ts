@@ -76,8 +76,16 @@ export const domains: Array<Domain> = [
 			'precipitation',
 			'pressure_msl',
 			'relative_humidity_2m',
-			'shortwave_radiation'
-		]
+			'shortwave_radiation',
+			'temperature_2m',
+			'visibility',
+			'wind_10m',
+			'wind_40m',
+			'wind_80m',
+			'wind_120m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: false
 	},
 	// DMI
 	{
@@ -103,7 +111,23 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		}
+		},
+		variables: [
+			'cape',
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'visibility',
+			'wind_10m',
+			'wind_40m',
+			'wind_80m',
+			'wind_120m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: false
 	},
 
 	// DWD

@@ -1,4 +1,6 @@
 export const variables = [
+	{ value: 'cape', label: 'CAPE' },
+
 	{ value: 'cloud_cover', label: 'Cloud Cover' },
 
 	{ value: 'precipitation', label: 'Precipitation' },
@@ -17,7 +19,6 @@ export const variables = [
 	{ value: 'wind_40m', label: 'Wind 40m' },
 	{ value: 'wind_80m', label: 'Wind 80m' },
 	{ value: 'wind_120m', label: 'Wind 120m' },
-
 	{ value: 'wind_gusts_10m', label: 'Wind Gusts 10m' }
 ];
 
