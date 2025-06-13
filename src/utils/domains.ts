@@ -79,6 +79,7 @@ export const domains: Array<Domain> = [
 			'shortwave_radiation',
 			'temperature_2m',
 			'visibility',
+			'weather_code',
 			'wind_10m',
 			'wind_40m',
 			'wind_80m',
@@ -98,12 +99,14 @@ export const domains: Array<Domain> = [
 			lonMin: -25.421997,
 			dx: 2000,
 			dy: 2000,
-			zoom: 6,
+			zoom: 4,
 			projection: {
 				λ0: 352,
 				ϕ0: 55.5,
 				ϕ1: 55.5,
 				ϕ2: 55.5,
+				latitude: 39.671,
+				longitude: -25.421997,
 				radius: 6371229,
 				name: 'LambertConformalConicProjection'
 			},
@@ -120,11 +123,19 @@ export const domains: Array<Domain> = [
 			'relative_humidity_2m',
 			'shortwave_radiation',
 			'temperature_2m',
+			'temperature_50m',
+			'temperature_100m',
+			'temperature_150m',
+			'temperature_200m',
+			'temperature_250m',
 			'visibility',
+			'weather_code',
 			'wind_10m',
-			'wind_40m',
-			'wind_80m',
-			'wind_120m',
+			'wind_50m',
+			'wind_150m',
+			'wind_250m',
+			'wind_350m',
+			'wind_450m',
 			'wind_gusts_10m'
 		],
 		windUVComponents: false
@@ -146,7 +157,27 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		}
+		},
+		variables: [
+			'cape',
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'temperature_80m',
+			'temperature_120m',
+			'temperature_180m',
+			'visibility',
+			'weather_code',
+			'wind_10m',
+			'wind_80m',
+			'wind_120m',
+			'wind_180m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: true
 	},
 	{
 		value: 'dwd_icon_eu',
@@ -163,7 +194,27 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		}
+		},
+		variables: [
+			'cape',
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'temperature_80m',
+			'temperature_120m',
+			'temperature_180m',
+			'visibility',
+			'weather_code',
+			'wind_10m',
+			'wind_80m',
+			'wind_120m',
+			'wind_180m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: true
 	},
 	{
 		value: 'dwd_icon_d2',
@@ -180,7 +231,27 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		}
+		},
+		variables: [
+			'cape',
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'temperature_80m',
+			'temperature_120m',
+			'temperature_180m',
+			'visibility',
+			'weather_code',
+			'wind_10m',
+			'wind_80m',
+			'wind_120m',
+			'wind_180m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: true
 	},
 
 	// GFS

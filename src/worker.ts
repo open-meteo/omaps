@@ -1,6 +1,6 @@
 import { colorScale } from './utils/color-scales';
 
-import { hideZero, requestMultiple } from './utils/variables';
+import { hideZero, drawOnTiles } from './utils/variables';
 
 import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
 
@@ -14,8 +14,8 @@ import {
 } from './utils/math';
 
 import type { TypedArray } from '@openmeteo/file-reader';
+import type { IconPixelData } from './utils/icons';
 import type { Domain } from './types';
-import type { v8 } from 'maplibre-gl';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
 const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
@@ -39,20 +39,23 @@ const drawArrow = (
 	projectionGrid: ProjectionGrid,
 	directions: TypedArray,
 	boxSize = TILE_SIZE / 8,
-	arrowTipLength = 7
+	arrowTipLength = 7,
+	iconPixelData: IconPixelData
 ): void => {
-	const arrowCoords = [];
+	const northArrow = iconPixelData['0'];
+	const newArrow = new Uint8ClampedArray(4 * boxSize * boxSize);
 
-	for (let bs = 1; bs < boxSize - 2; bs++) {
-		arrowCoords.push([iBase + bs, jBase + boxSize / 2]);
-	}
-	for (let at = 0; at < arrowTipLength; at++) {
-		arrowCoords.push([iBase + at, jBase + (boxSize / 2 + at)]);
-		arrowCoords.push([iBase + at, jBase + (boxSize / 2 - at)]);
-	}
+	// let arrowCoords = [];
+	// for (let bs = 1; bs < boxSize - 2; bs++) {
+	// 	arrowCoords.push([iBase + bs, jBase + boxSize / 2]);
+	// }
+	// for (let at = 0; at < arrowTipLength; at++) {
+	// 	arrowCoords.push([iBase + at, jBase + (boxSize / 2 + at)]);
+	// 	arrowCoords.push([iBase + at, jBase + (boxSize / 2 - at)]);
+	// }
 
-	const arrowCoordsRotated = [];
-	const arrowIndices = [];
+	// const arrowCoordsRotated = [];
+	// const arrowIndices = [];
 
 	let iCenter = iBase + Math.floor(boxSize / 2);
 	let jCenter = jBase + Math.floor(boxSize / 2);
@@ -71,21 +74,109 @@ const drawArrow = (
 		interpolateLinear(directions, nx, index, xFraction, yFraction)
 	);
 
-	for (let arrow of arrowCoords) {
-		let rotatedPoint = rotatePoint(iCenter, jCenter, -direction, arrow[0], arrow[1]);
-		arrowCoordsRotated.push([Math.floor(rotatedPoint[0]), Math.floor(rotatedPoint[1])]);
+	// for (let arrow of arrowCoords) {
+	// 	let rotatedPoint = rotatePoint(iCenter, jCenter, -direction, arrow[0], arrow[1]);
+	// 	arrowCoordsRotated.push([Math.floor(rotatedPoint[0]), Math.floor(rotatedPoint[1])]);
+	// }
+
+	// for (let arrow of arrowCoordsRotated) {
+	// 	arrowIndices.push(arrow[1] + arrow[0] * TILE_SIZE);
+	// }
+
+	if (direction) {
+		for (let i = 0; i < boxSize; i++) {
+			for (let j = 0; j < boxSize; j++) {
+				let ind = j + i * boxSize;
+				//let indTile = jBase + j + (iBase + i) * TILE_SIZE;
+				let rotatedPoint = rotatePoint(
+					Math.floor(boxSize / 2),
+					Math.floor(boxSize / 2),
+					-direction,
+					i,
+					j
+				);
+				let newI = Math.floor(rotatedPoint[0]);
+				let newJ = Math.floor(rotatedPoint[1]);
+				let indNew = newJ + newI * boxSize;
+				let indTile = jBase + newJ + (iBase + newI) * TILE_SIZE;
+
+				// newArrow[4 * indNew] = 0;
+				// newArrow[4 * indNew + 1] = 0;
+				// newArrow[4 * indNew + 2] = 0;
+				// newArrow[4 * indNew + 3] = northArrow[4 * ind + 3];
+
+				if (northArrow[4 * ind + 3]) {
+					rgba[4 * indTile] = 0;
+					rgba[4 * indTile + 1] = 0;
+					rgba[4 * indTile + 2] = 0;
+					rgba[4 * indTile + 3] = northArrow[4 * ind + 3];
+				}
+			}
+		}
 	}
 
-	for (let arrow of arrowCoordsRotated) {
-		arrowIndices.push(arrow[1] + arrow[0] * TILE_SIZE);
-	}
+	// for (let arrowIndex of arrowIndices) {
+	// 	rgba[4 * arrowIndex] = 0;
+	// 	rgba[4 * arrowIndex + 1] = 0;
+	// 	rgba[4 * arrowIndex + 2] = 0;
+	// 	rgba[4 * arrowIndex + 3] = 155;
+	// }
+};
 
-	for (let arrowIndex of arrowIndices) {
-		rgba[4 * arrowIndex] = 0;
-		rgba[4 * arrowIndex + 1] = 0;
-		rgba[4 * arrowIndex + 2] = 0;
-		rgba[4 * arrowIndex + 3] = 155;
-	}
+const drawIcon = (
+	rgba: Uint8ClampedArray,
+	iBase: number,
+	jBase: number,
+	x: number,
+	y: number,
+	z: number,
+	nx: number,
+	domain: Domain,
+	projectionGrid: ProjectionGrid,
+	values: TypedArray,
+	boxSize,
+	iconPixelData
+): Promise<void> => {
+	return new Promise(async (resolve) => {
+		let iCenter = iBase + Math.floor(boxSize / 2);
+		let jCenter = jBase + Math.floor(boxSize / 2);
+
+		const lat = tile2lat(y + iCenter / TILE_SIZE, z);
+		const lon = tile2lon(x + jCenter / TILE_SIZE, z);
+
+		let indCenter = jCenter + iCenter * TILE_SIZE;
+
+		const { index, xFraction, yFraction } = getIndexAndFractions(
+			lat,
+			lon,
+			domain,
+			projectionGrid
+		);
+
+		let weatherCode = Math.round(
+			interpolateLinear(values, nx, index, xFraction, yFraction)
+		);
+		if (weatherCode) {
+			let iconPixels = iconPixelData[weatherCode];
+			if (iconPixels) {
+				for (let i = 0; i < boxSize; i++) {
+					for (let j = 0; j < boxSize; j++) {
+						let ind = j + i * boxSize;
+						let indTile = jBase + j + (iBase + i) * TILE_SIZE;
+						if (iconPixels[4 * ind + 3]) {
+							rgba[4 * indTile] = 0;
+							rgba[4 * indTile + 1] = 0;
+							rgba[4 * indTile + 2] = 0;
+							rgba[4 * indTile + 3] =
+								iconPixels[4 * ind + 3];
+						}
+					}
+				}
+			}
+		}
+
+		resolve();
+	});
 };
 
 const getIndexAndFractions = (lat: number, lon: number, domain: Domain, projectionGrid) => {
@@ -113,7 +204,7 @@ self.onmessage = async (message) => {
 		const y = message.data.y;
 		const z = message.data.z;
 		const values = message.data.data.values;
-		const direction = message.data.data.direction;
+		const directions = message.data.data.directions;
 
 		const domain = message.data.domain;
 		const variable = message.data.variable;
@@ -220,7 +311,11 @@ self.onmessage = async (message) => {
 					}
 				}
 
-				if (isNaN(px) || px === Infinity) {
+				if (
+					isNaN(px) ||
+					px === Infinity ||
+					variable.value === 'weather_code'
+				) {
 					rgba[4 * ind] = 0;
 					rgba[4 * ind + 1] = 0;
 					rgba[4 * ind + 2] = 0;
@@ -247,11 +342,13 @@ self.onmessage = async (message) => {
 			}
 		}
 
-		if (requestMultiple.includes(variable.value)) {
+		if (drawOnTiles.includes(variable.value)) {
+			const iconPixelData = message.data.iconPixelData;
+
 			let reg = new RegExp(/wind_(\d+)m/);
 			const matches = variable.value.match(reg);
-			const boxSize = Math.floor(TILE_SIZE / 16);
-			if (matches[0]) {
+			if (matches) {
+				const boxSize = Math.floor(TILE_SIZE / 16);
 				for (let i = 0; i < TILE_SIZE; i += boxSize) {
 					for (let j = 0; j < TILE_SIZE; j += boxSize) {
 						drawArrow(
@@ -264,8 +361,31 @@ self.onmessage = async (message) => {
 							nx,
 							domain,
 							projectionGrid,
-							direction,
-							boxSize
+							directions,
+							boxSize,
+							7,
+							iconPixelData
+						);
+					}
+				}
+			} else if (variable.value === 'weather_code') {
+				const boxSize = Math.floor(TILE_SIZE / 8);
+
+				for (let i = 0; i < TILE_SIZE; i += boxSize) {
+					for (let j = 0; j < TILE_SIZE; j += boxSize) {
+						await drawIcon(
+							rgba,
+							i,
+							j,
+							x,
+							y,
+							z,
+							nx,
+							domain,
+							projectionGrid,
+							values,
+							boxSize,
+							iconPixelData
 						);
 					}
 				}

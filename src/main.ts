@@ -70,7 +70,9 @@ const getDomainOptions = () => {
 const getVariableOptions = () => {
 	let string = '';
 	for (let v of variables) {
-		string += `<option value=${v.value} ${variable.value === v.value ? 'selected' : ''}>${v.label}</option>`;
+		if (domain && domain.variables.includes(v.value)) {
+			string += `<option value=${v.value} ${variable.value === v.value ? 'selected' : ''}>${v.label}</option>`;
+		}
 	}
 	return string;
 };
@@ -86,6 +88,13 @@ let domainSelector: HTMLInputElement,
 let checkSourceLoadedInterval: ReturnType<typeof setInterval>;
 let checked = 0;
 const changeOMfileURL = () => {
+	variableSelector.replaceChildren('');
+	variableSelector.innerHTML = `${getVariableOptions()}`;
+
+	if (!domain.variables.includes(variable.value)) {
+		variable = variables.find((v) => v.value === domain.variables[0]) as Variable;
+	}
+
 	omUrl = getOMUrl();
 	map.removeLayer('omFileLayer');
 	map.removeSource('omFileSource');
@@ -134,7 +143,7 @@ if (mapContainer) {
 		// hash: true
 	});
 
-	map.on('load', () => {
+	map.on('load', async () => {
 		omUrl = getOMUrl();
 		source = map.addSource('omFileSource', {
 			type: 'raster',

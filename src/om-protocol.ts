@@ -18,6 +18,9 @@ import {
 import { domains } from './utils/domains';
 import { variables, requestMultiple } from './utils/variables';
 
+import iconListPixels from './utils/icons';
+import arrowPixels from './utils/arrow';
+
 import TileWorker from './worker?worker';
 
 import type { TileJSON, TileIndex, Domain, Variable, Bounds } from './types';
@@ -59,7 +62,7 @@ const fileReader: FileReader = {
 
 interface Data {
 	values: TypedArray;
-	direction?: TypedArray;
+	directions?: TypedArray;
 }
 
 let data: Data;
@@ -93,9 +96,9 @@ export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => 
 				yFraction
 			);
 			if (variable.value === 'wind') {
-				const direction = data.direction as TypedArray;
+				const directions = data.directions as TypedArray;
 				const dir = interpolate2DHermite(
-					direction,
+					directions,
 					domain.grid.nx,
 					index,
 					xFraction,
@@ -116,9 +119,28 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 
 	const worker = new TileWorker();
 
-	worker.postMessage({ type: 'GT', x, y, z, key, data, domain, variable });
+	let iconPixelData = {};
+	if (variable.value === 'weather_code') {
+		iconPixelData = iconListPixels;
+	} else if (variable.value.startsWith('wind')) {
+		iconPixelData = arrowPixels;
+	}
+
+	console.log(iconPixelData);
+
+	worker.postMessage({
+		type: 'GT',
+		x,
+		y,
+		z,
+		key,
+		data,
+		domain,
+		variable,
+		iconPixelData: iconPixelData
+	});
 	const tilePromise = new Promise<ImageBitmap>((resolve) => {
-		worker.onmessage = (message) => {
+		worker.onmessage = async (message) => {
 			if (message.data.type == 'RT' && key == message.data.key) {
 				resolve(message.data.tile);
 			}
@@ -248,18 +270,18 @@ const initOMFile = async (url: string) => {
 			const datav = await fileReader.readerv.read(OmDataType.FloatArray, ranges);
 
 			const dataValues: Float32Array<ArrayBuffer> = [];
-			const dataDirection: Float32Array<ArrayBuffer> = [];
+			const dataDirections: Float32Array<ArrayBuffer> = [];
 
 			for (let [i, dp] of datau.entries()) {
 				dataValues.push(
 					Math.sqrt(Math.pow(dp, 2) + Math.pow(datav[i], 2)) * 1.94384
 				);
 
-				dataDirection.push(
+				dataDirections.push(
 					(Math.atan2(dp, datav[i]) * (180 / Math.PI) + 360) % 360
 				);
 			}
-			data = { values: dataValues, direction: dataDirection };
+			data = { values: dataValues, directions: dataDirections };
 		}
 	} else {
 		fileReader.backend = new MemoryHttpBackend({
