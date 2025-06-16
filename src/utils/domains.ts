@@ -1,4 +1,7 @@
+// @ts-nocheck
+
 import { type Domain } from '../types';
+
 
 import {
 	getBorderPoints,

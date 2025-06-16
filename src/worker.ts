@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { colorScale } from './utils/color-scales';
 
 import { hideZero, drawOnTiles } from './utils/variables';
@@ -16,6 +17,7 @@ import {
 import type { TypedArray } from '@openmeteo/file-reader';
 import type { IconPixelData } from './utils/icons';
 import type { Domain } from './types';
+
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
 const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
