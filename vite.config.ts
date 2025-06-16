@@ -1,13 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 
 import dts from 'vite-plugin-dts';
-import { externalizeDeps } from 'vite-plugin-externalize-deps';
-
-import { wasm } from '@rollup/plugin-wasm';
-import resolve from '@rollup/plugin-node-resolve';
-import typescript from '@rollup/plugin-typescript';
-import commonjs from '@rollup/plugin-commonjs';
-import webWorkerLoader from 'rollup-plugin-web-worker-loader';
 
 export default ({ mode }) => {
 	process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
