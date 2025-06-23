@@ -75,20 +75,10 @@ const drawArrow = (
 		interpolateLinear(directions, nx, index, xFraction, yFraction)
 	);
 
-	// for (let arrow of arrowCoords) {
-	// 	let rotatedPoint = rotatePoint(iCenter, jCenter, -direction, arrow[0], arrow[1]);
-	// 	arrowCoordsRotated.push([Math.floor(rotatedPoint[0]), Math.floor(rotatedPoint[1])]);
-	// }
-
-	// for (let arrow of arrowCoordsRotated) {
-	// 	arrowIndices.push(arrow[1] + arrow[0] * TILE_SIZE);
-	// }
-
 	if (direction) {
 		for (let i = 0; i < boxSize; i++) {
 			for (let j = 0; j < boxSize; j++) {
 				let ind = j + i * boxSize;
-				//let indTile = jBase + j + (iBase + i) * TILE_SIZE;
 				let rotatedPoint = rotatePoint(
 					Math.floor(boxSize / 2),
 					Math.floor(boxSize / 2),
@@ -101,11 +91,6 @@ const drawArrow = (
 				let indNew = newJ + newI * boxSize;
 				let indTile = jBase + newJ + (iBase + newI) * TILE_SIZE;
 
-				// newArrow[4 * indNew] = 0;
-				// newArrow[4 * indNew + 1] = 0;
-				// newArrow[4 * indNew + 2] = 0;
-				// newArrow[4 * indNew + 3] = northArrow[4 * ind + 3];
-
 				if (northArrow[4 * ind + 3]) {
 					rgba[4 * indTile] = 0;
 					rgba[4 * indTile + 1] = 0;
@@ -115,13 +100,6 @@ const drawArrow = (
 			}
 		}
 	}
-
-	// for (let arrowIndex of arrowIndices) {
-	// 	rgba[4 * arrowIndex] = 0;
-	// 	rgba[4 * arrowIndex + 1] = 0;
-	// 	rgba[4 * arrowIndex + 2] = 0;
-	// 	rgba[4 * arrowIndex + 3] = 155;
-	// }
 };
 
 const drawIcon = (
@@ -190,7 +168,7 @@ const getIndexAndFractions = (lat: number, lon: number, domain: Domain, projecti
 
 	return (
 		indexObject ?? {
-			index: 0,
+			index: NaN,
 			xFraction: 0,
 			yFraction: 0
 		}

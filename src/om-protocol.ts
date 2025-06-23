@@ -48,8 +48,11 @@ interface FileReader {
 
 	readeru: OmFileReader | undefined;
 	readerv: OmFileReader | undefined;
+	readerDirections: MemoryHttpBackend | undefined;
+
 	backendu: MemoryHttpBackend | undefined;
 	backendv: MemoryHttpBackend | undefined;
+	backendDirections: MemoryHttpBackend | undefined;
 }
 
 const fileReader: FileReader = {
@@ -58,8 +61,11 @@ const fileReader: FileReader = {
 
 	readeru: undefined,
 	readerv: undefined,
+	readerDirections: undefined,
+
 	backendu: undefined,
-	backendv: undefined
+	backendv: undefined,
+	backendDirections: undefined
 };
 
 interface Data {
@@ -248,12 +254,19 @@ const initOMFile = async (url: string) => {
 	if (fileReader.readerv) {
 		fileReader.readerv.dispose();
 	}
+	if (fileReader.readerDirections) {
+		fileReader.readerDirections.dispose();
+	}
+
 	delete fileReader.reader;
 	delete fileReader.readeru;
 	delete fileReader.readerv;
+	delete fileReader.readerDirections;
+
 	delete fileReader.backend;
 	delete fileReader.backendu;
 	delete fileReader.backendv;
+	delete fileReader.backendDirections;
 
 	domain = domains.find((dm) => dm.value === omUrl.split('/')[4]) ?? domains[0];
 	const variableString = omUrl.split('/')[omUrl.split('/').length - 1].replace('.om', '');
@@ -291,44 +304,112 @@ const initOMFile = async (url: string) => {
 	if (requestMultiple.includes(variable.value)) {
 		let reg = new RegExp(/wind_(\d+)m\.om/);
 		const matches = url.match(reg);
-
-		fileReader.backendu = new MemoryHttpBackend({
-			url: omUrl.replace(matches[0], `wind_u_component_${matches[1]}m.om`),
-			maxFileSize: 500 * 1024 * 1024 // 500 MB
-		});
-		fileReader.backendv = new MemoryHttpBackend({
-			url: omUrl.replace(matches[0], `wind_v_component_${matches[1]}m.om`),
-			maxFileSize: 500 * 1024 * 1024 // 500 MB
-		});
-		fileReader.readeru = await OmFileReader.create(fileReader.backendu).catch(() => {
-			throw new Error(`OMFile error: 404 file not found`);
-		});
-		fileReader.readerv = await OmFileReader.create(fileReader.backendv).catch(() => {
-			throw new Error(`OMFile error: 404 file not found`);
-		});
-		if (fileReader.readeru && fileReader.readerv) {
-			const dimensions = fileReader.readeru.getDimensions();
-
-			// Create ranges for each dimension
-			const ranges = dimensions.map((dim, _) => {
-				return { start: 0, end: dim };
+		if (domain.windUVComponents) {
+			fileReader.backendu = new MemoryHttpBackend({
+				url: omUrl.replace(
+					matches[0],
+					`wind_u_component_${matches[1]}m.om`
+				),
+				maxFileSize: 500 * 1024 * 1024 // 500 MB
 			});
-			const datau = await fileReader.readeru.read(OmDataType.FloatArray, ranges);
-			const datav = await fileReader.readerv.read(OmDataType.FloatArray, ranges);
+			fileReader.backendv = new MemoryHttpBackend({
+				url: omUrl.replace(
+					matches[0],
+					`wind_v_component_${matches[1]}m.om`
+				),
+				maxFileSize: 500 * 1024 * 1024 // 500 MB
+			});
+			fileReader.readeru = await OmFileReader.create(fileReader.backendu).catch(
+				() => {
+					throw new Error(`OMFile error: 404 file not found`);
+				}
+			);
+			fileReader.readerv = await OmFileReader.create(fileReader.backendv).catch(
+				() => {
+					throw new Error(`OMFile error: 404 file not found`);
+				}
+			);
+			if (fileReader.readeru && fileReader.readerv) {
+				const dimensions = fileReader.readeru.getDimensions();
 
-			const dataValues: Float32Array<ArrayBuffer> = [];
-			const dataDirections: Float32Array<ArrayBuffer> = [];
-
-			for (let [i, dp] of datau.entries()) {
-				dataValues.push(
-					Math.sqrt(Math.pow(dp, 2) + Math.pow(datav[i], 2)) * 1.94384
+				// Create ranges for each dimension
+				const ranges = dimensions.map((dim, _) => {
+					return { start: 0, end: dim };
+				});
+				const datau = await fileReader.readeru.read(
+					OmDataType.FloatArray,
+					ranges
+				);
+				const datav = await fileReader.readerv.read(
+					OmDataType.FloatArray,
+					ranges
 				);
 
-				dataDirections.push(
-					(Math.atan2(dp, datav[i]) * (180 / Math.PI) + 360) % 360
-				);
+				const dataValues: Float32Array<ArrayBuffer> = [];
+				const dataDirections: Float32Array<ArrayBuffer> = [];
+
+				for (let [i, dp] of datau.entries()) {
+					dataValues.push(
+						Math.sqrt(Math.pow(dp, 2) + Math.pow(datav[i], 2)) *
+							1.94384
+					);
+
+					dataDirections.push(
+						(Math.atan2(dp, datav[i]) * (180 / Math.PI) + 360) %
+							360
+					);
+				}
+				data = { values: dataValues, directions: dataDirections };
 			}
-			data = { values: dataValues, directions: dataDirections };
+		} else {
+			fileReader.backend = new MemoryHttpBackend({
+				url: omUrl.replace(matches[0], `wind_speed_${matches[1]}m.om`),
+				maxFileSize: 500 * 1024 * 1024 // 500 MB
+			});
+			fileReader.backendDirections = new MemoryHttpBackend({
+				url: omUrl.replace(matches[0], `wind_direction_${matches[1]}m.om`),
+				maxFileSize: 500 * 1024 * 1024 // 500 MB
+			});
+
+			fileReader.reader = await OmFileReader.create(fileReader.backend).catch(
+				() => {
+					throw new Error(`OMFile error: 404 file not found`);
+				}
+			);
+			fileReader.readerDirections = await OmFileReader.create(
+				fileReader.backendDirections
+			).catch(() => {
+				throw new Error(`OMFile error: 404 file not found`);
+			});
+
+			if (fileReader.reader && fileReader.readerDirections) {
+				const dimensions = fileReader.reader.getDimensions();
+
+				// Create ranges for each dimension
+				const ranges = dimensions.map((dim, _) => {
+					return { start: 0, end: dim };
+				});
+				const dataWind = await fileReader.reader.read(
+					OmDataType.FloatArray,
+					ranges
+				);
+				const dataDirs = await fileReader.readerDirections.read(
+					OmDataType.FloatArray,
+					ranges
+				);
+
+				const dataValues: Float32Array<ArrayBuffer> = [];
+				const dataDirections: Float32Array<ArrayBuffer> = [];
+
+				for (let [i, dp] of dataWind.entries()) {
+					dataValues.push(dp * 1.94384);
+
+					dataDirections.push(360 - dataDirs[i]);
+				}
+				console.log(dataDirs, dataDirections);
+
+				data = { values: dataValues, directions: dataDirections };
+			}
 		}
 	} else {
 		fileReader.backend = new MemoryHttpBackend({
