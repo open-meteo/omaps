@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { type GetResourceResponse, type RequestParameters } from 'maplibre-gl';
 
 import {

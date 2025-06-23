@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { colorScale } from './utils/color-scales';
 
 import { hideZero, drawOnTiles } from './utils/variables';
