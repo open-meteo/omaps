@@ -87,7 +87,11 @@ export interface IconListPixels {
 const iconListPixelsSource: IconListPixels = {};
 
 for (let [i, map] of Object.entries(mapping)) {
-	iconListPixelsSource[i] = `images/weather-icons/wi-day-${map}.svg`;
+	if ([18, 27, 28, 29, 99].includes(i)) {
+		iconListPixelsSource[i] = `images/weather-icons/wi-${map}.svg`;
+	} else {
+		iconListPixelsSource[i] = `images/weather-icons/wi-day-${map}.svg`;
+	}
 }
 
 export default iconListPixelsSource;
