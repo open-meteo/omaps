@@ -2,13 +2,11 @@ import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { omProtocol } from './om-protocol';
-
 import { getValueFromLatLong } from './om-protocol';
-
 import { pad } from './utils/pad';
-
 import { domains, domainGroups } from './utils/domains';
 import { variables } from './utils/variables';
+import { createTimeSlider } from './components/TimeSlider';
 
 import './style.css';
 
@@ -33,9 +31,17 @@ const mapContainer: HTMLElement | null = document.getElementById('map_container'
 let omUrl: string;
 let timeSelected = new Date();
 let urlTime = params.get('time');
-if (urlTime) {
-	const timeString = urlTime.slice(0, 13) + ':' + urlTime.slice(13);
-	timeSelected = new Date(timeString);
+if (urlTime && urlTime.length == 15) {
+	const year = parseInt(urlTime.slice(0, 4));
+	const month = parseInt(urlTime.slice(5, 7)) - 1; // zero-based
+	const day = parseInt(urlTime.slice(8, 10));
+	const hour = parseInt(urlTime.slice(11, 13));
+	const minute = parseInt(urlTime.slice(13, 15));
+	// Parse Date from UTC components (urlTime is in UTC)
+	timeSelected = new Date(Date.UTC(year, month, day, hour, minute, 0, 0));
+} else {
+	timeSelected = new Date(); // today
+	timeSelected.setHours(12, 0, 0, 0); // Default to 12:00 local time
 }
 
 let variable: Variable;
@@ -82,9 +88,8 @@ const getOMUrl = () => {
 };
 
 let source: maplibregl.Map;
-let domainSelector: HTMLInputElement,
-	variableSelector: HTMLInputElement,
-	dateTimeSelector: HTMLInputElement;
+let domainSelector: HTMLSelectElement, variableSelector: HTMLSelectElement;
+let timeSliderApi: { setDisabled: (d: boolean) => void };
 let checkSourceLoadedInterval: ReturnType<typeof setInterval>;
 let checked = 0;
 const changeOMfileURL = () => {
@@ -101,7 +106,7 @@ const changeOMfileURL = () => {
 
 	domainSelector.disabled = true;
 	variableSelector.disabled = true;
-	dateTimeSelector.disabled = true;
+	timeSliderApi.setDisabled(true);
 
 	source = map.addSource('omFileSource', {
 		type: 'raster',
@@ -123,7 +128,7 @@ const changeOMfileURL = () => {
 		if (source.loaded() || checked >= 30) {
 			domainSelector.disabled = false;
 			variableSelector.disabled = false;
-			dateTimeSelector.disabled = false;
+			timeSliderApi.setDisabled(false);
 			checked = 0;
 			clearInterval(checkSourceLoadedInterval);
 		}
@@ -168,16 +173,10 @@ if (mapContainer) {
 				if (!popup) {
 					popup = new maplibregl.Popup()
 						.setLngLat(coordinates)
-						.setHTML(
-							`<span style="color:black;">Outside domain</span>`
-						)
+						.setHTML(`<span style="color:black;">Outside domain</span>`)
 						.addTo(map);
 				}
-				let value = getValueFromLatLong(
-					coordinates.lat,
-					coordinates.lng,
-					omUrl
-				);
+				let value = getValueFromLatLong(coordinates.lat, coordinates.lng, omUrl);
 				if (value) {
 					let string;
 					if (Array === value.constructor) {
@@ -187,19 +186,13 @@ if (mapContainer) {
 						}
 					} else {
 						string =
-							value.toFixed(1) +
-							(variable.value.startsWith('temperature')
-								? 'C°'
-								: '');
+							// @ts-ignore
+							value.toFixed(1) + (variable.value.startsWith('temperature') ? 'C°' : '');
 					}
 
-					popup.setLngLat(coordinates).setHTML(
-						`<span style="color:black;">${string}</span>`
-					);
+					popup.setLngLat(coordinates).setHTML(`<span style="color:black;">${string}</span>`);
 				} else {
-					popup.setLngLat(coordinates).setHTML(
-						`<span style="color:black;">Outside domain</span>`
-					);
+					popup.setLngLat(coordinates).setHTML(`<span style="color:black;">Outside domain</span>`);
 				}
 			}
 		});
@@ -216,17 +209,40 @@ if (mapContainer) {
 		});
 
 		if (infoBox) {
-			infoBox.innerHTML = `<div>Selected domain: <select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">${getDomainOptions()}</select><br>Selected variable: <select id="variable_selection" class="variable-selection" name="variables" value="${variable.value}">${getVariableOptions()}</select><br>Selected time: <input class="date-time-selection" type="datetime-local"  id="date_time_selection" value="${timeSelected.getFullYear() + '-' + pad(timeSelected.getMonth() + 1) + '-' + pad(timeSelected.getDate()) + 'T' + pad(Number(timeSelected.getHours() + (timeSelected.getMinutes() > 1 ? 1 : 0))) + ':00'}"/></div>`;
+			infoBox.innerHTML = `
+   			<div>
+  				Selected domain:
+  				<select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">
+   					${getDomainOptions()}
+  				</select>
+  				<br>
+  				Selected variable:
+  				<select id="variable_selection" class="variable-selection" name="variables" value="${variable.value}">
+   					${getVariableOptions()}
+  				</select>
+  				<br>
+  				Selected time:
+  				<div id="time_slider_container"></div>
+   			</div>
+  		`;
 
-			domainSelector = document.querySelector(
-				'#domain_selection'
-			) as HTMLInputElement;
+			const timeSliderContainer = document.getElementById('time_slider_container') as HTMLElement;
+			timeSliderApi = createTimeSlider({
+				container: timeSliderContainer,
+				initialDate: timeSelected,
+				onChange: (newDate) => {
+					timeSelected = newDate;
+					url.searchParams.set('time', newDate.toISOString().replace(/[:Z]/g, '').slice(0, 15));
+					history.pushState({}, '', url);
+					changeOMfileURL();
+				}
+			});
+
+			domainSelector = document.querySelector('#domain_selection') as HTMLSelectElement;
 			domainSelector?.addEventListener('change', (e) => {
-				const target = e.target as HTMLInputElement;
+				const target = e.target as HTMLSelectElement;
 				if (target) {
-					domain =
-						domains.find((dm) => dm.value === target.value) ??
-						domains[0];
+					domain = domains.find((dm) => dm.value === target.value) ?? domains[0];
 
 					// map.flyTo({
 					// 	center:
@@ -241,31 +257,13 @@ if (mapContainer) {
 				}
 			});
 
-			variableSelector = document.querySelector(
-				'#variable_selection'
-			) as HTMLInputElement;
+			variableSelector = document.querySelector('#variable_selection') as HTMLSelectElement;
 			variableSelector?.addEventListener('change', (e) => {
-				const target = e.target as HTMLInputElement;
+				const target = e.target as HTMLSelectElement;
 				if (target) {
-					variable =
-						variables.find((v) => v.value === target.value) ??
-						variables[0];
+					variable = variables.find((v) => v.value === target.value) ?? variables[0];
 					url.searchParams.set('variable', target.value);
 					history.pushState({}, '', url);
-					changeOMfileURL();
-				}
-			});
-
-			dateTimeSelector = document.querySelector(
-				'#date_time_selection'
-			) as HTMLInputElement;
-			dateTimeSelector?.addEventListener('change', (e) => {
-				const target = e.target as HTMLInputElement;
-				if (target) {
-					timeSelected = new Date(target.value);
-					url.searchParams.set('time', target.value.replace(':', ''));
-					history.pushState({}, '', url);
-
 					changeOMfileURL();
 				}
 			});
