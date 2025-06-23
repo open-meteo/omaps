@@ -20,6 +20,10 @@ export const variables = [
 	{ value: 'temperature_200m', label: 'Temperature 200m' },
 	{ value: 'temperature_250m', label: 'Temperature 250m' },
 
+	{ value: 'thunderstorm_probability', label: 'Thunderstorm probability' },
+
+	{ value: 'uv_index', label: 'UV Index' },
+
 	{ value: 'visibility', label: 'Visibility' },
 
 	{ value: 'weather_code', label: 'Weather Codes' },
@@ -32,6 +36,7 @@ export const variables = [
 	{ value: 'wind_120m', label: 'Wind 120m' },
 	{ value: 'wind_150m', label: 'Wind 150m' },
 	{ value: 'wind_180m', label: 'Wind 180m' },
+	{ value: 'wind_200m', label: 'Wind 200m' },
 
 	{ value: 'wind_gusts_10m', label: 'Wind Gusts 10m' }
 ];

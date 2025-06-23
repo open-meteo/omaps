@@ -179,16 +179,16 @@ export class LambertAzimuthalEqualAreaProjection implements Projection {
 	reverse(x: number, y: number): [latitude: number, longitude: number] {
 		x = x / this.R;
 		y = y / this.R;
-		let p = Math.sqrt(x * x + y * y);
-		let c = 2 * Math.asin(0.5 * p);
+		let ρ = Math.sqrt(x * x + y * y);
+		let c = 2 * Math.asin(0.5 * ρ);
 		let ϕ = Math.asin(
-			Math.cos(c) * Math.sin(this.ϕ1) + (y * Math.sin(c) * Math.cos(this.ϕ1)) / p
+			Math.cos(c) * Math.sin(this.ϕ1) + (y * Math.sin(c) * Math.cos(this.ϕ1)) / ρ
 		);
 		let λ =
 			this.λ0 +
 			Math.atan(
 				(x * Math.sin(c)) /
-					(p * Math.cos(this.ϕ1) * Math.cos(c) -
+					(ρ * Math.cos(this.ϕ1) * Math.cos(c) -
 						y * Math.sin(this.ϕ1) * Math.sin(c))
 			);
 
