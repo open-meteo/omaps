@@ -871,12 +871,3 @@ export const domains: Array<Domain> = [
 		windUVComponents: false
 	}
 ];
-
-for (let domain of domains) {
-	if (domain.grid.center && typeof domain.grid.center == 'function') {
-		domain.grid.center();
-		if (!domain.variables) {
-			domain.variables = domains[0].variables;
-		}
-	}
-}
