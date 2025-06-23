@@ -403,10 +403,8 @@ const initOMFile = async (url: string) => {
 
 				for (let [i, dp] of dataWind.entries()) {
 					dataValues.push(dp * 1.94384);
-
 					dataDirections.push(360 - dataDirs[i]);
 				}
-				console.log(dataDirs, dataDirections);
 
 				data = { values: dataValues, directions: dataDirections };
 			}
