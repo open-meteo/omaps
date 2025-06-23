@@ -13,7 +13,7 @@ function isValidColorSchemeName(name: string): name is keyof typeof COLOR_SCHEME
 }
 
 export type ColorScaleParams = {
-	customColors?: Array<HEXColor>;
+	customColors?: Array<HEXColor | string>;
 	colorScheme?: string;
 	min: number;
 	max: number;
@@ -54,7 +54,7 @@ const colorScale = ({
 	max,
 	isReverse = false
 }: ColorScaleParams) => {
-	let colors: Array<HEXColor>;
+	let colors: Array<HEXColor | string>;
 
 	if (colorScheme) {
 		if (isValidColorSchemeName(colorScheme)) {

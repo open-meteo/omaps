@@ -40,7 +40,6 @@ if (urlTime && urlTime.length == 15) {
 	// Parse Date from UTC components (urlTime is in UTC)
 	timeSelected = new Date(Date.UTC(year, month, day, hour, minute, 0, 0));
 } else {
-	timeSelected = new Date(); // today
 	timeSelected.setHours(12, 0, 0, 0); // Default to 12:00 local time
 }
 
@@ -173,10 +172,16 @@ if (mapContainer) {
 				if (!popup) {
 					popup = new maplibregl.Popup()
 						.setLngLat(coordinates)
-						.setHTML(`<span style="color:black;">Outside domain</span>`)
+						.setHTML(
+							`<span style="color:black;">Outside domain</span>`
+						)
 						.addTo(map);
 				}
-				let value = getValueFromLatLong(coordinates.lat, coordinates.lng, omUrl);
+				let value = getValueFromLatLong(
+					coordinates.lat,
+					coordinates.lng,
+					omUrl
+				);
 				if (value) {
 					let string;
 					if (Array === value.constructor) {
@@ -187,12 +192,19 @@ if (mapContainer) {
 					} else {
 						string =
 							// @ts-ignore
-							value.toFixed(1) + (variable.value.startsWith('temperature') ? 'C°' : '');
+							value.toFixed(1) +
+							(variable.value.startsWith('temperature')
+								? 'C°'
+								: '');
 					}
 
-					popup.setLngLat(coordinates).setHTML(`<span style="color:black;">${string}</span>`);
+					popup.setLngLat(coordinates).setHTML(
+						`<span style="color:black;">${string}</span>`
+					);
 				} else {
-					popup.setLngLat(coordinates).setHTML(`<span style="color:black;">Outside domain</span>`);
+					popup.setLngLat(coordinates).setHTML(
+						`<span style="color:black;">Outside domain</span>`
+					);
 				}
 			}
 		});
@@ -226,42 +238,51 @@ if (mapContainer) {
    			</div>
   		`;
 
-			const timeSliderContainer = document.getElementById('time_slider_container') as HTMLElement;
+			const timeSliderContainer = document.getElementById(
+				'time_slider_container'
+			) as HTMLElement;
 			timeSliderApi = createTimeSlider({
 				container: timeSliderContainer,
 				initialDate: timeSelected,
 				onChange: (newDate) => {
 					timeSelected = newDate;
-					url.searchParams.set('time', newDate.toISOString().replace(/[:Z]/g, '').slice(0, 15));
+					url.searchParams.set(
+						'time',
+						newDate
+							.toISOString()
+							.replace(/[:Z]/g, '')
+							.slice(0, 15)
+					);
 					history.pushState({}, '', url);
 					changeOMfileURL();
 				}
 			});
 
-			domainSelector = document.querySelector('#domain_selection') as HTMLSelectElement;
+			domainSelector = document.querySelector(
+				'#domain_selection'
+			) as HTMLSelectElement;
 			domainSelector?.addEventListener('change', (e) => {
 				const target = e.target as HTMLSelectElement;
 				if (target) {
-					domain = domains.find((dm) => dm.value === target.value) ?? domains[0];
+					domain =
+						domains.find((dm) => dm.value === target.value) ??
+						domains[0];
 
-					// map.flyTo({
-					// 	center:
-					// 		typeof domain.grid.center == 'object'
-					// 			? domain.grid.center
-					// 			: [0, 0],
-					// 	zoom: domain.grid.zoom
-					// });
 					url.searchParams.set('domain', target.value);
 					history.pushState({}, '', url);
 					changeOMfileURL();
 				}
 			});
 
-			variableSelector = document.querySelector('#variable_selection') as HTMLSelectElement;
+			variableSelector = document.querySelector(
+				'#variable_selection'
+			) as HTMLSelectElement;
 			variableSelector?.addEventListener('change', (e) => {
 				const target = e.target as HTMLSelectElement;
 				if (target) {
-					variable = variables.find((v) => v.value === target.value) ?? variables[0];
+					variable =
+						variables.find((v) => v.value === target.value) ??
+						variables[0];
 					url.searchParams.set('variable', target.value);
 					history.pushState({}, '', url);
 					changeOMfileURL();

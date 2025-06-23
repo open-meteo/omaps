@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { type Domain } from '../types';
 
 import {
@@ -164,6 +166,7 @@ export const domains: Array<Domain> = [
 			'precipitation',
 			'pressure_msl',
 			'relative_humidity_2m',
+			'shortwave_radiation',
 			'temperature_2m',
 			'temperature_80m',
 			'temperature_120m',
@@ -200,6 +203,7 @@ export const domains: Array<Domain> = [
 			'precipitation',
 			'pressure_msl',
 			'relative_humidity_2m',
+			'shortwave_radiation',
 			'temperature_2m',
 			'temperature_80m',
 			'temperature_120m',
@@ -236,6 +240,7 @@ export const domains: Array<Domain> = [
 			'precipitation',
 			'pressure_msl',
 			'relative_humidity_2m',
+			'shortwave_radiation',
 			'temperature_2m',
 			'temperature_80m',
 			'temperature_120m',
@@ -267,22 +272,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cape',
-			//'cloud_cover', <- only per hPa
-			'pressure_msl',
-			//'relative_humidity_2m',  <- only per hPa
-			'shortwave_radiation',
-			'temperature_80m',
-			'temperature_100m',
-			'visibility',
-			'weather_code',
-			'wind_80m',
-			'wind_100m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: true
+		}
 	},
 	{
 		value: 'ncep_gfs013',
@@ -299,19 +289,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cloud_cover',
-			'precipitation',
-			'pressure_msl',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'uv_index',
-			'wind_10m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: true
+		}
 	},
 	{
 		value: 'ncep_hrrr_conus',
@@ -337,20 +315,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cape',
-			'cloud_cover',
-			'precipitation',
-			'pressure_msl',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'visibility',
-			'wind_10m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: true
+		}
 	},
 	{
 		value: 'ncep_nbm_conus',
@@ -377,22 +342,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cape',
-			'cloud_cover',
-			'precipitation',
-			'pressure_msl',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'thunderstorm_probability',
-			'visibility',
-			'wind_10m',
-			'wind_80m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: false
+		}
 	},
 
 	// ECWMF
@@ -411,38 +361,25 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cape',
-			'cloud_cover',
-			'precipitation',
-			'pressure_msl',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'wind_10m',
-			'wind_100m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: true
+		}
 	},
-	// {
-	// 	value: 'ecmwf_ifs04',
-	// 	label: 'ECMWF IFS 0.4°',
-	// 	grid: {
-	// 		nx: 900,
-	// 		ny: 451,
-	// 		latMin: -90,
-	// 		lonMin: -180,
-	// 		dx: 360 / 900,
-	// 		dy: 180 / (451 - 1),
-	// 		zoom: 1,
-	// 		center: function () {
-	// 			this.center = getCenterPoint(this);
-	// 			return this;
-	// 		}
-	// 	}
-	// },
+	{
+		value: 'ecmwf_ifs04',
+		label: 'ECMWF IFS 0.4°',
+		grid: {
+			nx: 900,
+			ny: 451,
+			latMin: -90,
+			lonMin: -180,
+			dx: 360 / 900,
+			dy: 180 / (451 - 1),
+			zoom: 1,
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
+			}
+		}
+	},
 
 	// ItaliaMeteo
 	{
@@ -460,21 +397,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cape',
-			'cloud_cover',
-			'precipitation',
-			'pressure_msl',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'visibility',
-			'weather_code',
-			'wind_10m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: false
+		}
 	},
 
 	// JMA
@@ -493,18 +416,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cloud_cover',
-			'precipitation',
-			'pressure_msl',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'wind_10m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: true
+		}
 	},
 	{
 		value: 'jma_msm',
@@ -521,17 +433,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cloud_cover',
-			'precipitation',
-			'pressure_msl',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'wind_10m'
-		],
-		windUVComponents: true
+		}
 	},
 
 	// MeteoFrance
@@ -550,27 +452,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cape',
-			'cloud_cover',
-			'precipitation',
-			'pressure_msl',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'temperature_50m',
-			'temperature_100m',
-			'temperature_150m',
-			'temperature_200m',
-			'wind_10m',
-			'wind_50m',
-			'wind_100m',
-			'wind_150m',
-			'wind_200m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: true
+		}
 	},
 	{
 		value: 'meteofrance_arpege_europe',
@@ -587,27 +469,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cape',
-			'cloud_cover',
-			'precipitation',
-			'pressure_msl',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'temperature_50m',
-			'temperature_100m',
-			'temperature_150m',
-			'temperature_200m',
-			'wind_10m',
-			'wind_50m',
-			'wind_100m',
-			'wind_150m',
-			'wind_200m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: true
+		}
 	},
 	{
 		value: 'meteofrance_arome_france0025',
@@ -624,27 +486,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cape',
-			'cloud_cover',
-			'precipitation',
-			'pressure_msl',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'temperature_50m',
-			'temperature_100m',
-			'temperature_150m',
-			'temperature_200m',
-			'wind_10m',
-			'wind_50m',
-			'wind_100m',
-			'wind_150m',
-			'wind_200m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: true
+		}
 	},
 
 	{
@@ -662,22 +504,8 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cape',
-			'precipitation',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'wind_10m',
-			'wind_20m',
-			'wind_50m',
-			'wind_100m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: true
+		}
 	},
-
 	// MetNo
 	{
 		value: 'metno_nordic_pp',
@@ -703,93 +531,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cloud_cover',
-			'precipitation',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'wind_10m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: false
-	},
-
-	// KNMI
-	{
-		value: 'knmi_harmonie_arome_europe',
-		label: 'KNMI Harmonie Arome Europe',
-		grid: {
-			nx: 676,
-			ny: 564,
-			latMin: 39.740627,
-			lonMin: -25.162262,
-			dx: 0,
-			dy: 0,
-			zoom: 3.5,
-			projection: {
-				rotation: [-35, -8],
-				latitude: [39.740627, 62.619324],
-				longitude: [-25.162262, 38.75702],
-				name: 'RotatedLatLonProjection'
-			},
-			center: function () {
-				this.center = getCenterPoint(this);
-				return this;
-			}
-		},
-		variables: [
-			'cloud_cover',
-			'precipitation',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'temperature_50m',
-			'temperature_100m',
-			'temperature_200m',
-			'visibility',
-			'wind_10m',
-			'wind_50m',
-			'wind_100m',
-			'wind_200m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: false
-	},
-	{
-		value: 'knmi_harmonie_arome_netherlands',
-		label: 'KNMI Harmonie Arome Netherlands',
-		grid: {
-			nx: 390,
-			ny: 390,
-			latMin: 49,
-			lonMin: 0,
-			dx: 0.029,
-			dy: 0.018,
-			zoom: 6,
-			center: function () {
-				this.center = getCenterPoint(this);
-				return this;
-			}
-		},
-		variables: [
-			'cloud_cover',
-			'precipitation',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'temperature_50m',
-			'temperature_100m',
-			'temperature_200m',
-			'visibility',
-			'wind_10m',
-			'wind_50m',
-			'wind_100m',
-			'wind_200m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: false
+		}
 	},
 
 	// UKMO
@@ -808,18 +550,7 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cape',
-			'cloud_cover',
-			'precipitation',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'wind_10m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: false
+		}
 	},
 	{
 		value: 'ukmo_uk_deterministic_2km',
@@ -845,27 +576,54 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		},
-		variables: [
-			'cape',
-			'cloud_cover',
-			'precipitation',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'temperature_50m',
-			'temperature_100m',
-			'temperature_150m',
-			'temperature_200m',
-			'temperature_250m',
-			'visibility',
-			'wind_10m',
-			'wind_50m',
-			'wind_100m',
-			'wind_150m',
-			'wind_200m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: false
+		}
+	},
+
+	// KNMI
+	{
+		value: 'knmi_harmonie_arome_europe',
+		label: 'KNMI Harmonie Arome Europe',
+		grid: {
+			nx: 676,
+			ny: 564,
+			latMin: 39.740627,
+			lonMin: -25.162262,
+			dx: 0,
+			dy: 0,
+			zoom: 3.5,
+			projection: {
+				rotation: [-35, -8],
+				latitude: [39.740627, 62.619324],
+				longitude: [-25.162262, 38.75702],
+				name: 'RotatedLatLonProjection'
+			},
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
+			}
+		}
+	},
+	{
+		value: 'knmi_harmonie_arome_netherlands',
+		label: 'KNMI Harmonie Arome Netherlands',
+		grid: {
+			nx: 390,
+			ny: 390,
+			latMin: 49,
+			lonMin: 0,
+			dx: 0.029,
+			dy: 0.018,
+			zoom: 6,
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
+			}
+		}
 	}
 ];
+
+for (let domain of domains) {
+	if (domain.grid.center && typeof domain.grid.center == 'function') {
+		domain.grid.center();
+	}
+}

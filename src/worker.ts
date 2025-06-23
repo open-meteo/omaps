@@ -14,7 +14,7 @@ import {
 } from './utils/math';
 
 import type { TypedArray } from '@openmeteo/file-reader';
-import type { IconPixelData } from './utils/icons';
+import type { IconListPixels } from './utils/icons';
 import type { Domain } from './types';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
@@ -40,22 +40,9 @@ const drawArrow = (
 	directions: TypedArray,
 	boxSize = TILE_SIZE / 8,
 	arrowTipLength = 7,
-	iconPixelData: IconPixelData
+	iconPixelData: IconListPixels
 ): void => {
 	const northArrow = iconPixelData['0'];
-	const newArrow = new Uint8ClampedArray(4 * boxSize * boxSize);
-
-	// let arrowCoords = [];
-	// for (let bs = 1; bs < boxSize - 2; bs++) {
-	// 	arrowCoords.push([iBase + bs, jBase + boxSize / 2]);
-	// }
-	// for (let at = 0; at < arrowTipLength; at++) {
-	// 	arrowCoords.push([iBase + at, jBase + (boxSize / 2 + at)]);
-	// 	arrowCoords.push([iBase + at, jBase + (boxSize / 2 - at)]);
-	// }
-
-	// const arrowCoordsRotated = [];
-	// const arrowIndices = [];
 
 	let iCenter = iBase + Math.floor(boxSize / 2);
 	let jCenter = jBase + Math.floor(boxSize / 2);
@@ -112,8 +99,8 @@ const drawIcon = (
 	domain: Domain,
 	projectionGrid: ProjectionGrid,
 	values: TypedArray,
-	boxSize,
-	iconPixelData
+	boxSize: number,
+	iconPixelData: IconListPixels
 ): Promise<void> => {
 	return new Promise(async (resolve) => {
 		let iCenter = iBase + Math.floor(boxSize / 2);
@@ -157,7 +144,12 @@ const drawIcon = (
 	});
 };
 
-const getIndexAndFractions = (lat: number, lon: number, domain: Domain, projectionGrid) => {
+const getIndexAndFractions = (
+	lat: number,
+	lon: number,
+	domain: Domain,
+	projectionGrid: ProjectionGrid
+) => {
 	let indexObject;
 	if (domain.grid.projection && projectionGrid) {
 		indexObject = projectionGrid.findPointInterpolated(lat, lon);

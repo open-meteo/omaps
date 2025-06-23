@@ -46,7 +46,7 @@ interface FileReader {
 
 	readeru: OmFileReader | undefined;
 	readerv: OmFileReader | undefined;
-	readerDirections: MemoryHttpBackend | undefined;
+	readerDirections: OmFileReader | undefined;
 
 	backendu: MemoryHttpBackend | undefined;
 	backendv: MemoryHttpBackend | undefined;
@@ -67,8 +67,8 @@ const fileReader: FileReader = {
 };
 
 interface Data {
-	values: TypedArray;
-	directions?: TypedArray;
+	values: number[] | TypedArray;
+	directions?: number[] | TypedArray;
 }
 
 let data: Data;
@@ -95,7 +95,7 @@ export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => 
 		if (values && index) {
 			//const px = interpolateLinear(data, index, xFraction, yFraction);
 			const px = interpolate2DHermite(
-				values,
+				values as TypedArray,
 				domain.grid.nx,
 				index,
 				xFraction,
@@ -343,8 +343,8 @@ const initOMFile = async (url: string) => {
 					ranges
 				);
 
-				const dataValues: Float32Array<ArrayBuffer> = [];
-				const dataDirections: Float32Array<ArrayBuffer> = [];
+				const dataValues = [];
+				const dataDirections = [];
 
 				for (let [i, dp] of datau.entries()) {
 					dataValues.push(
@@ -396,8 +396,8 @@ const initOMFile = async (url: string) => {
 					ranges
 				);
 
-				const dataValues: Float32Array<ArrayBuffer> = [];
-				const dataDirections: Float32Array<ArrayBuffer> = [];
+				const dataValues = [];
+				const dataDirections = [];
 
 				for (let [i, dp] of dataWind.entries()) {
 					dataValues.push(dp * 1.94384);
