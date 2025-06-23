@@ -18,7 +18,6 @@ import type { TypedArray } from '@openmeteo/file-reader';
 import type { IconPixelData } from './utils/icons';
 import type { Domain } from './types';
 
-
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
 const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
 
@@ -251,6 +250,16 @@ self.onmessage = async (message) => {
 			colors = colorScale({
 				min: 0,
 				max: 4000
+			});
+		} else if (variable.value == 'uv_index') {
+			colors = colorScale({
+				min: 0,
+				max: 11
+			});
+		} else if (variable.value == 'thunderstorm_probablity') {
+			colors = colorScale({
+				min: 0,
+				max: 100
 			});
 		} else {
 			colors = colorScale({

@@ -2,7 +2,6 @@
 
 import { type Domain } from '../types';
 
-
 import {
 	getBorderPoints,
 	getBoundsFromBorderPoints,
@@ -273,7 +272,23 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		}
+		},
+		variables: [
+			'cape',
+			//'cloud_cover', <- only per hPa
+			//'precipitation',
+			'pressure_msl',
+			//'relative_humidity_2m',  <- only per hPa
+			'shortwave_radiation',
+			'temperature_80m',
+			'temperature_100m',
+			'visibility',
+			'weather_code',
+			'wind_80m',
+			'wind_100m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: true
 	},
 	{
 		value: 'ncep_gfs013',
@@ -290,7 +305,19 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		}
+		},
+		variables: [
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'uv_index',
+			'wind_10m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: true
 	},
 	{
 		value: 'ncep_hrrr_conus',
@@ -316,7 +343,20 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		}
+		},
+		variables: [
+			'cape',
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'visibility',
+			'wind_10m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: true
 	},
 	{
 		value: 'ncep_nbm_conus',
@@ -343,7 +383,22 @@ export const domains: Array<Domain> = [
 				this.center = getCenterPoint(this);
 				return this;
 			}
-		}
+		},
+		variables: [
+			'cape',
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'thunderstorm_probability',
+			'visibility',
+			'wind_10m',
+			'wind_80m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: false
 	},
 
 	// ECWMF
