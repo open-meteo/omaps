@@ -93,3 +93,22 @@ body {
 	margin-top: 5px;
 	margin-bottom: 5px;
 }
+
+#time_slider_container button {
+	background-color: white;
+	color: black;
+	padding: 5px;
+	border-radius: 5px;
+	font-size: 15px;
+	padding: 0.5rem 0.75rem;
+	font-weight: bold;
+}
+
+#slider_time_label {
+	margin: 0 0.3rem;
+}
+
+.date-time-selection {
+	margin-top: 0.5rem;
+	border-width: 1px;
+}

@@ -44,8 +44,8 @@ export function createTimeSlider({ container, initialDate, onChange }: TimeSlide
 		<input
 			type="date"
 			id="date_picker"
+			class="date-time-selection"
 			value="${formatDateInputValue(currentDate)}"
-			style="margin-top: 0.5em;"
 		/>
 	`;
 

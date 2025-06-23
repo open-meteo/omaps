@@ -6,7 +6,7 @@ import { getValueFromLatLong } from './om-protocol';
 import { pad } from './utils/pad';
 import { domains, domainGroups } from './utils/domains';
 import { variables } from './utils/variables';
-import { createTimeSlider } from './components/TimeSlider';
+import { createTimeSlider } from './components/time-slider';
 
 import './style.css';
 
