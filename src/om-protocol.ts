@@ -75,7 +75,10 @@ let data: Data;
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
 
-export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => {
+export const getValueFromLatLong = (
+	lat: number,
+	lon: number
+): { index: number; value: number; direction?: number } => {
 	if (data) {
 		const values = data.values;
 
@@ -87,7 +90,7 @@ export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => 
 		}
 
 		const { index, xFraction, yFraction } = indexObject ?? {
-			index: 0,
+			index: NaN,
 			xFraction: 0,
 			yFraction: 0
 		};
@@ -101,7 +104,7 @@ export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => 
 				xFraction,
 				yFraction
 			);
-			if (variable.value === 'wind') {
+			if (variable.value.startsWith('wind_')) {
 				const directions = data.directions as TypedArray;
 				const dir = interpolate2DHermite(
 					directions,
@@ -110,12 +113,12 @@ export const getValueFromLatLong = (lat: number, lon: number, omUrl: string) => 
 					xFraction,
 					yFraction
 				);
-				return [px, dir];
+				return { index: index, value: px, direction: dir };
 			} else {
-				return px;
+				return { index: index, value: px };
 			}
 		} else {
-			return NaN;
+			return { index: NaN, value: NaN };
 		}
 	}
 };

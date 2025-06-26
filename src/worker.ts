@@ -230,6 +230,11 @@ self.onmessage = async (message) => {
 				min: 0,
 				max: 100
 			});
+		} else if (variable.value == 'precipitation') {
+			colors = colorScale({
+				min: -1,
+				max: 15
+			});
 		} else {
 			colors = colorScale({
 				min: -5,
@@ -286,7 +291,7 @@ self.onmessage = async (message) => {
 				);
 
 				if (hideZero.includes(variable.value)) {
-					if (Math.floor(px) <= 0.1) {
+					if (px < 0.25) {
 						px = NaN;
 					}
 				}
@@ -314,6 +319,8 @@ self.onmessage = async (message) => {
 						rgba[4 * ind + 2] = color[2];
 						if (variable.value == 'cloud_cover') {
 							rgba[4 * ind + 3] = 255 * (px / 100);
+						} else if (variable.value == 'precipitation') {
+							rgba[4 * ind + 3] = 50 + 205 * (px / 10);
 						} else {
 							rgba[4 * ind + 3] = 255 * (OPACITY / 100);
 						}

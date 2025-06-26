@@ -95,6 +95,7 @@ body {
 }
 
 #time_slider_container button {
+	border-width: 1px;
 	background-color: white;
 	color: black;
 	padding: 5px;

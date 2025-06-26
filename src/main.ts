@@ -5,7 +5,7 @@ import { omProtocol } from './om-protocol';
 import { getValueFromLatLong } from './om-protocol';
 import { pad } from './utils/pad';
 import { domains, domainGroups } from './utils/domains';
-import { variables } from './utils/variables';
+import { hideZero, variables } from './utils/variables';
 import { createTimeSlider } from './components/time-slider';
 
 import './style.css';
@@ -134,7 +134,7 @@ const changeOMfileURL = () => {
 	}, 100);
 };
 
-let showTemp = false;
+let showPopup = false;
 if (mapContainer) {
 	maplibregl.addProtocol('om', omProtocol);
 
@@ -143,8 +143,12 @@ if (mapContainer) {
 		style: `https://maptiler.servert.nl/styles/basic-world-maps/style.json`,
 		center: typeof domain.grid.center == 'object' ? domain.grid.center : [0, 0],
 		zoom: domain?.grid.zoom,
-		attributionControl: false
-		// hash: true
+		attributionControl: false,
+		keyboard: false
+		// rollEnabled: false
+		//cancelPendingTileRequestsWhileZooming: import.meta.env.DEV,
+		//fadeDuration: 300
+		//hash: true
 	});
 
 	map.on('load', async () => {
@@ -167,7 +171,7 @@ if (mapContainer) {
 
 		let popup: maplibregl.Popup | undefined;
 		map.on('mousemove', function (e) {
-			if (showTemp) {
+			if (showPopup) {
 				const coordinates = e.lngLat;
 				if (!popup) {
 					popup = new maplibregl.Popup()
@@ -176,31 +180,34 @@ if (mapContainer) {
 							`<span style="color:black;">Outside domain</span>`
 						)
 						.addTo(map);
+				} else {
+					popup.addTo(map);
 				}
-				let value = getValueFromLatLong(
+				let { index, value, direction } = getValueFromLatLong(
 					coordinates.lat,
-					coordinates.lng,
-					omUrl
+					coordinates.lng
 				);
-				if (value) {
-					let string;
-					if (Array === value.constructor) {
-						string = '';
-						for (let val of value) {
-							string += val.toFixed(1) + '  ';
-						}
+				if (index) {
+					if (hideZero.includes(variable.value) && value <= 0.25) {
+						popup.remove();
 					} else {
-						string =
-							// @ts-ignore
-							value.toFixed(1) +
-							(variable.value.startsWith('temperature')
-								? 'C°'
-								: '');
-					}
+						let string = '';
+						if (variable.value.startsWith('wind_')) {
+							string = `${value.toFixed(0)}kn`;
+						} else {
+							string =
+								value.toFixed(1) +
+								(variable.value.startsWith(
+									'temperature'
+								)
+									? 'C°'
+									: '');
+						}
 
-					popup.setLngLat(coordinates).setHTML(
-						`<span style="color:black;">${string}</span>`
-					);
+						popup.setLngLat(coordinates).setHTML(
+							`<span style="color:black;">${string}</span>`
+						);
+					}
 				} else {
 					popup.setLngLat(coordinates).setHTML(
 						`<span style="color:black;">Outside domain</span>`
@@ -210,11 +217,11 @@ if (mapContainer) {
 		});
 
 		map.on('click', (e) => {
-			showTemp = !showTemp;
-			if (!showTemp && popup) {
+			showPopup = !showPopup;
+			if (!showPopup && popup) {
 				popup.remove();
 			}
-			if (showTemp && popup) {
+			if (showPopup && popup) {
 				const coordinates = e.lngLat;
 				popup.setLngLat(coordinates).addTo(map);
 			}

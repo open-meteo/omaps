@@ -115,6 +115,32 @@ export function createTimeSlider({ container, initialDate, onChange }: TimeSlide
 		dateInput.disabled = disabled;
 	}
 
+	window.addEventListener('keydown', (event) => {
+		let newDate;
+		switch (event.key) {
+			case 'ArrowLeft':
+				prevBtn.click();
+				break;
+			case 'ArrowRight':
+				nextBtn.click();
+				break;
+			case 'ArrowUp':
+				currentDate.setDate(currentDate.getDate() + 1);
+				updateUI();
+				newDate = new Date(currentDate);
+				newDate.setHours(currentHour);
+				onChange(newDate);
+				break;
+			case 'ArrowDown':
+				currentDate.setDate(currentDate.getDate() - 1);
+				updateUI();
+				newDate = new Date(currentDate);
+				newDate.setHours(currentHour);
+				onChange(newDate);
+				break;
+		}
+	});
+
 	// Return the API which supports enabling/disabling controls
 	return { setDisabled };
 }
