@@ -144,12 +144,16 @@ if (mapContainer) {
 		center: typeof domain.grid.center == 'object' ? domain.grid.center : [0, 0],
 		zoom: domain?.grid.zoom,
 		attributionControl: false,
-		keyboard: false
+		keyboard: false,
+		dragRotate: false
+		// touchZoomRotate: false
 		// rollEnabled: false
 		//cancelPendingTileRequestsWhileZooming: import.meta.env.DEV,
 		//fadeDuration: 300
 		//hash: true
 	});
+
+	map.touchZoomRotate.disableRotation();
 
 	map.on('load', async () => {
 		omUrl = getOMUrl();
