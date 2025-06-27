@@ -58,16 +58,11 @@ body {
 .info-wrapper {
 	position: absolute;
 	bottom: 15px;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	width: 100%;
+	left: 50%;
+	transform: translate(-50%);
 }
 
 #info_box {
-	display: flex;
-	justify-content: center;
-	align-items: center;
 	background: rgba(255, 255, 255, 0.8);
 	border-radius: 15px;
 	padding: 15px 20px;
