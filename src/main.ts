@@ -27,6 +27,7 @@ const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
 let map: maplibregl.Map;
 const infoBox: HTMLElement | null = document.getElementById('info_box');
 const mapContainer: HTMLElement | null = document.getElementById('map_container');
+let popup: maplibregl.Popup | undefined;
 
 let omUrl: string;
 let timeSelected = new Date();
@@ -95,6 +96,10 @@ const changeOMfileURL = () => {
 	variableSelector.replaceChildren('');
 	variableSelector.innerHTML = `${getVariableOptions()}`;
 
+	if (popup) {
+		popup.remove();
+	}
+
 	if (!domain.variables.includes(variable.value)) {
 		variable = variables.find((v) => v.value === domain.variables[0]) as Variable;
 	}
@@ -155,6 +160,19 @@ if (mapContainer) {
 
 	map.touchZoomRotate.disableRotation();
 
+	// Add geolocate control to the map.
+	map.addControl(
+		new maplibregl.GeolocateControl({
+			fitBoundsOptions: {
+				maxZoom: 9.5
+			},
+			positionOptions: {
+				enableHighAccuracy: true
+			},
+			trackUserLocation: true
+		})
+	);
+
 	map.on('load', async () => {
 		omUrl = getOMUrl();
 		source = map.addSource('omFileSource', {
@@ -173,7 +191,6 @@ if (mapContainer) {
 			'road_area_pier'
 		);
 
-		let popup: maplibregl.Popup | undefined;
 		map.on('mousemove', function (e) {
 			if (showPopup) {
 				const coordinates = e.lngLat;
@@ -192,7 +209,11 @@ if (mapContainer) {
 					coordinates.lng
 				);
 				if (index) {
-					if (hideZero.includes(variable.value) && value <= 0.25) {
+					if (
+						(hideZero.includes(variable.value) &&
+							value <= 0.25) ||
+						!value
+					) {
 						popup.remove();
 					} else {
 						let string = '';

@@ -320,7 +320,14 @@ self.onmessage = async (message) => {
 						if (variable.value == 'cloud_cover') {
 							rgba[4 * ind + 3] = 255 * (px / 100);
 						} else if (variable.value == 'precipitation') {
-							rgba[4 * ind + 3] = 50 + 205 * (px / 10);
+							rgba[4 * ind + 3] =
+								50 + 180 * Math.min(px / 12, 10);
+						} else if (variable.value == 'pressure_msl') {
+							if (px % 1 > 0.05 || px % 1 > 0.95) {
+								rgba[4 * ind + 3] = 0;
+							} else {
+								rgba[4 * ind + 3] = 255;
+							}
 						} else {
 							rgba[4 * ind + 3] = 255 * (OPACITY / 100);
 						}
