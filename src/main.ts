@@ -15,6 +15,17 @@ import type { Variable, Domain, DomainGroups } from './types';
 let url = new URL(document.location.href);
 let params = new URLSearchParams(url.search);
 
+let darkMode = false;
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+	darkMode = true;
+}
+if (params.get('dark')) {
+	darkMode = params.get('dark') === 'true';
+}
+if (darkMode) {
+	document.body.classList.add('dark');
+}
+
 let domain: Domain;
 if (params.get('domain')) {
 	domain = domains.find((dm) => dm.value === params.get('domain')) ?? domains[0];
@@ -143,9 +154,11 @@ let showPopup = false;
 if (mapContainer) {
 	maplibregl.addProtocol('om', omProtocol);
 
+	console.log(darkMode);
+
 	map = new maplibregl.Map({
 		container: mapContainer,
-		style: `https://maptiler.servert.nl/styles/basic-world-maps/style.json`,
+		style: `https://maptiler.servert.nl/styles/basic-world-maps${darkMode ? '-dark' : ''}/style.json`,
 		center: typeof domain.grid.center == 'object' ? domain.grid.center : [0, 0],
 		zoom: domain?.grid.zoom,
 		attributionControl: false,
@@ -267,6 +280,7 @@ if (mapContainer) {
   				<br>
   				Selected time:
   				<div id="time_slider_container"></div>
+      				<div id="darkmode_toggle">${darkMode ? 'Light mode' : 'Dark mode'}</div>
    			</div>
   		`;
 
@@ -319,6 +333,16 @@ if (mapContainer) {
 					history.pushState({}, '', url);
 					changeOMfileURL();
 				}
+			});
+
+			const darkmodeToggle = document.getElementById(
+				'darkmode_toggle'
+			) as HTMLElement;
+			darkmodeToggle?.addEventListener('click', (e) => {
+				darkMode = !darkMode;
+				url.searchParams.set('dark', darkMode);
+				history.pushState({}, '', url);
+				window.location.reload();
 			});
 		}
 	});

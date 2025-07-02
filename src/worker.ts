@@ -186,7 +186,7 @@ self.onmessage = async (message) => {
 		if (variable.value == 'cloud_cover') {
 			colors = colorScale({
 				colorScheme: '',
-				customColors: ['#999', '#444'],
+				customColors: ['#FFF', '#c3c2c2'],
 				min: 0,
 				max: 100
 			});
