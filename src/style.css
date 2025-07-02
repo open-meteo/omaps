@@ -63,13 +63,6 @@ body {
 }
 
 #info_box {
-<<<<<<< HEAD
-=======
-	position: relative;
-	display: flex;
-	justify-content: center;
-	align-items: center;
->>>>>>> 3e343dd (darkmode)
 	background: rgba(255, 255, 255, 0.8);
 	border-radius: 15px;
 	padding: 15px 20px;

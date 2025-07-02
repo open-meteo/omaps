@@ -81,7 +81,8 @@ const drawArrow = (
 					rgba[4 * indTile] = 0;
 					rgba[4 * indTile + 1] = 0;
 					rgba[4 * indTile + 2] = 0;
-					rgba[4 * indTile + 3] = northArrow[4 * ind + 3];
+					rgba[4 * indTile + 3] =
+						northArrow[4 * ind + 3] * (OPACITY / 50);
 				}
 			}
 		}
@@ -133,7 +134,8 @@ const drawIcon = (
 							rgba[4 * indTile + 1] = 0;
 							rgba[4 * indTile + 2] = 0;
 							rgba[4 * indTile + 3] =
-								iconPixels[4 * ind + 3];
+								iconPixels[4 * ind + 3] *
+								(OPACITY / 100);
 						}
 					}
 				}
@@ -318,15 +320,18 @@ self.onmessage = async (message) => {
 						rgba[4 * ind + 1] = color[1];
 						rgba[4 * ind + 2] = color[2];
 						if (variable.value == 'cloud_cover') {
-							rgba[4 * ind + 3] = 255 * (px / 100);
+							rgba[4 * ind + 3] =
+								255 * (px / 100) * (OPACITY / 50);
 						} else if (variable.value == 'precipitation') {
 							rgba[4 * ind + 3] =
-								50 + 180 * Math.min(px / 12, 10);
+								(75 + 180 * Math.min(px / 12, 10)) *
+								(OPACITY / 50);
 						} else if (variable.value == 'pressure_msl') {
 							if (px % 1 > 0.05 || px % 1 > 0.95) {
 								rgba[4 * ind + 3] = 0;
 							} else {
-								rgba[4 * ind + 3] = 255;
+								rgba[4 * ind + 3] =
+									255 * (OPACITY / 100);
 							}
 						} else {
 							rgba[4 * ind + 3] = 255 * (OPACITY / 100);
