@@ -10,6 +10,8 @@ export const variables = [
 
 	{ value: 'shortwave_radiation', label: 'Shortwave Solar Radiation' },
 
+	{ value: 'sunshine_duration', label: 'Sunshine Duration' },
+
 	{ value: 'temperature_2m', label: 'Temperature 2m' },
 	{ value: 'temperature_50m', label: 'Temperature 50m' },
 	{ value: 'temperature_80m', label: 'Temperature 80m' },
