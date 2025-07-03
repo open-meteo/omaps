@@ -338,7 +338,7 @@ if (mapContainer) {
 			) as HTMLElement;
 			darkmodeToggle?.addEventListener('click', (e) => {
 				darkMode = !darkMode;
-				url.searchParams.set('dark', darkMode);
+				url.searchParams.set('dark', String(darkMode));
 				history.pushState({}, '', url);
 				window.location.reload();
 			});
