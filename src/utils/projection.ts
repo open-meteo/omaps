@@ -48,23 +48,20 @@ export class RotatedLatLonProjection implements Projection {
 		let lon = degreesToRadians(x);
 		let lat = degreesToRadians(y);
 
-		let θ = -1 * this.θ;
-		let ϕ = -1 * this.ϕ;
-
 		// quick solution without conversion in cartesian space
 		let lat2 =
 			-1 *
 			Math.asin(
-				Math.cos(θ) * Math.sin(lat) -
-					Math.cos(lon) * Math.sin(θ) * Math.cos(lat)
+				Math.cos(this.θ) * Math.sin(lat) -
+					Math.cos(lon) * Math.sin(this.θ) * Math.cos(lat)
 			);
 		let lon2 =
 			-1 *
 			(Math.atan2(
 				Math.sin(lon),
-				Math.tan(lat) * Math.sin(θ) + Math.cos(lon) * Math.cos(θ)
+				Math.tan(lat) * Math.sin(this.θ) + Math.cos(lon) * Math.cos(this.θ)
 			) -
-				ϕ);
+				this.ϕ);
 		return [radiansToDegrees(lat2), ((radiansToDegrees(lon2) + 180) % 360) - 180];
 	}
 }
