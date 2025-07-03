@@ -19,6 +19,7 @@ export const domainGroups = [
 	'knmi',
 	'meteofrance',
 	'metno',
+	'meteoswiss',
 	'ukmo'
 ];
 
@@ -790,6 +791,94 @@ export const domains: Array<Domain> = [
 			'wind_gusts_10m'
 		],
 		windUVComponents: false
+	},
+
+	// MeteoSwiss ICON
+	{
+		value: 'meteoswiss_icon_ch1',
+		label: 'MeteoSwiss ICON CH1',
+		grid: {
+			nx: 1089,
+			ny: 705,
+			latMin: 43.18,
+			lonMin: -3.94,
+			dx: 0.01,
+			dy: 0.01,
+			zoom: 5.2,
+			projection: {
+				rotation: [43.0, 190.0],
+				latitude: -6.46,
+				longitude: -4.06,
+				name: 'RotatedLatLonProjection',
+				projectOrigin: false
+			},
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
+			}
+		},
+		variables: [
+			'cape',
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'temperature_2m',
+			'temperature_80m',
+			'temperature_120m',
+			'temperature_180m',
+			'visibility',
+			'weather_code',
+			'wind_10m',
+			'wind_80m',
+			'wind_120m',
+			'wind_180m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: true
+	},
+	{
+		value: 'meteoswiss_icon_ch2',
+		label: 'MeteoSwiss ICON CH2',
+		grid: {
+			nx: 545,
+			ny: 353,
+			latMin: 43.18,
+			lonMin: -3.94,
+			dx: 0.02,
+			dy: 0.02,
+			zoom: 5.2,
+			projection: {
+				rotation: [43.0, 190.0],
+				latitude: -6.46,
+				longitude: -4.06,
+				name: 'RotatedLatLonProjection',
+				projectOrigin: false
+			},
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
+			}
+		},
+		variables: [
+			'cape',
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'temperature_2m',
+			'temperature_80m',
+			'temperature_120m',
+			'temperature_180m',
+			'visibility',
+			'weather_code',
+			'wind_10m',
+			'wind_80m',
+			'wind_120m',
+			'wind_180m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: true
 	},
 
 	// UKMO
