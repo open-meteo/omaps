@@ -154,8 +154,6 @@ let showPopup = false;
 if (mapContainer) {
 	maplibregl.addProtocol('om', omProtocol);
 
-	console.log(darkMode);
-
 	map = new maplibregl.Map({
 		container: mapContainer,
 		style: `https://maptiler.servert.nl/styles/basic-world-maps${darkMode ? '-dark' : ''}/style.json`,

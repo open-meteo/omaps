@@ -38,7 +38,10 @@ export class RotatedLatLonProjection implements Projection {
 			Math.sin(this.θ) * Math.sin(this.ϕ) * y +
 			Math.cos(this.θ) * z;
 
-		return [radiansToDegrees(Math.atan2(y2, x2)), radiansToDegrees(Math.asin(z2))];
+		return [
+			-1 * radiansToDegrees(Math.atan2(y2, x2)),
+			-1 * radiansToDegrees(Math.asin(z2))
+		];
 	}
 
 	reverse(x: number, y: number): [latitude: number, longitude: number] {
@@ -49,15 +52,20 @@ export class RotatedLatLonProjection implements Projection {
 		let ϕ = -1 * this.ϕ;
 
 		// quick solution without conversion in cartesian space
-		let lat2 = Math.asin(
-			Math.cos(θ) * Math.sin(lat) - Math.cos(lon) * Math.sin(θ) * Math.cos(lat)
-		);
+		let lat2 =
+			-1 *
+			Math.asin(
+				Math.cos(θ) * Math.sin(lat) -
+					Math.cos(lon) * Math.sin(θ) * Math.cos(lat)
+			);
 		let lon2 =
-			Math.atan2(
+			-1 *
+			(Math.atan2(
 				Math.sin(lon),
 				Math.tan(lat) * Math.sin(θ) + Math.cos(lon) * Math.cos(θ)
-			) - ϕ;
-		return [radiansToDegrees(lat2), radiansToDegrees(lon2)];
+			) -
+				ϕ);
+		return [radiansToDegrees(lat2), ((radiansToDegrees(lon2) + 180) % 360) - 180];
 	}
 }
 
