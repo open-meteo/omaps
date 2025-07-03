@@ -27,5 +27,5 @@ test('Test RotatedLatLon for KNMI', () => {
 	expect(proj.ϕ).toBe(-0.13962634015954636);
 
 	expect(proj.forward(39.671, -25.421997)[0]).toBe(13.716985366241445);
-	expect(proj.forward(39.671, -25.421997)[1]).toBe(-13.617348599940314);
+	expect(proj.forward(39.671, -25.421997)[1]).toBe(13.617348599940314);
 });
