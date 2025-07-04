@@ -77,6 +77,7 @@ export interface Domain {
 			  }
 			| Function;
 	};
+	time_interval: number;
 	variables: string[];
 	windUVComponents: boolean;
 }
