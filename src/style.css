@@ -142,3 +142,11 @@ body {
 	background: rgba(100, 100, 100, 0.8);
 	color: white;
 }
+
+.dark .maplibregl-ctrl.maplibregl-ctrl-group {
+	background: rgba(40, 40, 40, 0.95);
+}
+
+.dark .maplibregl-ctrl.maplibregl-ctrl-group .maplibregl-ctrl-icon {
+	filter: invert(1);
+}
