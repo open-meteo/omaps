@@ -184,6 +184,14 @@ if (mapContainer) {
 		})
 	);
 
+	// Add zoom and rotation controls to the map.
+	map.addControl(
+		new maplibregl.NavigationControl({
+			showZoom: true,
+			showCompass: true
+		})
+	);
+
 	map.on('load', async () => {
 		omUrl = getOMUrl();
 		source = map.addSource('omFileSource', {
