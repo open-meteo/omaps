@@ -161,7 +161,8 @@ if (mapContainer) {
 		zoom: domain?.grid.zoom,
 		keyboard: false,
 		dragRotate: false,
-		hash: true
+		hash: true,
+		maxZoom: 13.5
 		//cancelPendingTileRequestsWhileZooming: import.meta.env.DEV,
 	});
 
