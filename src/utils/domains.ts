@@ -16,6 +16,7 @@ export const domainGroups = [
 	'ncep',
 	'italia_meteo',
 	'jma',
+	'kma',
 	'knmi',
 	'meteofrance',
 	'metno',
@@ -72,6 +73,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -116,6 +118,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -159,6 +162,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -195,6 +199,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -231,6 +236,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -269,6 +275,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			//'cloud_cover', <- only per hPa
@@ -301,6 +308,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -339,6 +347,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -379,6 +388,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -413,6 +423,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -427,23 +438,37 @@ export const domains: Array<Domain> = [
 		],
 		windUVComponents: true
 	},
-	// {
-	// 	value: 'ecmwf_ifs04',
-	// 	label: 'ECMWF IFS 0.4°',
-	// 	grid: {
-	// 		nx: 900,
-	// 		ny: 451,
-	// 		latMin: -90,
-	// 		lonMin: -180,
-	// 		dx: 360 / 900,
-	// 		dy: 180 / (451 - 1),
-	// 		zoom: 1,
-	// 		center: function () {
-	// 			this.center = getCenterPoint(this);
-	// 			return this;
-	// 		}
-	// 	}
-	// },
+	{
+		value: 'ecmwf_aifs025_single',
+		label: 'ECMWF AIFS 0.25° Single ',
+		grid: {
+			nx: 1440,
+			ny: 721,
+			latMin: -90,
+			lonMin: -180,
+			dx: 360 / 1440,
+			dy: 180 / (721 - 1),
+			zoom: 1,
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
+			}
+		},
+		time_interval: 6,
+		variables: [
+			'cape',
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'wind_10m',
+			'wind_100m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: true
+	},
 
 	// ItaliaMeteo
 	{
@@ -462,6 +487,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -495,6 +521,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -523,6 +550,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -552,6 +580,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -589,6 +618,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -626,6 +656,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -664,6 +695,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'precipitation',
@@ -705,6 +737,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -712,6 +745,78 @@ export const domains: Array<Domain> = [
 			'shortwave_radiation',
 			'temperature_2m',
 			'wind_10m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: false
+	},
+
+	// KMA
+	{
+		value: 'kma_gdps',
+		label: 'KMA GDPS 12km',
+		grid: {
+			nx: 2560,
+			ny: 1920,
+			latMin: -90 + 180 / 1920 / 2,
+			lonMin: -180 + 360 / 2560 / 2,
+			dx: 360 / 2560,
+			dy: 180 / 1920,
+			zoom: 2,
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
+			}
+		},
+		time_interval: 3,
+		variables: [
+			'cape',
+			'cloud_cover',
+			'precipitation',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'visibility',
+			'wind_10m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: false
+	},
+	{
+		value: 'kma_ldps',
+		label: 'KMA LDPS 1.5km',
+		grid: {
+			nx: 602,
+			ny: 781,
+			latMin: 32.2569,
+			lonMin: 121.834,
+			dx: 1500,
+			dy: 1500,
+			zoom: 5.5,
+			projection: {
+				λ0: 126,
+				ϕ0: 38,
+				ϕ1: 30,
+				ϕ2: 60,
+				radius: 6371229,
+				latitude: 32.2569,
+				longitude: 121.834,
+				name: 'LambertConformalConicProjection'
+			},
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
+			}
+		},
+		time_interval: 1,
+		variables: [
+			'cloud_cover_2m',
+			'precipitation',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'visibility',
+			'wind_10m',
+			'wind_50m',
 			'wind_gusts_10m'
 		],
 		windUVComponents: false
@@ -740,6 +845,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -774,6 +880,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -817,6 +924,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -856,6 +964,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -890,6 +999,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -927,6 +1037,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
+		time_interval: 1,
 		variables: [
 			'cape',
 			'cloud_cover',
