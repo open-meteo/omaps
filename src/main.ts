@@ -159,14 +159,10 @@ if (mapContainer) {
 		style: `https://maptiler.servert.nl/styles/basic-world-maps${darkMode ? '-dark' : ''}/style.json`,
 		center: typeof domain.grid.center == 'object' ? domain.grid.center : [0, 0],
 		zoom: domain?.grid.zoom,
-		attributionControl: false,
 		keyboard: false,
-		dragRotate: false
-		// touchZoomRotate: false
-		// rollEnabled: false
+		dragRotate: false,
+		hash: true
 		//cancelPendingTileRequestsWhileZooming: import.meta.env.DEV,
-		//fadeDuration: 300
-		//hash: true
 	});
 
 	map.touchZoomRotate.disableRotation();
@@ -191,6 +187,10 @@ if (mapContainer) {
 			showCompass: true
 		})
 	);
+
+	// improved scrolling
+	map.scrollZoom.setZoomRate(1 / 90);
+	map.scrollZoom.setWheelZoomRate(1 / 90);
 
 	map.on('load', async () => {
 		omUrl = getOMUrl();

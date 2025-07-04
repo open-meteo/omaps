@@ -150,3 +150,16 @@ body {
 .dark .maplibregl-ctrl.maplibregl-ctrl-group .maplibregl-ctrl-icon {
 	filter: invert(1);
 }
+
+.dark .maplibregl-ctrl.maplibregl-ctrl-attrib {
+	background: rgba(40, 40, 40, 0.95);
+	color: white;
+}
+
+.dark .maplibregl-ctrl.maplibregl-ctrl-attrib a {
+	color: white;
+}
+
+.dark .maplibregl-ctrl-attrib-button {
+	filter: invert(1);
+}
