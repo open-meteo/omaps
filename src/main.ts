@@ -189,6 +189,8 @@ if (mapContainer) {
 		})
 	);
 
+	map.addControl(new maplibregl.GlobeControl());
+
 	// improved scrolling
 	map.scrollZoom.setZoomRate(1 / 90);
 	map.scrollZoom.setWheelZoomRate(1 / 90);
