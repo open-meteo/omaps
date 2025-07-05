@@ -37,6 +37,7 @@ const drawArrow = (
 	nx: number,
 	domain: Domain,
 	projectionGrid: ProjectionGrid,
+	values: TypedArray,
 	directions: TypedArray,
 	boxSize = TILE_SIZE / 8,
 	arrowTipLength = 7,
@@ -56,6 +57,8 @@ const drawArrow = (
 		domain,
 		projectionGrid
 	);
+
+	let px = interpolateLinear(values, nx, index, xFraction, yFraction);
 
 	let direction = degreesToRadians(
 		interpolateLinear(directions, nx, index, xFraction, yFraction)
@@ -82,7 +85,9 @@ const drawArrow = (
 					rgba[4 * indTile + 1] = 0;
 					rgba[4 * indTile + 2] = 0;
 					rgba[4 * indTile + 3] =
-						northArrow[4 * ind + 3] * (OPACITY / 50);
+						northArrow[4 * ind + 3] *
+						Math.min(((px - 2) / 50) * 50, 100) *
+						(OPACITY / 50);
 				}
 			}
 		}
@@ -237,6 +242,11 @@ self.onmessage = async (message) => {
 				min: -1,
 				max: 15
 			});
+		} else if (variable.value.startsWith('wind')) {
+			colors = colorScale({
+				min: 0,
+				max: 35
+			});
 		} else {
 			colors = colorScale({
 				min: -5,
@@ -326,6 +336,11 @@ self.onmessage = async (message) => {
 							rgba[4 * ind + 3] =
 								(75 + 180 * Math.min(px / 12, 10)) *
 								(OPACITY / 50);
+						} else if (variable.value.startsWith('wind')) {
+							rgba[4 * ind + 3] =
+								((px - 3.5) / 6) *
+								255 *
+								(OPACITY / 100);
 						} else if (variable.value == 'pressure_msl') {
 							if (px % 1 > 0.05 || px % 1 > 0.95) {
 								rgba[4 * ind + 3] = 0;
@@ -360,6 +375,7 @@ self.onmessage = async (message) => {
 							nx,
 							domain,
 							projectionGrid,
+							values,
 							directions,
 							boxSize,
 							7,
