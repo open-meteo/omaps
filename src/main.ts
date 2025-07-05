@@ -168,6 +168,14 @@ if (mapContainer) {
 
 	map.touchZoomRotate.disableRotation();
 
+	// Add zoom and rotation controls to the map.
+	map.addControl(
+		new maplibregl.NavigationControl({
+			showZoom: true,
+			showCompass: true
+		})
+	);
+
 	// Add geolocate control to the map.
 	map.addControl(
 		new maplibregl.GeolocateControl({
@@ -178,14 +186,6 @@ if (mapContainer) {
 				enableHighAccuracy: true
 			},
 			trackUserLocation: true
-		})
-	);
-
-	// Add zoom and rotation controls to the map.
-	map.addControl(
-		new maplibregl.NavigationControl({
-			showZoom: true,
-			showCompass: true
 		})
 	);
 
