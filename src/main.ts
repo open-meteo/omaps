@@ -180,7 +180,7 @@ if (mapContainer) {
 	map.addControl(
 		new maplibregl.GeolocateControl({
 			fitBoundsOptions: {
-				maxZoom: 9.5
+				maxZoom: 13.5
 			},
 			positionOptions: {
 				enableHighAccuracy: true
@@ -196,6 +196,28 @@ if (mapContainer) {
 	map.scrollZoom.setWheelZoomRate(1 / 90);
 
 	map.on('load', async () => {
+		map.addSource('rasterDem', {
+			type: 'raster-dem',
+			tiles: [
+				'https://mbtiles.servert.nl/services/copernicus-terrain/tiles/{z}/{x}/{y}.png'
+			],
+			tileSize: 256
+		});
+
+		map.addLayer(
+			{
+				source: 'rasterDem',
+				id: 'rasterDemLayer',
+				type: 'hillshade',
+				paint: {
+					'hillshade-method': 'igor',
+					'hillshade-shadow-color': 'rgba(0,0,0,0.25)',
+					'hillshade-highlight-color': 'rgba(255,255,255,0.25)'
+				}
+			},
+			'road_area_pier'
+		);
+
 		omUrl = getOMUrl();
 		source = map.addSource('omFileSource', {
 			type: 'raster',

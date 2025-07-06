@@ -86,7 +86,7 @@ const drawArrow = (
 					rgba[4 * indTile + 2] = 0;
 					rgba[4 * indTile + 3] =
 						northArrow[4 * ind + 3] *
-						Math.min(((px - 2) / 50) * 50, 100) *
+						Math.min(((px - 2) / 200) * 50, 100) *
 						(OPACITY / 50);
 				}
 			}
