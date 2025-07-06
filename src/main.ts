@@ -160,7 +160,7 @@ if (mapContainer) {
 		center: typeof domain.grid.center == 'object' ? domain.grid.center : [0, 0],
 		zoom: domain?.grid.zoom,
 		keyboard: false,
-		dragRotate: false,
+		//dragRotate: false,
 		hash: true,
 		maxZoom: 13.5
 		//cancelPendingTileRequestsWhileZooming: import.meta.env.DEV,
@@ -199,9 +199,10 @@ if (mapContainer) {
 		map.addSource('rasterDem', {
 			type: 'raster-dem',
 			tiles: [
-				'https://mbtiles.servert.nl/services/copernicus-terrain/tiles/{z}/{x}/{y}.png'
+				'https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'
 			],
-			tileSize: 256
+			tileSize: 256,
+			maxzoom: 10
 		});
 
 		map.addLayer(
@@ -211,11 +212,18 @@ if (mapContainer) {
 				type: 'hillshade',
 				paint: {
 					'hillshade-method': 'igor',
-					'hillshade-shadow-color': 'rgba(0,0,0,0.25)',
+					'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
 					'hillshade-highlight-color': 'rgba(255,255,255,0.25)'
 				}
 			},
 			'road_area_pier'
+		);
+
+		map.addControl(
+			new maplibregl.TerrainControl({
+				source: 'rasterDem',
+				exaggeration: 1
+			})
 		);
 
 		omUrl = getOMUrl();
