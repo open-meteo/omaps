@@ -199,7 +199,7 @@ if (mapContainer) {
 		map.addSource('rasterDem', {
 			type: 'raster-dem',
 			tiles: [
-				'https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'
+				'https://mbtiles.servert.nl/services/copernicus-90m-terrain/tiles/{z}/{x}/{y}.png'
 			],
 			tileSize: 256,
 			maxzoom: 10
