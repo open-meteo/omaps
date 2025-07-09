@@ -4,6 +4,7 @@ export const variables = [
 	{ value: 'cloud_cover', label: 'Cloud Cover' },
 
 	{ value: 'precipitation', label: 'Precipitation' },
+
 	{ value: 'pressure_msl', label: 'Pressure Main Sea Level' },
 
 	{ value: 'relative_humidity_2m', label: 'Relative Humidity 2m' },
@@ -11,6 +12,8 @@ export const variables = [
 	{ value: 'shortwave_radiation', label: 'Shortwave Solar Radiation' },
 
 	{ value: 'sunshine_duration', label: 'Sunshine Duration' },
+
+	{ value: 'surface_temperature', label: 'Surface Temperature' },
 
 	{ value: 'temperature_2m', label: 'Temperature 2m' },
 	{ value: 'temperature_50m', label: 'Temperature 50m' },

@@ -162,7 +162,8 @@ if (mapContainer) {
 		keyboard: false,
 		//dragRotate: false,
 		hash: true,
-		maxZoom: 13.5
+		maxZoom: 13.5,
+		maxPitch: 85
 		//cancelPendingTileRequestsWhileZooming: import.meta.env.DEV,
 	});
 
@@ -171,6 +172,7 @@ if (mapContainer) {
 	// Add zoom and rotation controls to the map.
 	map.addControl(
 		new maplibregl.NavigationControl({
+			visualizePitch: true,
 			showZoom: true,
 			showCompass: true
 		})
@@ -196,6 +198,15 @@ if (mapContainer) {
 	map.scrollZoom.setWheelZoomRate(1 / 90);
 
 	map.on('load', async () => {
+		map.setSky({
+			'sky-color': '#000000',
+			'sky-horizon-blend': 0.8,
+			'horizon-color': '#80C1FF',
+			'horizon-fog-blend': 0.6,
+			'fog-color': '#D6EAFF',
+			'fog-ground-blend': 0
+		});
+
 		map.addSource('rasterDem', {
 			type: 'raster-dem',
 			tiles: [
@@ -212,14 +223,15 @@ if (mapContainer) {
 				type: 'hillshade',
 				paint: {
 					'hillshade-method': 'igor',
+					//'hillshade-exaggeration': 1,
 					'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
-					'hillshade-highlight-color': 'rgba(255,255,255,0.25)'
+					'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
 				}
 			},
 			'road_area_pier'
 		);
 
-		map.addControl(
+		const terrainControl = map.addControl(
 			new maplibregl.TerrainControl({
 				source: 'rasterDem',
 				exaggeration: 1
