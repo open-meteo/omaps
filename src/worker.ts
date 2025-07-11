@@ -1,4 +1,4 @@
-import { colorScale } from './utils/color-scales';
+import { colorScale, colorScales } from './utils/color-scales';
 
 import { hideZero, drawOnTiles } from './utils/variables';
 
@@ -15,7 +15,7 @@ import {
 
 import type { TypedArray } from '@openmeteo/file-reader';
 import type { IconListPixels } from './utils/icons';
-import type { Domain } from './types';
+import type { Domain, IndexAndFractions } from './types';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
 const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
@@ -77,7 +77,6 @@ const drawArrow = (
 				);
 				let newI = Math.floor(rotatedPoint[0]);
 				let newJ = Math.floor(rotatedPoint[1]);
-				let indNew = newJ + newI * boxSize;
 				let indTile = jBase + newJ + (iBase + newI) * TILE_SIZE;
 
 				if (northArrow[4 * ind + 3]) {
@@ -157,7 +156,7 @@ const getIndexAndFractions = (
 	domain: Domain,
 	projectionGrid: ProjectionGrid
 ) => {
-	let indexObject;
+	let indexObject: IndexAndFractions;
 	if (domain.grid.projection && projectionGrid) {
 		indexObject = projectionGrid.findPointInterpolated(lat, lon);
 	} else {
@@ -232,26 +231,13 @@ self.onmessage = async (message) => {
 				min: 0,
 				max: 11
 			});
-		} else if (variable.value == 'thunderstorm_probablity') {
+		} else if (variable.value == 'thunderstorm_probability') {
 			colors = colorScale({
 				min: 0,
 				max: 100
 			});
-		} else if (variable.value == 'precipitation') {
-			colors = colorScale({
-				min: -1,
-				max: 15
-			});
-		} else if (variable.value.startsWith('wind')) {
-			colors = colorScale({
-				min: 0,
-				max: 35
-			});
 		} else {
-			colors = colorScale({
-				min: -5,
-				max: 40
-			});
+			colors = colorScales[variable.value.split('_')[0]];
 		}
 
 		let projectionGrid;
@@ -318,13 +304,20 @@ self.onmessage = async (message) => {
 					rgba[4 * ind + 2] = 0;
 					rgba[4 * ind + 3] = 0;
 				} else {
-					const color =
-						colors[
-							Math.min(
-								colors.length - 1,
-								Math.max(0, Math.floor(px))
-							)
-						];
+					let color: number[];
+
+					if (variable.value.startsWith('temperature')) {
+						color = colors[Math.max(0, Math.floor(px + 40))];
+					} else {
+						color =
+							colors[
+								Math.min(
+									colors.length - 1,
+									Math.max(0, Math.floor(px))
+								)
+							];
+					}
+
 					if (color) {
 						rgba[4 * ind] = color[0];
 						rgba[4 * ind + 1] = color[1];
@@ -341,13 +334,13 @@ self.onmessage = async (message) => {
 								((px - 3.5) / 6) *
 								255 *
 								(OPACITY / 100);
-						} else if (variable.value == 'pressure_msl') {
-							if (px % 1 > 0.05 || px % 1 > 0.95) {
-								rgba[4 * ind + 3] = 0;
-							} else {
-								rgba[4 * ind + 3] =
-									255 * (OPACITY / 100);
-							}
+							// } else if (variable.value == 'pressure_msl') {
+							// 	if (px % 1 > 0.05 || px % 1 > 0.95) {
+							// 		rgba[4 * ind + 3] = 0;
+							// 	} else {
+							// 		rgba[4 * ind + 3] =
+							// 			255 * (OPACITY / 100);
+							// 	}
 						} else {
 							rgba[4 * ind + 3] = 255 * (OPACITY / 100);
 						}

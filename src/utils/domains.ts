@@ -491,12 +491,16 @@ export const domains: Array<Domain> = [
 		},
 		time_interval: 3,
 		variables: [
+			'cape',
 			'cloud_cover',
 			'precipitation',
 			'pressure_msl',
 			'relative_humidity_2m',
 			'shortwave_radiation',
 			'temperature_2m',
+			'temperature_40m',
+			'temperature_80m',
+			'temperature_120m',
 			'visibility',
 			'weather_code',
 			'wind_10m',
@@ -549,7 +553,7 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
-		time_interval: 3,
+		time_interval: 1,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -557,6 +561,9 @@ export const domains: Array<Domain> = [
 			'relative_humidity_2m',
 			'shortwave_radiation',
 			'temperature_2m',
+			'temperature_40m',
+			'temperature_80m',
+			'temperature_120m',
 			'visibility',
 			'weather_code',
 			'wind_10m',

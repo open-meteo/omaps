@@ -10,6 +10,10 @@ import { createTimeSlider } from './components/time-slider';
 
 import './style.css';
 
+import { colorScales } from './utils/color-scales';
+
+console.log(colorScales);
+
 import type { Variable, Domain, DomainGroups } from './types';
 
 let url = new URL(document.location.href);

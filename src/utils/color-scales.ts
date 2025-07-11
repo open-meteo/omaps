@@ -1,20 +1,8 @@
 import { interpolateHsl, color } from 'd3';
 
-export type HEXColor = `#${string}`;
-
-export const COLOR_SCHEMES = {
-	CartoTemps: ['#009392', '#39b185', '#9ccb86', '#e9e29c', '#eeb479', '#e88471', '#cf597e']
-} satisfies { [key: string]: Array<HEXColor> };
-
-const colorSchemeNames = Object.keys(COLOR_SCHEMES) as Array<keyof typeof COLOR_SCHEMES>;
-
-function isValidColorSchemeName(name: string): name is keyof typeof COLOR_SCHEMES {
-	return (colorSchemeNames as readonly string[]).includes(name);
-}
-
 export type ColorScaleParams = {
 	customColors?: Array<HEXColor | string>;
-	colorScheme?: string;
+	colorScheme?: string[];
 	min: number;
 	max: number;
 	isReverse?: boolean;
@@ -48,7 +36,7 @@ function interpolateColorScaleHSL(colors: Array<string>, steps: number) {
 	return rgbArray;
 }
 const colorScale = ({
-	colorScheme = 'CartoTemps',
+	colorScheme = ['#009392', '#39b185', '#9ccb86', '#e9e29c', '#eeb479', '#e88471', '#cf597e'],
 	customColors,
 	min,
 	max,
@@ -57,17 +45,17 @@ const colorScale = ({
 	let colors: Array<HEXColor | string>;
 
 	if (colorScheme) {
-		if (isValidColorSchemeName(colorScheme)) {
-			colors = COLOR_SCHEMES[colorScheme];
-		} else {
-			throw new Error(`"${colorScheme}" is not a supported color scheme`);
-		}
+		colors = [
+			'#009392',
+			'#39b185',
+			'#9ccb86',
+			'#e9e29c',
+			'#eeb479',
+			'#e88471',
+			'#cf597e'
+		];
 	} else if (customColors && customColors.length >= 2) {
 		colors = customColors;
-	} else {
-		throw new Error(
-			`You must provide a colorScheme or an array of at least 2 customColors`
-		);
 	}
 
 	let colorInts = interpolateColorScaleHSL(colors, max - min);
@@ -77,3 +65,21 @@ const colorScale = ({
 };
 
 export { colorScale, colorSchemeNames };
+
+export const colorScales = {
+	temperature: [
+		...interpolateColorScaleHSL(['purple', 'blue'], 40), // -40° to 0°
+		...interpolateColorScaleHSL(['blue', 'green'], 16), // 0° to 16°
+		...interpolateColorScaleHSL(['green', 'orange'], 16), // 0° to 32°
+		...interpolateColorScaleHSL(['orange', 'red'], 10), // 32° to 42°
+		...interpolateColorScaleHSL(['red', 'purple'], 18) // 42° to 60°
+	],
+	precipitation: colorScale({
+		min: -1,
+		max: 15
+	}),
+	wind: colorScale({
+		min: 0,
+		max: 35
+	})
+};
