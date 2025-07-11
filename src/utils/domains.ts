@@ -13,6 +13,7 @@ export const domainGroups = [
 	'dmi',
 	'dwd',
 	'ecmwf',
+	'cmc_gem',
 	'ncep',
 	'italia_meteo',
 	'jma',
@@ -91,6 +92,7 @@ export const domains: Array<Domain> = [
 		],
 		windUVComponents: false
 	},
+
 	// DMI
 	{
 		value: 'dmi_harmonie_arome_europe',
@@ -468,6 +470,141 @@ export const domains: Array<Domain> = [
 			'wind_gusts_10m'
 		],
 		windUVComponents: true
+	},
+
+	// GEM
+	{
+		value: 'cmc_gem_gdps',
+		label: 'GEM Global',
+		grid: {
+			nx: 2400,
+			ny: 1201,
+			latMin: -90,
+			lonMin: -180,
+			dx: 0.15,
+			dy: 0.15,
+			zoom: 1,
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
+			}
+		},
+		time_interval: 3,
+		variables: [
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'visibility',
+			'weather_code',
+			'wind_10m',
+			'wind_40m',
+			'wind_80m',
+			'wind_120m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: false
+	},
+	// {
+	// 	value: 'cmc_gem_geps',
+	// 	label: 'GEM Global',
+	// 	grid: {
+	// 		nx: 2400,
+	// 		ny: 1201,
+	// 		latMin: -90,
+	// 		lonMin: -180,
+	// 		dx: 0.15,
+	// 		dy: 0.15,
+	// 		zoom: 1,
+	// 		center: function () {
+	// 			this.center = getCenterPoint(this);
+	// 			return this;
+	// 		}
+	// 	},
+	// 	time_interval: 3,
+	// 	variables: ['precipitation_probability'],
+	// 	windUVComponents: false
+	// },
+	{
+		value: 'cmc_gem_hrdps',
+		label: 'GEM HRDPS Continental',
+		grid: {
+			nx: 2540,
+			ny: 1290,
+			latMin: 39.626034,
+			lonMin: -133.62952,
+			dx: 0.15,
+			dy: 0.15,
+			zoom: 1,
+			projection: {
+				rotation: [-36.0885, 245.305],
+				latitude: [39.626034, 47.876457],
+				longitude: [-133.62952, -40.708557],
+				name: 'RotatedLatLonProjection'
+			},
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
+			}
+		},
+		time_interval: 3,
+		variables: [
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'visibility',
+			'weather_code',
+			'wind_10m',
+			'wind_40m',
+			'wind_80m',
+			'wind_120m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: false
+	},
+	{
+		value: 'cmc_gem_rdps',
+		label: 'GEM Regional',
+		grid: {
+			nx: 935,
+			ny: 824,
+			latMin: 18.14503,
+			lonMin: 217.10745,
+			dx: 0.15,
+			dy: 0.15,
+			zoom: 1,
+			projection: {
+				latitude: 90,
+				longitude: 249,
+				name: 'StereograpicProjection'
+			},
+			center: function () {
+				this.center = getCenterPoint(this);
+				return this;
+			}
+		},
+		time_interval: 3,
+		variables: [
+			'cloud_cover',
+			'precipitation',
+			'pressure_msl',
+			'relative_humidity_2m',
+			'shortwave_radiation',
+			'temperature_2m',
+			'visibility',
+			'weather_code',
+			'wind_10m',
+			'wind_40m',
+			'wind_80m',
+			'wind_120m',
+			'wind_gusts_10m'
+		],
+		windUVComponents: false
 	},
 
 	// ItaliaMeteo

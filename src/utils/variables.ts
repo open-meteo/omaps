@@ -4,6 +4,7 @@ export const variables = [
 	{ value: 'cloud_cover', label: 'Cloud Cover' },
 
 	{ value: 'precipitation', label: 'Precipitation' },
+	{ value: 'precipitation_probability', label: 'Precipitation Probability' },
 
 	{ value: 'pressure_msl', label: 'Pressure Main Sea Level' },
 
