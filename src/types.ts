@@ -97,3 +97,9 @@ export interface Center {
 	lng: number;
 	lat: number;
 }
+
+export interface IndexAndFractions {
+	index: number;
+	xFraction: number;
+	yFraction: number;
+}

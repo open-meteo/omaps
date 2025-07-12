@@ -26,6 +26,7 @@ import TileWorker from './worker?worker';
 import type { TileJSON, TileIndex, Domain, Variable, Bounds } from './types';
 import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
 
+let dark = false;
 let domain: Domain;
 let variable: Variable;
 
@@ -189,7 +190,8 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 		data,
 		domain,
 		variable,
-		iconPixelData: iconList
+		iconPixelData: iconList,
+		dark: dark
 	});
 	const tilePromise = new Promise<ImageBitmap>((resolve) => {
 		worker.onmessage = async (message) => {
@@ -244,7 +246,10 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 const initOMFile = async (url: string) => {
 	initPixelData();
 
-	const omUrl = url.replace('om://', '');
+	const [omUrl, omParams] = url.replace('om://', '').split('?');
+
+	const urlParams = new URLSearchParams(omParams);
+	dark = urlParams.get('dark') === 'true';
 
 	if (fileReader.reader) {
 		fileReader.reader.dispose();

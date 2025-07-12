@@ -204,7 +204,58 @@ export class LambertAzimuthalEqualAreaProjection implements Projection {
 	}
 }
 
+export class StereograpicProjection implements Projection {
+	λ0: number; // Central longitude
+	sinϕ1: number; // Sinus of central latitude
+	cosϕ1: number; // Cosine of central latitude
+	R = 6371229; // Radius of Earth
+	constructor(projectionData: Domain['grid']['projection']) {
+		if (projectionData) {
+			this.λ0 = degreesToRadians(projectionData.longitude as number);
+			this.sinϕ1 = Math.sin(degreesToRadians(projectionData.latitude as number));
+			this.cosϕ1 = Math.cos(degreesToRadians(projectionData.latitude as number));
+			if (projectionData.radius) {
+				this.R = projectionData.radius;
+			}
+		} else {
+			this.λ0 = 0;
+			this.sinϕ1 = 0;
+			this.cosϕ1 = 0;
+		}
+	}
+
+	forward(latitude: number, longitude: number): [x: number, y: number] {
+		let ϕ = degreesToRadians(latitude);
+		let λ = degreesToRadians(longitude);
+		let k =
+			(2 * this.R) /
+			(1 +
+				this.sinϕ1 * Math.sin(ϕ) +
+				this.cosϕ1 * Math.cos(ϕ) * Math.cos(λ - this.λ0));
+		let x = k * Math.cos(ϕ) * Math.sin(λ - this.λ0);
+		let y =
+			k *
+			(this.cosϕ1 * Math.sin(ϕ) -
+				this.sinϕ1 * Math.cos(ϕ) * Math.cos(λ - this.λ0));
+		return [x, y];
+	}
+
+	reverse(x: number, y: number): [latitude: number, longitude: number] {
+		let p = Math.sqrt(x * x + y * y);
+		let c = 2 * Math.atan2(p, 2 * this.R);
+		let ϕ = Math.asin(Math.cos(c) * this.sinϕ1 + (y * Math.sin(c) * this.cosϕ1) / p);
+		let λ =
+			this.λ0 +
+			Math.atan2(
+				x * Math.sin(c),
+				p * this.cosϕ1 * Math.cos(c) - y * this.sinϕ1 * Math.sin(c)
+			);
+		return [radiansToDegrees(ϕ), radiansToDegrees(λ)];
+	}
+}
+
 const projections = {
+	StereograpicProjection,
 	RotatedLatLonProjection,
 	LambertConformalConicProjection,
 	LambertAzimuthalEqualAreaProjection

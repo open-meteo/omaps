@@ -1,5 +1,5 @@
 import type { TypedArray } from '@openmeteo/file-reader';
-import type { Domain, Bounds, Center } from '../types';
+import type { Domain, Bounds, Center, IndexAndFractions } from '../types';
 import type { Projection, ProjectionGrid } from './projection';
 
 const r2d = 180 / Math.PI;
@@ -60,20 +60,20 @@ export const interpolate2DHermite = (
 	xFraction: number,
 	yFraction: number
 ) => {
-	if (import.meta.env.DEV) {
-		if (xFraction < 0.05 && yFraction < 0.05) {
-			return 40;
-		}
-		if (xFraction < 0.05 && yFraction > 0.95) {
-			return 0;
-		}
-		if (xFraction > 0.95 && yFraction > 0.95) {
-			return 40;
-		}
-		if (yFraction < 0.05 && xFraction > 0.95) {
-			return 0;
-		}
-	}
+	// if (import.meta.env.DEV) {
+	// 	if (xFraction < 0.05 && yFraction < 0.05) {
+	// 		return 40;
+	// 	}
+	// 	if (xFraction < 0.05 && yFraction > 0.95) {
+	// 		return 0;
+	// 	}
+	// 	if (xFraction > 0.95 && yFraction > 0.95) {
+	// 		return 40;
+	// 	}
+	// 	if (yFraction < 0.05 && xFraction > 0.95) {
+	// 		return 0;
+	// 	}
+	// }
 	// tension = 0 is Hermite with Catmull-Rom. Tension = 1 is bilinear interpolation
 	// 0.5 is somewhat in the middle
 	return interpolateCardinal2D(values, nx, index, xFraction, yFraction, 0.3);
@@ -179,7 +179,11 @@ export const quinticHermite2D = (
 	return quinticHermite(yFraction, f0, f1, m0, m1, c0, c1);
 };
 
-export const getIndexFromLatLong = (lat: number, lon: number, domain: Domain) => {
+export const getIndexFromLatLong = (
+	lat: number,
+	lon: number,
+	domain: Domain
+): IndexAndFractions => {
 	if (
 		lat < domain.grid.latMin ||
 		lat > domain.grid.latMin + domain.grid.dy * domain.grid.ny ||
