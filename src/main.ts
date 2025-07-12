@@ -10,10 +10,6 @@ import { createTimeSlider } from './components/time-slider';
 
 import './style.css';
 
-import { colorScales } from './utils/color-scales';
-
-console.log(colorScales);
-
 import type { Variable, Domain, DomainGroups } from './types';
 
 let url = new URL(document.location.href);
@@ -99,7 +95,7 @@ const getVariableOptions = () => {
 };
 
 const getOMUrl = () => {
-	return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours()))}00Z/${variable.value}.om`;
+	return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours()))}00Z/${variable.value}.om?dark=${darkMode}`;
 };
 
 let source: maplibregl.Map;

@@ -1,4 +1,4 @@
-import { colorScale, colorScales } from './utils/color-scales';
+import { colorScales } from './utils/color-scales';
 
 import { hideZero, drawOnTiles } from './utils/variables';
 
@@ -90,6 +90,34 @@ const drawArrow = (
 				}
 			}
 		}
+	}
+};
+
+const getColor = (v: string, px: number): number[] => {
+	if (v.startsWith('temperature')) {
+		// increase minimum temperature by 40, since scale starts at -40
+		return colors[Math.max(0, Math.floor(px + 40))];
+	} else if (v.startsWith('pressure')) {
+		// increase minimum index by 950
+		return colors[Math.min(colors.length - 1, Math.max(0, Math.floor((px - 950) / 2)))];
+	} else {
+		return colors[Math.min(colors.length - 1, Math.max(0, Math.floor(px)))];
+	}
+};
+
+const getOpacity = (v: string, px: number, dark: boolean): number => {
+	if (v == 'cloud_cover' || v == 'thunderstorm_probability') {
+		// scale opacity with percentage
+		return 255 * (px ** 1.5 / 1000) * (OPACITY / 100);
+	} else if (v.startsWith('wind')) {
+		// scale opacity with wind values below 14kn
+		return Math.min((px - 2) / 12, 1) * 255 * (OPACITY / 100);
+	} else if (v.startsWith('precipitation')) {
+		// scale opacity with precip values below 1.5mm
+		return Math.min(px / 1.5, 1) * 255 * (OPACITY / 100);
+	} else {
+		// else set the opacity with env variable and deduct 20% for darkmode
+		return 255 * (dark ? OPACITY / 100 - 0.2 : OPACITY / 100);
 	}
 };
 
@@ -188,57 +216,9 @@ self.onmessage = async (message) => {
 
 		const pixels = TILE_SIZE * TILE_SIZE;
 		const rgba = new Uint8ClampedArray(pixels * 4);
+		const dark = message.data.dark;
 
-		if (variable.value == 'cloud_cover') {
-			colors = colorScale({
-				colorScheme: '',
-				customColors: ['#FFF', '#c3c2c2'],
-				min: 0,
-				max: 100
-			});
-		} else if (variable.value == 'pressure_msl') {
-			colors = colorScale({
-				min: 990,
-				max: 1020
-			});
-		} else if (variable.value == 'relative_humidity_2m') {
-			colors = colorScale({
-				colorScheme: '',
-				customColors: [
-					'#009392',
-					'#39b185',
-					'#9ccb86',
-					'#e9e29c',
-					'#eeb479',
-					'#e88471',
-					'#cf597e'
-				].reverse(),
-				min: 0,
-				max: 100
-			});
-		} else if (variable.value == 'shortwave_radiation') {
-			colors = colorScale({
-				min: 0,
-				max: 1000
-			});
-		} else if (variable.value == 'cape') {
-			colors = colorScale({
-				min: 0,
-				max: 4000
-			});
-		} else if (variable.value == 'uv_index') {
-			colors = colorScale({
-				min: 0,
-				max: 11
-			});
-		} else if (variable.value == 'thunderstorm_probability') {
-			colors = colorScale({
-				min: 0,
-				max: 100
-			});
-		} else {
-			colors = colorScales[variable.value.split('_')[0]];
-		}
+		colors = colorScales[variable.value.split('_')[0]];
 
 		let projectionGrid;
 		if (domain.grid.projection) {
@@ -304,46 +284,17 @@ self.onmessage = async (message) => {
 					rgba[4 * ind + 2] = 0;
 					rgba[4 * ind + 3] = 0;
 				} else {
-					let color: number[];
-
-					if (variable.value.startsWith('temperature')) {
-						color = colors[Math.max(0, Math.floor(px + 40))];
-					} else {
-						color =
-							colors[
-								Math.min(
-									colors.length - 1,
-									Math.max(0, Math.floor(px))
-								)
-							];
-					}
+					const color = getColor(variable.value, px);
 
 					if (color) {
 						rgba[4 * ind] = color[0];
 						rgba[4 * ind + 1] = color[1];
 						rgba[4 * ind + 2] = color[2];
-						if (variable.value == 'cloud_cover') {
-							rgba[4 * ind + 3] =
-								255 * (px / 100) * (OPACITY / 50);
-						} else if (variable.value == 'precipitation') {
-							rgba[4 * ind + 3] =
-								(75 + 180 * Math.min(px / 12, 10)) *
-								(OPACITY / 50);
-						} else if (variable.value.startsWith('wind')) {
-							rgba[4 * ind + 3] =
-								((px - 3.5) / 6) *
-								255 *
-								(OPACITY / 100);
-							// } else if (variable.value == 'pressure_msl') {
-							// 	if (px % 1 > 0.05 || px % 1 > 0.95) {
-							// 		rgba[4 * ind + 3] = 0;
-							// 	} else {
-							// 		rgba[4 * ind + 3] =
-							// 			255 * (OPACITY / 100);
-							// 	}
-						} else {
-							rgba[4 * ind + 3] = 255 * (OPACITY / 100);
-						}
+						rgba[4 * ind + 3] = getOpacity(
+							variable.value,
+							px,
+							dark
+						);
 					}
 				}
 			}

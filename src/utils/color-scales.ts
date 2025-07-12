@@ -1,14 +1,5 @@
 import { interpolateHsl, color } from 'd3';
 
-export type ColorScaleParams = {
-	customColors?: Array<HEXColor | string>;
-	colorScheme?: string[];
-	min: number;
-	max: number;
-	isReverse?: boolean;
-	isContinuous?: boolean;
-};
-
 function interpolateColorScaleHSL(colors: Array<string>, steps: number) {
 	const segments = colors.length - 1;
 	const stepsPerSegment = Math.floor(steps / segments);
@@ -35,51 +26,91 @@ function interpolateColorScaleHSL(colors: Array<string>, steps: number) {
 
 	return rgbArray;
 }
-const colorScale = ({
-	colorScheme = ['#009392', '#39b185', '#9ccb86', '#e9e29c', '#eeb479', '#e88471', '#cf597e'],
-	customColors,
-	min,
-	max,
-	isReverse = false
-}: ColorScaleParams) => {
-	let colors: Array<HEXColor | string>;
-
-	if (colorScheme) {
-		colors = [
-			'#009392',
-			'#39b185',
-			'#9ccb86',
-			'#e9e29c',
-			'#eeb479',
-			'#e88471',
-			'#cf597e'
-		];
-	} else if (customColors && customColors.length >= 2) {
-		colors = customColors;
-	}
-
-	let colorInts = interpolateColorScaleHSL(colors, max - min);
-	const range = isReverse ? colorInts.reverse() : colorInts;
-
-	return range;
-};
-
-export { colorScale, colorSchemeNames };
 
 export const colorScales = {
+	cape: [
+		...interpolateColorScaleHSL(
+			[
+				'#009392',
+				'#39b185',
+				'#9ccb86',
+				'#e9e29c',
+				'#eeb479',
+				'#e88471',
+				'#cf597e'
+			],
+			4000
+		)
+	],
+	cloud: [
+		...interpolateColorScaleHSL(['#FFF', '#c3c2c2'], 100) // 0 to 100%
+	],
+	precipitation: [
+		...interpolateColorScaleHSL(['blue', 'green'], 5), // 0 to 5mm
+		...interpolateColorScaleHSL(['green', 'orange'], 5), // 5 to 10mm
+		...interpolateColorScaleHSL(['orange', 'red'], 10) // 10 to 20mm
+	],
+	pressure: [
+		...interpolateColorScaleHSL(['#4444FF', '#FFFFFF'], 25), // 950 to 1000hPa
+		...interpolateColorScaleHSL(['#FFFFFF', '#FF4444'], 25) // 1000hPa to 1050hPa
+	],
+	relative: [
+		...interpolateColorScaleHSL(
+			[
+				'#009392',
+				'#39b185',
+				'#9ccb86',
+				'#e9e29c',
+				'#eeb479',
+				'#e88471',
+				'#cf597e'
+			].reverse(),
+			100
+		)
+	],
+	shortwave: [
+		...interpolateColorScaleHSL(
+			[
+				'#009392',
+				'#39b185',
+				'#9ccb86',
+				'#e9e29c',
+				'#eeb479',
+				'#e88471',
+				'#cf597e'
+			],
+			1000
+		)
+	],
 	temperature: [
 		...interpolateColorScaleHSL(['purple', 'blue'], 40), // -40° to 0°
 		...interpolateColorScaleHSL(['blue', 'green'], 16), // 0° to 16°
-		...interpolateColorScaleHSL(['green', 'orange'], 16), // 0° to 32°
-		...interpolateColorScaleHSL(['orange', 'red'], 10), // 32° to 42°
+		...interpolateColorScaleHSL(['green', 'orange'], 12), // 0° to 28°
+		...interpolateColorScaleHSL(['orange', 'red'], 14), // 28° to 42°
 		...interpolateColorScaleHSL(['red', 'purple'], 18) // 42° to 60°
 	],
-	precipitation: colorScale({
-		min: -1,
-		max: 15
-	}),
-	wind: colorScale({
-		min: 0,
-		max: 35
-	})
+	thunderstorm: [
+		...interpolateColorScaleHSL(['blue', 'green'], 33), //
+		...interpolateColorScaleHSL(['green', 'orange'], 33), //
+		...interpolateColorScaleHSL(['orange', 'red'], 33) //
+	],
+	uv: [
+		...interpolateColorScaleHSL(
+			[
+				'#009392',
+				'#39b185',
+				'#9ccb86',
+				'#e9e29c',
+				'#eeb479',
+				'#e88471',
+				'#cf597e'
+			],
+			11
+		)
+	],
+	wind: [
+		...interpolateColorScaleHSL(['blue', 'green'], 10), // 0 to 10kn
+		...interpolateColorScaleHSL(['green', 'orange'], 10), // 10 to 20kn
+		...interpolateColorScaleHSL(['orange', 'red'], 20) // 20 to 40kn
+	]
 };
