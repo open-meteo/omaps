@@ -142,8 +142,6 @@ const drawIcon = (
 		const lat = tile2lat(y + iCenter / TILE_SIZE, z);
 		const lon = tile2lon(x + jCenter / TILE_SIZE, z);
 
-		let indCenter = jCenter + iCenter * TILE_SIZE;
-
 		const { index, xFraction, yFraction } = getIndexAndFractions(
 			lat,
 			lon,
