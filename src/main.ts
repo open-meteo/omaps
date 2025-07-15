@@ -8,9 +8,13 @@ import { domains, domainGroups } from './utils/domains';
 import { hideZero, variables } from './utils/variables';
 import { createTimeSlider } from './components/time-slider';
 
+import { colorScales } from './utils/color-scales';
+
 import './style.css';
 
 import type { Variable, Domain, DomainGroups } from './types';
+
+console.log(colorScales);
 
 let url = new URL(document.location.href);
 let params = new URLSearchParams(url.search);
@@ -162,7 +166,7 @@ if (mapContainer) {
 		keyboard: false,
 		//dragRotate: false,
 		hash: true,
-		maxZoom: 13.5,
+		maxZoom: 20,
 		maxPitch: 85
 		//cancelPendingTileRequestsWhileZooming: import.meta.env.DEV,
 	});
@@ -207,19 +211,28 @@ if (mapContainer) {
 			'fog-ground-blend': 0
 		});
 
-		map.addSource('rasterDem', {
+		map.addSource('terrainSource', {
 			type: 'raster-dem',
 			tiles: [
-				'https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'
+				'https://mbtiles.servert.nl/services/alti3d_2m_z16/tiles/{z}/{x}/{y}.png'
 			],
 			tileSize: 256,
-			maxzoom: 11
+			maxzoom: 16
+		});
+
+		map.addSource('hillshadeSource', {
+			type: 'raster-dem',
+			tiles: [
+				'https://mbtiles.servert.nl/services/alti3d_2m_z16/tiles/{z}/{x}/{y}.png'
+			],
+			tileSize: 256,
+			maxzoom: 16
 		});
 
 		map.addLayer(
 			{
-				source: 'rasterDem',
-				id: 'rasterDemLayer',
+				source: 'hillshadeSource',
+				id: 'hillshadeLayer',
 				type: 'hillshade',
 				paint: {
 					'hillshade-method': 'igor',
@@ -233,7 +246,7 @@ if (mapContainer) {
 
 		const terrainControl = map.addControl(
 			new maplibregl.TerrainControl({
-				source: 'rasterDem',
+				source: 'terrainSource',
 				exaggeration: 1
 			})
 		);

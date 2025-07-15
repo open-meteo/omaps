@@ -1,4 +1,4 @@
-import { type Domain } from '../types';
+import { type Domain } from '../../types';
 
 import {
 	getBorderPoints,
@@ -28,10 +28,7 @@ export const domainGroups = [
 const getCenterPoint = (grid: Domain['grid']) => {
 	let center;
 	if (grid.projection) {
-		const projection = new DynamicProjection(
-			grid.projection.name,
-			grid.projection
-		) as Projection;
+		const projection = new DynamicProjection(grid.projection.name, grid.projection) as Projection;
 		const projectionGrid = new ProjectionGrid(
 			projection,
 			grid.nx,
