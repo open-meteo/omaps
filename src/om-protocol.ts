@@ -388,7 +388,6 @@ const initOMFile = async (url: string) => {
 
 		for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
 			const child = await fileReader.reader.getChild(i);
-			console.log(child.getName());
 			if (child.getName() === variable.value) {
 				const dimensions = child.getDimensions();
 
@@ -404,6 +403,8 @@ const initOMFile = async (url: string) => {
 
 				data = { values: dataValues };
 				break;
+			} else {
+				child.dispose();
 			}
 		}
 	}
