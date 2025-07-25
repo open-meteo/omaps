@@ -95,7 +95,8 @@ const getVariableOptions = () => {
 };
 
 const getOMUrl = () => {
-	return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours()))}00Z/${variable.value}.om?dark=${darkMode}`;
+	//return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours()))}00Z/${'2025-07-25T0600'}.om?dark=${darkMode}&variable=${variable.value}`;
+	return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/2025/07/25/0600Z/${'2025-07-25T0600'}.om?dark=${darkMode}&variable=${variable.value}`;
 };
 
 let source: maplibregl.Map;
@@ -209,9 +210,7 @@ if (mapContainer) {
 
 		map.addSource('rasterDem', {
 			type: 'raster-dem',
-			tiles: [
-				'https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'
-			],
+			tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
 			tileSize: 256,
 			maxzoom: 11
 		});
@@ -261,46 +260,27 @@ if (mapContainer) {
 				if (!popup) {
 					popup = new maplibregl.Popup()
 						.setLngLat(coordinates)
-						.setHTML(
-							`<span style="color:black;">Outside domain</span>`
-						)
+						.setHTML(`<span style="color:black;">Outside domain</span>`)
 						.addTo(map);
 				} else {
 					popup.addTo(map);
 				}
-				let { index, value, direction } = getValueFromLatLong(
-					coordinates.lat,
-					coordinates.lng
-				);
+				let { index, value, direction } = getValueFromLatLong(coordinates.lat, coordinates.lng);
 				if (index) {
-					if (
-						(hideZero.includes(variable.value) &&
-							value <= 0.25) ||
-						!value
-					) {
+					if ((hideZero.includes(variable.value) && value <= 0.25) || !value) {
 						popup.remove();
 					} else {
 						let string = '';
 						if (variable.value.startsWith('wind_')) {
 							string = `${value.toFixed(0)}kn`;
 						} else {
-							string =
-								value.toFixed(1) +
-								(variable.value.startsWith(
-									'temperature'
-								)
-									? 'C°'
-									: '');
+							string = value.toFixed(1) + (variable.value.startsWith('temperature') ? 'C°' : '');
 						}
 
-						popup.setLngLat(coordinates).setHTML(
-							`<span style="color:black;">${string}</span>`
-						);
+						popup.setLngLat(coordinates).setHTML(`<span style="color:black;">${string}</span>`);
 					}
 				} else {
-					popup.setLngLat(coordinates).setHTML(
-						`<span style="color:black;">Outside domain</span>`
-					);
+					popup.setLngLat(coordinates).setHTML(`<span style="color:black;">Outside domain</span>`);
 				}
 			}
 		});
@@ -335,35 +315,23 @@ if (mapContainer) {
    			</div>
   		`;
 
-			const timeSliderContainer = document.getElementById(
-				'time_slider_container'
-			) as HTMLElement;
+			const timeSliderContainer = document.getElementById('time_slider_container') as HTMLElement;
 			timeSliderApi = createTimeSlider({
 				container: timeSliderContainer,
 				initialDate: timeSelected,
 				onChange: (newDate) => {
 					timeSelected = newDate;
-					url.searchParams.set(
-						'time',
-						newDate
-							.toISOString()
-							.replace(/[:Z]/g, '')
-							.slice(0, 15)
-					);
+					url.searchParams.set('time', newDate.toISOString().replace(/[:Z]/g, '').slice(0, 15));
 					history.pushState({}, '', url);
 					changeOMfileURL();
 				}
 			});
 
-			domainSelector = document.querySelector(
-				'#domain_selection'
-			) as HTMLSelectElement;
+			domainSelector = document.querySelector('#domain_selection') as HTMLSelectElement;
 			domainSelector?.addEventListener('change', (e) => {
 				const target = e.target as HTMLSelectElement;
 				if (target) {
-					domain =
-						domains.find((dm) => dm.value === target.value) ??
-						domains[0];
+					domain = domains.find((dm) => dm.value === target.value) ?? domains[0];
 
 					url.searchParams.set('domain', target.value);
 					history.pushState({}, '', url);
@@ -371,24 +339,18 @@ if (mapContainer) {
 				}
 			});
 
-			variableSelector = document.querySelector(
-				'#variable_selection'
-			) as HTMLSelectElement;
+			variableSelector = document.querySelector('#variable_selection') as HTMLSelectElement;
 			variableSelector?.addEventListener('change', (e) => {
 				const target = e.target as HTMLSelectElement;
 				if (target) {
-					variable =
-						variables.find((v) => v.value === target.value) ??
-						variables[0];
+					variable = variables.find((v) => v.value === target.value) ?? variables[0];
 					url.searchParams.set('variable', target.value);
 					history.pushState({}, '', url);
 					changeOMfileURL();
 				}
 			});
 
-			const darkmodeToggle = document.getElementById(
-				'darkmode_toggle'
-			) as HTMLElement;
+			const darkmodeToggle = document.getElementById('darkmode_toggle') as HTMLElement;
 			darkmodeToggle?.addEventListener('click', (e) => {
 				darkMode = !darkMode;
 				url.searchParams.set('dark', String(darkMode));
