@@ -30,30 +30,6 @@ let dark = false;
 let domain: Domain;
 let variable: Variable;
 
-const vList = [
-	'cape',
-	'cloud_base',
-	'cloud_cover',
-	'cloud_cover_high',
-	'cloud_cover_low',
-	'cloud_cover_mid',
-	'convective_inhibition',
-	'direct_radiation',
-	'freezing_level_height',
-	'precipitation',
-	'pressure_msl',
-	'relative_humidity_2m',
-	'shortwave_radiation',
-	'snow_depth',
-	'snowfall_height',
-	'sunshine_duration',
-	'surface_temperature',
-	'temperature_2m',
-	'wind_gusts_10m',
-	'wind_u_component_10m',
-	'wind_v_component_10m'
-];
-
 let projection: Projection;
 let projectionGrid: ProjectionGrid;
 let projectionName: string;
@@ -269,7 +245,6 @@ const initOMFile = async (url: string) => {
 	const urlParams = new URLSearchParams(omParams);
 	dark = urlParams.get('dark') === 'true';
 	variable = variables.find((v) => urlParams.get('variable') === v.value) ?? variables[0];
-	index = vList.indexOf(variable.value);
 
 	if (fileReader.reader) {
 		fileReader.reader.dispose();
@@ -413,6 +388,7 @@ const initOMFile = async (url: string) => {
 
 		for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
 			const child = await fileReader.reader.getChild(i);
+			console.log(child.getName());
 			if (child.getName() === variable.value) {
 				const dimensions = child.getDimensions();
 
