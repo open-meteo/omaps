@@ -111,52 +111,6 @@ const getOpacity = (v: string, px: number, dark: boolean): number => {
 	}
 };
 
-const drawIcon = (
-	rgba: Uint8ClampedArray,
-	iBase: number,
-	jBase: number,
-	x: number,
-	y: number,
-	z: number,
-	nx: number,
-	domain: Domain,
-	projectionGrid: ProjectionGrid,
-	values: TypedArray,
-	boxSize: number,
-	iconPixelData: IconListPixels
-): Promise<void> => {
-	return new Promise(async (resolve) => {
-		let iCenter = iBase + Math.floor(boxSize / 2);
-		let jCenter = jBase + Math.floor(boxSize / 2);
-
-		const lat = tile2lat(y + iCenter / TILE_SIZE, z);
-		const lon = tile2lon(x + jCenter / TILE_SIZE, z);
-
-		const { index, xFraction, yFraction } = getIndexAndFractions(lat, lon, domain, projectionGrid);
-
-		let weatherCode = Math.round(interpolateLinear(values, nx, index, xFraction, yFraction));
-		if (weatherCode) {
-			let iconPixels = iconPixelData[weatherCode];
-			if (iconPixels) {
-				for (let i = 0; i < boxSize; i++) {
-					for (let j = 0; j < boxSize; j++) {
-						let ind = j + i * boxSize;
-						let indTile = jBase + j + (iBase + i) * TILE_SIZE;
-						if (iconPixels[4 * ind + 3]) {
-							rgba[4 * indTile] = 0;
-							rgba[4 * indTile + 1] = 0;
-							rgba[4 * indTile + 2] = 0;
-							rgba[4 * indTile + 3] = iconPixels[4 * ind + 3] * (OPACITY / 100);
-						}
-					}
-				}
-			}
-		}
-
-		resolve();
-	});
-};
-
 const getIndexAndFractions = (
 	lat: number,
 	lon: number,
@@ -286,27 +240,6 @@ self.onmessage = async (message) => {
 							projectionGrid,
 							values,
 							directions,
-							boxSize,
-							iconPixelData
-						);
-					}
-				}
-			} else if (variable.value === 'weather_code') {
-				const boxSize = Math.floor(TILE_SIZE / 8);
-
-				for (let i = 0; i < TILE_SIZE; i += boxSize) {
-					for (let j = 0; j < TILE_SIZE; j += boxSize) {
-						await drawIcon(
-							rgba,
-							i,
-							j,
-							x,
-							y,
-							z,
-							nx,
-							domain,
-							projectionGrid,
-							values,
 							boxSize,
 							iconPixelData
 						);

@@ -30,23 +30,5 @@ export default ({ mode }) => {
 		optimizeDeps: {
 			exclude: ['@openmeteo/file-reader', '@openmeteo/file-format-wasm']
 		}
-		// base: '/omaps/'
-		// build: {
-		// 	chunkSizeWarningLimit: 1200,
-		// 	rollupOptions: {
-		// 		input: input,
-		// 		output: {
-		// 			//preserveModules: true, only for es format
-		// 			entryFileNames: `[name].js`,
-		// 			chunkFileNames: `[name].js`,
-		// 			assetFileNames: `[name].[ext]`,
-
-		// 			name: 'MaplibreOMProtocol',
-		// 			format: 'umd'
-		// 		},
-		// 		preserveEntrySignatures: 'strict'
-		// 	},
-		// 	sourcemap: true
-		// }
 	});
 };

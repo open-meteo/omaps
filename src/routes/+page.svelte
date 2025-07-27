@@ -1,15 +1,18 @@
 <script lang="ts">
+	import { onMount, onDestroy } from 'svelte';
+
 	import * as maplibregl from 'maplibre-gl';
 	import 'maplibre-gl/dist/maplibre-gl.css';
 
 	import { omProtocol, getValueFromLatLong } from '../om-protocol';
 	import { pad } from '$lib/utils/pad';
-	import { domains, domainGroups } from '$lib/utils/domains';
-	import { hideZero, variables } from '$lib/utils/variables';
+	import { domains, domainGroups, getDomainOptions } from '$lib/utils/domains';
+	import { hideZero, variables, getVariableOptions } from '$lib/utils/variables';
 	import { createTimeSlider } from '$lib/components/time-slider';
 
-	import type { Variable, Domain, DomainGroups } from '../types';
-	import { onMount } from 'svelte';
+	import type { Variable, Domain } from '../types';
+
+	import '../styles.css';
 
 	let map: maplibregl.Map;
 	let mapContainer: HTMLElement | null;
@@ -18,44 +21,12 @@
 	let infoBox: HTMLElement | null;
 	let popup: maplibregl.Popup | undefined;
 
-	let domain: Domain = $state({ value: 'meteoswiss_icon_ch1' });
-	let variable: Variable = $state({ value: 'temperature_2m' });
+	let domain: Domain = $state({ value: 'meteoswiss_icon_ch1', label: 'DWD ICON D2' });
+	let variable: Variable = $state({ value: 'temperature_2m', label: 'Temperature 2m' });
 	let darkMode = $state();
 	let timeSelected = $state(new Date());
 
 	const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
-
-	const getDomainOptions = () => {
-		let optGroups: DomainGroups = {};
-		for (let dg of domainGroups) {
-			const dgArray = [];
-			for (let d of domains) {
-				if (d.value.startsWith(dg)) {
-					dgArray.push(d);
-				}
-			}
-			optGroups[dg] = dgArray;
-		}
-		let string = '';
-		for (let [og, doms] of Object.entries(optGroups)) {
-			string += `<optgroup label="${og.replace('_', ' ')}">`;
-			for (let d of doms) {
-				string += `<option value=${d.value} ${domain.value === d.value ? 'selected' : ''}>${d.label}</option>`;
-			}
-			string += `</optgroup>`;
-		}
-		return string;
-	};
-
-	const getVariableOptions = () => {
-		let string = '';
-		for (let v of variables) {
-			if (domain && domain.variables.includes(v.value)) {
-				string += `<option value=${v.value} ${variable.value === v.value ? 'selected' : ''}>${v.label}</option>`;
-			}
-		}
-		return string;
-	};
 
 	const getOMUrl = () => {
 		//return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours()))}00Z/${'2025-07-25T0600'}.om?dark=${darkMode}&variable=${variable.value}`;
@@ -71,7 +42,7 @@
 	let checked = 0;
 	const changeOMfileURL = () => {
 		variableSelector.replaceChildren('');
-		variableSelector.innerHTML = `${getVariableOptions()}`;
+		variableSelector.innerHTML = `${getVariableOptions(domain, variable)}`;
 
 		if (popup) {
 			popup.remove();
@@ -168,11 +139,9 @@
 			center: typeof domain.grid.center == 'object' ? domain.grid.center : [0, 0],
 			zoom: domain?.grid.zoom,
 			keyboard: false,
-			//dragRotate: false,
 			hash: true,
 			maxZoom: 20,
 			maxPitch: 85
-			//cancelPendingTileRequestsWhileZooming: import.meta.env.DEV,
 		});
 
 		map.touchZoomRotate.disableRotation();
@@ -314,22 +283,22 @@
 
 			if (infoBox) {
 				infoBox.innerHTML = `
-   			<div>
-  				Selected domain:
-  				<select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">
-   					${getDomainOptions()}
-  				</select>
-  				<br>
-  				Selected variable:
-  				<select id="variable_selection" class="variable-selection" name="variables" value="${variable.value}">
-   					${getVariableOptions()}
-  				</select>
-  				<br>
-  				Selected time:
-  				<div id="time_slider_container"></div>
-      				<div id="darkmode_toggle">${darkMode ? 'Light mode' : 'Dark mode'}</div>
-   			</div>
-  		`;
+		 			<div>
+						Selected domain:
+						<select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">
+		 					${getDomainOptions(domain.value)}
+						</select>
+						<br>
+						Selected variable:
+						<select id="variable_selection" class="variable-selection" name="variables" value="${variable.value}">
+		 					${getVariableOptions(domain, variable)}
+						</select>
+						<br>
+						Selected time:
+						<div id="time_slider_container"></div>
+		    				<div id="darkmode_toggle">${darkMode ? 'Light mode' : 'Dark mode'}</div>
+		 			</div>
+				`;
 
 				const timeSliderContainer = document.getElementById('time_slider_container') as HTMLElement;
 				timeSliderApi = createTimeSlider({
@@ -375,6 +344,11 @@
 				});
 			}
 		});
+	});
+	onDestroy(() => {
+		if (map) {
+			map.remove();
+		}
 	});
 </script>
 

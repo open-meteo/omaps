@@ -1,3 +1,15 @@
+import type { Domain, Variable } from '../../types';
+
+export const getVariableOptions = (domain: Domain, variable: Variable) => {
+	let string = '';
+	for (const v of variables) {
+		if (domain && domain.variables.includes(v.value)) {
+			string += `<option value=${v.value} ${variable.value === v.value ? 'selected' : ''}>${v.label}</option>`;
+		}
+	}
+	return string;
+};
+
 export const variables = [
 	{ value: 'cape', label: 'CAPE' },
 
