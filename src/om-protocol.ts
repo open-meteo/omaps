@@ -13,18 +13,17 @@ import {
 	getBoundsFromGrid,
 	getIndexFromLatLong,
 	getBoundsFromBorderPoints
-} from './utils/math';
+} from '$lib/utils/math';
 
-import { domains } from './utils/domains';
-import { variables, requestMultiple } from './utils/variables';
+import { domains } from '$lib/utils/domains';
+import { variables, requestMultiple } from '$lib//utils/variables';
 
-import iconListPixelsSource from './utils/icons';
-import arrowPixelsSource from './utils/arrow';
+import arrowPixelsSource from '$lib//utils/arrow';
 
 import TileWorker from './worker?worker';
 
 import type { TileJSON, TileIndex, Domain, Variable, Bounds } from './types';
-import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
+import { DynamicProjection, ProjectionGrid, type Projection } from '$lib/utils/projection';
 
 let dark = false;
 let domain: Domain;
@@ -117,12 +116,12 @@ export const getValueFromLatLong = (
 		} else {
 			return { index: NaN, value: NaN };
 		}
+	} else {
+		return { index: NaN, value: NaN };
 	}
 };
 
-let iconPixelData = {};
 let arrowPixelData = {};
-
 const initPixelData = async () => {
 	for (let [key, iconUrl] of Object.entries(arrowPixelsSource)) {
 		const response = await fetch(iconUrl);
@@ -143,26 +142,6 @@ const initPixelData = async () => {
 		};
 		img.src = image64;
 	}
-
-	for (let [key, iconUrl] of Object.entries(iconListPixelsSource)) {
-		const response = await fetch(iconUrl);
-		const svgString = await response.text();
-
-		const svg64 = btoa(svgString);
-		const b64Start = 'data:image/svg+xml;base64,';
-
-		const image64 = b64Start + svg64;
-		const canvas = new OffscreenCanvas(64, 64);
-
-		let img = new Image();
-		img.onload = () => {
-			canvas.getContext('2d').drawImage(img, 0, 0);
-			const iconData = canvas.getContext('2d').getImageData(0, 0, 64, 64);
-
-			iconPixelData[key] = iconData.data;
-		};
-		img.src = image64;
-	}
 };
 
 const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitmap> => {
@@ -171,9 +150,7 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 	const worker = new TileWorker();
 
 	let iconList = {};
-	if (variable.value === 'weather_code') {
-		iconList = iconPixelData;
-	} else if (variable.value.startsWith('wind')) {
+	if (variable.value.startsWith('wind')) {
 		iconList = arrowPixelData;
 	}
 

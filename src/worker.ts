@@ -1,8 +1,8 @@
-import { colorScales } from './utils/color-scales';
+import { colorScales } from './lib/utils/color-scales';
 
-import { hideZero, drawOnTiles } from './utils/variables';
+import { hideZero, drawOnTiles } from './lib/utils/variables';
 
-import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
+import { DynamicProjection, ProjectionGrid, type Projection } from './lib/utils/projection';
 
 import {
 	tile2lat,
@@ -11,10 +11,10 @@ import {
 	interpolateLinear,
 	interpolate2DHermite,
 	degreesToRadians
-} from './utils/math';
+} from './lib/utils/math';
 
 import type { TypedArray } from '@openmeteo/file-reader';
-import type { IconListPixels } from './utils/icons';
+import type { IconListPixels } from './lib/utils/icons';
 import type { Domain, IndexAndFractions } from './types';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
@@ -40,7 +40,6 @@ const drawArrow = (
 	values: TypedArray,
 	directions: TypedArray,
 	boxSize = TILE_SIZE / 8,
-	arrowTipLength = 7,
 	iconPixelData: IconListPixels
 ): void => {
 	const northArrow = iconPixelData['0'];
@@ -51,18 +50,11 @@ const drawArrow = (
 	const lat = tile2lat(y + iCenter / TILE_SIZE, z);
 	const lon = tile2lon(x + jCenter / TILE_SIZE, z);
 
-	const { index, xFraction, yFraction } = getIndexAndFractions(
-		lat,
-		lon,
-		domain,
-		projectionGrid
-	);
+	const { index, xFraction, yFraction } = getIndexAndFractions(lat, lon, domain, projectionGrid);
 
 	let px = interpolateLinear(values, nx, index, xFraction, yFraction);
 
-	let direction = degreesToRadians(
-		interpolateLinear(directions, nx, index, xFraction, yFraction)
-	);
+	let direction = degreesToRadians(interpolateLinear(directions, nx, index, xFraction, yFraction));
 
 	if (direction) {
 		for (let i = 0; i < boxSize; i++) {
@@ -84,9 +76,7 @@ const drawArrow = (
 					rgba[4 * indTile + 1] = 0;
 					rgba[4 * indTile + 2] = 0;
 					rgba[4 * indTile + 3] =
-						northArrow[4 * ind + 3] *
-						Math.min(((px - 2) / 200) * 50, 100) *
-						(OPACITY / 50);
+						northArrow[4 * ind + 3] * Math.min(((px - 2) / 200) * 50, 100) * (OPACITY / 50);
 				}
 			}
 		}
@@ -119,61 +109,6 @@ const getOpacity = (v: string, px: number, dark: boolean): number => {
 		// else set the opacity with env variable and deduct 20% for darkmode
 		return 255 * (dark ? OPACITY / 100 - 0.2 : OPACITY / 100);
 	}
-};
-
-const drawIcon = (
-	rgba: Uint8ClampedArray,
-	iBase: number,
-	jBase: number,
-	x: number,
-	y: number,
-	z: number,
-	nx: number,
-	domain: Domain,
-	projectionGrid: ProjectionGrid,
-	values: TypedArray,
-	boxSize: number,
-	iconPixelData: IconListPixels
-): Promise<void> => {
-	return new Promise(async (resolve) => {
-		let iCenter = iBase + Math.floor(boxSize / 2);
-		let jCenter = jBase + Math.floor(boxSize / 2);
-
-		const lat = tile2lat(y + iCenter / TILE_SIZE, z);
-		const lon = tile2lon(x + jCenter / TILE_SIZE, z);
-
-		const { index, xFraction, yFraction } = getIndexAndFractions(
-			lat,
-			lon,
-			domain,
-			projectionGrid
-		);
-
-		let weatherCode = Math.round(
-			interpolateLinear(values, nx, index, xFraction, yFraction)
-		);
-		if (weatherCode) {
-			let iconPixels = iconPixelData[weatherCode];
-			if (iconPixels) {
-				for (let i = 0; i < boxSize; i++) {
-					for (let j = 0; j < boxSize; j++) {
-						let ind = j + i * boxSize;
-						let indTile = jBase + j + (iBase + i) * TILE_SIZE;
-						if (iconPixels[4 * ind + 3]) {
-							rgba[4 * indTile] = 0;
-							rgba[4 * indTile + 1] = 0;
-							rgba[4 * indTile + 2] = 0;
-							rgba[4 * indTile + 3] =
-								iconPixels[4 * ind + 3] *
-								(OPACITY / 100);
-						}
-					}
-				}
-			}
-		}
-
-		resolve();
-	});
 };
 
 const getIndexAndFractions = (
@@ -258,13 +193,7 @@ self.onmessage = async (message) => {
 					projectionGrid
 				);
 
-				let px = interpolate2DHermite(
-					values,
-					nx,
-					index,
-					xFraction,
-					yFraction
-				);
+				let px = interpolate2DHermite(values, nx, index, xFraction, yFraction);
 
 				if (hideZero.includes(variable.value)) {
 					if (px < 0.25) {
@@ -272,11 +201,7 @@ self.onmessage = async (message) => {
 					}
 				}
 
-				if (
-					isNaN(px) ||
-					px === Infinity ||
-					variable.value === 'weather_code'
-				) {
+				if (isNaN(px) || px === Infinity || variable.value === 'weather_code') {
 					rgba[4 * ind] = 0;
 					rgba[4 * ind + 1] = 0;
 					rgba[4 * ind + 2] = 0;
@@ -288,11 +213,7 @@ self.onmessage = async (message) => {
 						rgba[4 * ind] = color[0];
 						rgba[4 * ind + 1] = color[1];
 						rgba[4 * ind + 2] = color[2];
-						rgba[4 * ind + 3] = getOpacity(
-							variable.value,
-							px,
-							dark
-						);
+						rgba[4 * ind + 3] = getOpacity(variable.value, px, dark);
 					}
 				}
 			}
@@ -319,28 +240,6 @@ self.onmessage = async (message) => {
 							projectionGrid,
 							values,
 							directions,
-							boxSize,
-							7,
-							iconPixelData
-						);
-					}
-				}
-			} else if (variable.value === 'weather_code') {
-				const boxSize = Math.floor(TILE_SIZE / 8);
-
-				for (let i = 0; i < TILE_SIZE; i += boxSize) {
-					for (let j = 0; j < TILE_SIZE; j += boxSize) {
-						await drawIcon(
-							rgba,
-							i,
-							j,
-							x,
-							y,
-							z,
-							nx,
-							domain,
-							projectionGrid,
-							values,
 							boxSize,
 							iconPixelData
 						);
