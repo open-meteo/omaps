@@ -13,22 +13,23 @@ import {
 	getBoundsFromGrid,
 	getIndexFromLatLong,
 	getBoundsFromBorderPoints
-} from './lib/utils/math';
+} from './utils/math';
 
-import { domains } from './lib/utils/domains';
-import { variables, requestMultiple } from './lib/utils/variables';
+import { domains } from './utils/domains';
+import { variables, requestMultiple } from './utils/variables';
 
-import iconListPixelsSource from './lib/utils/icons';
-import arrowPixelsSource from './lib/utils/arrow';
+import iconListPixelsSource from './utils/icons';
+import arrowPixelsSource from './utils/arrow';
 
 import TileWorker from './worker?worker';
 
 import type { TileJSON, TileIndex, Domain, Variable, Bounds } from './types';
-import { DynamicProjection, ProjectionGrid, type Projection } from './lib/utils/projection';
+import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
 
 let dark = false;
 let domain: Domain;
 let variable: Variable;
+let currentPath: string;
 
 let projection: Projection;
 let projectionGrid: ProjectionGrid;
@@ -44,6 +45,7 @@ let dy: number;
 interface FileReader {
 	reader: OmFileReader | undefined;
 	backend: MemoryHttpBackend | undefined;
+	child?: OmFileReader | null;
 
 	readeru: OmFileReader | undefined;
 	readerv: OmFileReader | undefined;
@@ -244,160 +246,200 @@ const initOMFile = async (url: string) => {
 
 	const urlParams = new URLSearchParams(omParams);
 	dark = urlParams.get('dark') === 'true';
+	variable = variables.find((v) => urlParams.get('variable') === v.value) ?? variables[0];
 
-	if (fileReader.reader) {
-		fileReader.reader.dispose();
-	}
-	if (fileReader.readeru) {
-		fileReader.readeru.dispose();
-	}
-	if (fileReader.readerv) {
-		fileReader.readerv.dispose();
-	}
-	if (fileReader.readerDirections) {
-		fileReader.readerDirections.dispose();
-	}
+	if (omUrl !== currentPath) {
+		if (fileReader.child) {
+			fileReader.child.dispose();
+		}
+		if (fileReader.reader) {
+			fileReader.reader.dispose();
+		}
+		if (fileReader.readeru) {
+			fileReader.readeru.dispose();
+		}
+		if (fileReader.readerv) {
+			fileReader.readerv.dispose();
+		}
+		if (fileReader.readerDirections) {
+			fileReader.readerDirections.dispose();
+		}
 
-	delete fileReader.reader;
-	delete fileReader.readeru;
-	delete fileReader.readerv;
-	delete fileReader.readerDirections;
+		delete fileReader.child;
 
-	delete fileReader.backend;
-	delete fileReader.backendu;
-	delete fileReader.backendv;
-	delete fileReader.backendDirections;
+		delete fileReader.reader;
+		delete fileReader.readeru;
+		delete fileReader.readerv;
+		delete fileReader.readerDirections;
 
-	domain = domains.find((dm) => dm.value === omUrl.split('/')[4]) ?? domains[0];
-	const variableString = omUrl.split('/')[omUrl.split('/').length - 1].replace('.om', '');
-	variable = variables.find((v) => v.value === variableString) ?? variables[0];
+		delete fileReader.backend;
+		delete fileReader.backendu;
+		delete fileReader.backendv;
+		delete fileReader.backendDirections;
 
-	nx = domain.grid.nx;
-	ny = domain.grid.ny;
-	latMin = domain.grid.latMin;
-	lonMin = domain.grid.lonMin;
-	dx = domain.grid.dx;
-	dy = domain.grid.dy;
+		domain = domains.find((dm) => dm.value === omUrl.split('/')[4]) ?? domains[0];
+		// const variableString = omUrl.split('/')[omUrl.split('/').length - 1].replace('.om', '');
+		// variable = variables.find((v) => v.value === variableString) ?? variables[0];
 
-	if (domain.grid.projection) {
-		const latitude = domain.grid.projection.latitude ?? domain.grid.latMin;
-		const longitude = domain.grid.projection.longitude ?? domain.grid.lonMin;
-		const projectOrigin = domain.grid.projection.projectOrigin ?? true;
+		nx = domain.grid.nx;
+		ny = domain.grid.ny;
+		latMin = domain.grid.latMin;
+		lonMin = domain.grid.lonMin;
+		dx = domain.grid.dx;
+		dy = domain.grid.dy;
 
-		projectionName = domain.grid.projection.name;
-		projection = new DynamicProjection(projectionName, domain.grid.projection) as Projection;
-		projectionGrid = new ProjectionGrid(
-			projection,
-			nx,
-			ny,
-			latitude,
-			longitude,
-			dx,
-			dy,
-			projectOrigin
-		);
-	}
+		if (domain.grid.projection) {
+			const latitude = domain.grid.projection.latitude ?? domain.grid.latMin;
+			const longitude = domain.grid.projection.longitude ?? domain.grid.lonMin;
+			const projectOrigin = domain.grid.projection.projectOrigin ?? true;
 
-	if (requestMultiple.includes(variable.value)) {
-		let reg = new RegExp(/wind_(\d+)m\.om/);
-		const matches = url.match(reg);
-		if (domain.windUVComponents) {
-			fileReader.backendu = new MemoryHttpBackend({
-				url: omUrl.replace(matches[0], `wind_u_component_${matches[1]}m.om`),
-				maxFileSize: 500 * 1024 * 1024 // 500 MB
-			});
-			fileReader.backendv = new MemoryHttpBackend({
-				url: omUrl.replace(matches[0], `wind_v_component_${matches[1]}m.om`),
-				maxFileSize: 500 * 1024 * 1024 // 500 MB
-			});
-			fileReader.readeru = await OmFileReader.create(fileReader.backendu).catch(() => {
-				throw new Error(`OMFile error: 404 file not found`);
-			});
-			fileReader.readerv = await OmFileReader.create(fileReader.backendv).catch(() => {
-				throw new Error(`OMFile error: 404 file not found`);
-			});
-			if (fileReader.readeru && fileReader.readerv) {
-				const dimensions = fileReader.readeru.getDimensions();
+			projectionName = domain.grid.projection.name;
+			projection = new DynamicProjection(projectionName, domain.grid.projection) as Projection;
+			projectionGrid = new ProjectionGrid(
+				projection,
+				nx,
+				ny,
+				latitude,
+				longitude,
+				dx,
+				dy,
+				projectOrigin
+			);
+		}
 
-				// Create ranges for each dimension
-				const ranges = dimensions.map((dim, _) => {
-					return { start: 0, end: dim };
+		if (requestMultiple.includes(variable.value)) {
+			let reg = new RegExp(/wind_(\d+)m\.om/);
+			const matches = url.match(reg);
+			if (domain.windUVComponents) {
+				fileReader.backendu = new MemoryHttpBackend({
+					url: omUrl.replace(matches[0], `wind_u_component_${matches[1]}m.om`),
+					maxFileSize: 500 * 1024 * 1024 // 500 MB
 				});
-				const datau = await fileReader.readeru.read(OmDataType.FloatArray, ranges);
-				const datav = await fileReader.readerv.read(OmDataType.FloatArray, ranges);
+				fileReader.backendv = new MemoryHttpBackend({
+					url: omUrl.replace(matches[0], `wind_v_component_${matches[1]}m.om`),
+					maxFileSize: 500 * 1024 * 1024 // 500 MB
+				});
+				fileReader.readeru = await OmFileReader.create(fileReader.backendu).catch(() => {
+					throw new Error(`OMFile error: 404 file not found`);
+				});
+				fileReader.readerv = await OmFileReader.create(fileReader.backendv).catch(() => {
+					throw new Error(`OMFile error: 404 file not found`);
+				});
+				if (fileReader.readeru && fileReader.readerv) {
+					const dimensions = fileReader.readeru.getDimensions();
 
-				const dataValues = [];
-				const dataDirections = [];
+					// Create ranges for each dimension
+					const ranges = dimensions.map((dim, _) => {
+						return { start: 0, end: dim };
+					});
+					const datau = await fileReader.readeru.read(OmDataType.FloatArray, ranges);
+					const datav = await fileReader.readerv.read(OmDataType.FloatArray, ranges);
 
-				for (let [i, dp] of datau.entries()) {
-					dataValues.push(Math.sqrt(Math.pow(dp, 2) + Math.pow(datav[i], 2)) * 1.94384);
+					const dataValues = [];
+					const dataDirections = [];
 
-					dataDirections.push((Math.atan2(dp, datav[i]) * (180 / Math.PI) + 360) % 360);
+					for (let [i, dp] of datau.entries()) {
+						dataValues.push(Math.sqrt(Math.pow(dp, 2) + Math.pow(datav[i], 2)) * 1.94384);
+
+						dataDirections.push((Math.atan2(dp, datav[i]) * (180 / Math.PI) + 360) % 360);
+					}
+					data = { values: dataValues, directions: dataDirections };
 				}
-				data = { values: dataValues, directions: dataDirections };
+			} else {
+				fileReader.backend = new MemoryHttpBackend({
+					url: omUrl.replace(matches[0], `wind_speed_${matches[1]}m.om`),
+					maxFileSize: 500 * 1024 * 1024 // 500 MB
+				});
+				fileReader.backendDirections = new MemoryHttpBackend({
+					url: omUrl.replace(matches[0], `wind_direction_${matches[1]}m.om`),
+					maxFileSize: 500 * 1024 * 1024 // 500 MB
+				});
+
+				fileReader.reader = await OmFileReader.create(fileReader.backend).catch(() => {
+					throw new Error(`OMFile error: 404 file not found`);
+				});
+				fileReader.readerDirections = await OmFileReader.create(fileReader.backendDirections).catch(
+					() => {
+						throw new Error(`OMFile error: 404 file not found`);
+					}
+				);
+
+				if (fileReader.reader && fileReader.readerDirections) {
+					const dimensions = fileReader.reader.getDimensions();
+
+					// Create ranges for each dimension
+					const ranges = dimensions.map((dim, _) => {
+						return { start: 0, end: dim };
+					});
+					const dataWind = await fileReader.reader.read(OmDataType.FloatArray, ranges);
+					const dataDirs = await fileReader.readerDirections.read(OmDataType.FloatArray, ranges);
+
+					const dataValues = [];
+					const dataDirections = [];
+
+					for (let [i, dp] of dataWind.entries()) {
+						dataValues.push(dp * 1.94384);
+						dataDirections.push(360 - dataDirs[i]);
+					}
+
+					data = { values: dataValues, directions: dataDirections };
+				}
 			}
 		} else {
 			fileReader.backend = new MemoryHttpBackend({
-				url: omUrl.replace(matches[0], `wind_speed_${matches[1]}m.om`),
-				maxFileSize: 500 * 1024 * 1024 // 500 MB
+				url: omUrl,
+				maxFileSize: 500 * 1024 * 1024 // 500 MB,
 			});
-			fileReader.backendDirections = new MemoryHttpBackend({
-				url: omUrl.replace(matches[0], `wind_direction_${matches[1]}m.om`),
-				maxFileSize: 500 * 1024 * 1024 // 500 MB
-			});
-
 			fileReader.reader = await OmFileReader.create(fileReader.backend).catch(() => {
 				throw new Error(`OMFile error: 404 file not found`);
 			});
-			fileReader.readerDirections = await OmFileReader.create(fileReader.backendDirections).catch(
-				() => {
-					throw new Error(`OMFile error: 404 file not found`);
-				}
-			);
 
-			if (fileReader.reader && fileReader.readerDirections) {
-				const dimensions = fileReader.reader.getDimensions();
+			for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
+				const child = await fileReader.reader.getChild(i);
+				if (child.getName() === variable.value) {
+					const dimensions = child.getDimensions();
+
+					// Create ranges for each dimension
+					const ranges = dimensions.map((dim, _) => {
+						return { start: 0, end: dim };
+					});
+					let dataValues = await child.read(OmDataType.FloatArray, ranges);
+
+					if (variable.value == 'wind_gusts_10m') {
+						dataValues = dataValues.map((val) => val * 1.94384);
+					}
+					fileReader.child = child;
+					data = { values: dataValues };
+					break;
+				} else {
+					child.dispose();
+				}
+			}
+		}
+		currentPath = omUrl;
+	} else {
+		fileReader.child.dispose();
+		for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
+			const child = await fileReader.reader.getChild(i);
+			if (child.getName() === variable.value) {
+				const dimensions = child.getDimensions();
 
 				// Create ranges for each dimension
 				const ranges = dimensions.map((dim, _) => {
 					return { start: 0, end: dim };
 				});
-				const dataWind = await fileReader.reader.read(OmDataType.FloatArray, ranges);
-				const dataDirs = await fileReader.readerDirections.read(OmDataType.FloatArray, ranges);
+				let dataValues = await child.read(OmDataType.FloatArray, ranges);
 
-				const dataValues = [];
-				const dataDirections = [];
-
-				for (let [i, dp] of dataWind.entries()) {
-					dataValues.push(dp * 1.94384);
-					dataDirections.push(360 - dataDirs[i]);
+				if (variable.value == 'wind_gusts_10m') {
+					dataValues = dataValues.map((val) => val * 1.94384);
 				}
 
-				data = { values: dataValues, directions: dataDirections };
+				fileReader.child = child;
+				data = { values: dataValues };
+				break;
+			} else {
+				child.dispose();
 			}
-		}
-	} else {
-		fileReader.backend = new MemoryHttpBackend({
-			url: omUrl,
-			maxFileSize: 500 * 1024 * 1024 // 500 MB
-		});
-		fileReader.reader = await OmFileReader.create(fileReader.backend).catch(() => {
-			throw new Error(`OMFile error: 404 file not found`);
-		});
-		if (fileReader.reader) {
-			const dimensions = fileReader.reader.getDimensions();
-
-			// Create ranges for each dimension
-			const ranges = dimensions.map((dim, _) => {
-				return { start: 0, end: dim };
-			});
-			let dataValues = await fileReader.reader.read(OmDataType.FloatArray, ranges);
-
-			if (variable.value == 'wind_gusts_10m') {
-				dataValues = dataValues.map((val) => val * 1.94384);
-			}
-
-			data = { values: dataValues };
 		}
 	}
 };
