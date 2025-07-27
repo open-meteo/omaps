@@ -58,7 +58,8 @@
 	};
 
 	const getOMUrl = () => {
-		return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours()))}00Z/${variable.value}.om?dark=${darkMode}`;
+		//return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours()))}00Z/${'2025-07-25T0600'}.om?dark=${darkMode}&variable=${variable.value}`;
+		return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/2025/07/25/0600Z/${'2025-07-25T0600'}.om?dark=${darkMode}&variable=${variable.value}`;
 	};
 
 	let source: maplibregl.Map;
@@ -216,14 +217,14 @@
 
 			map.addSource('terrainSource', {
 				type: 'raster-dem',
-				tiles: ['https://mbtiles.servert.nl/services/alti3d_2m_z16/tiles/{z}/{x}/{y}.png'],
+				tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
 				tileSize: 256,
 				maxzoom: 16
 			});
 
 			map.addSource('hillshadeSource', {
 				type: 'raster-dem',
-				tiles: ['https://mbtiles.servert.nl/services/alti3d_2m_z16/tiles/{z}/{x}/{y}.png'],
+				tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
 				tileSize: 256,
 				maxzoom: 16
 			});

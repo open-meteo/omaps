@@ -13,18 +13,18 @@ import {
 	getBoundsFromGrid,
 	getIndexFromLatLong,
 	getBoundsFromBorderPoints
-} from './utils/math';
+} from '$lib/utils/math';
 
-import { domains } from './utils/domains';
-import { variables, requestMultiple } from './utils/variables';
+import { domains } from '$lib/utils/domains';
+import { variables, requestMultiple } from '$lib//utils/variables';
 
-import iconListPixelsSource from './utils/icons';
-import arrowPixelsSource from './utils/arrow';
+import iconListPixelsSource from '$lib//utils/icons';
+import arrowPixelsSource from '$lib//utils/arrow';
 
 import TileWorker from './worker?worker';
 
 import type { TileJSON, TileIndex, Domain, Variable, Bounds } from './types';
-import { DynamicProjection, ProjectionGrid, type Projection } from './utils/projection';
+import { DynamicProjection, ProjectionGrid, type Projection } from '$lib/utils/projection';
 
 let dark = false;
 let domain: Domain;
@@ -117,6 +117,8 @@ export const getValueFromLatLong = (
 		} else {
 			return { index: NaN, value: NaN };
 		}
+	} else {
+		return { index: NaN, value: NaN };
 	}
 };
 

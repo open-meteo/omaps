@@ -3,10 +3,10 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { omProtocol } from './om-protocol';
 import { getValueFromLatLong } from './om-protocol';
-import { pad } from './utils/pad';
-import { domains, domainGroups } from './utils/domains';
-import { hideZero, variables } from './utils/variables';
-import { createTimeSlider } from './components/time-slider';
+import { pad } from '$lib/utils/pad';
+import { domains, domainGroups } from '$lib/utils/domains';
+import { hideZero, variables } from '$lib/utils/variables';
+import { createTimeSlider } from '$lib/components/time-slider';
 
 import './style.css';
 
@@ -217,7 +217,7 @@ if (mapContainer) {
 
 		map.addSource('hillshadeSource', {
 			type: 'raster-dem',
-			tiles: ['https://mbtiles.servert.nl/services/alti3d_2m_z16/tiles/{z}/{x}/{y}.png'],
+			tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
 			tileSize: 256,
 			maxzoom: 16
 		});
@@ -229,7 +229,6 @@ if (mapContainer) {
 				type: 'hillshade',
 				paint: {
 					'hillshade-method': 'igor',
-					//'hillshade-exaggeration': 1,
 					'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
 					'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
 				}
