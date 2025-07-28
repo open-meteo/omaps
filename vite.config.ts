@@ -29,6 +29,12 @@ export default ({ mode }) => {
 		],
 		optimizeDeps: {
 			exclude: ['@openmeteo/file-reader', '@openmeteo/file-format-wasm']
+		},
+		server: {
+			fs: {
+				// Allow serving files from one level up to the project root
+				allow: ['..']
+			}
 		}
 	});
 };

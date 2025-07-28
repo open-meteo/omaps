@@ -104,11 +104,6 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 
 	const worker = new TileWorker();
 
-	let iconList = {};
-	if (variable.value.startsWith('wind')) {
-		iconList = arrowPixelData;
-	}
-
 	worker.postMessage({
 		type: 'GT',
 		x,
@@ -118,7 +113,6 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 		data,
 		domain,
 		variable,
-		iconPixelData: iconList,
 		dark: dark
 	});
 	const tilePromise = new Promise<ImageBitmap>((resolve) => {

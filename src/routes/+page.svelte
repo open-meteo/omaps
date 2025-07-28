@@ -476,95 +476,97 @@
 	</Sheet.Root>
 
 	<Drawer.Root bind:open={drawerOpen}>
-		<Drawer.Content class="flex h-1/2 items-center">
-			<div class="absolute top-2 left-2">
-				Domain: {domain.value} <br />
-				Model: {modelRunSelected.getUTCFullYear()}-{pad(modelRunSelected.getUTCMonth() + 1)}-{pad(
-					modelRunSelected.getUTCDate()
-				)}T{pad(modelRunSelected.getUTCHours())}:00Z <br />
-				Time: {timeSelected.getUTCFullYear()}-{pad(timeSelected.getUTCMonth() + 1)}-{pad(
-					timeSelected.getUTCDate()
-				)}T{pad(timeSelected.getUTCHours())}:00Z <br />
-				Variable: {variable.value}
-				<br />
-			</div>
-			<div class="flex overflow-scroll">
-				<div class="flex w-1/3 flex-col gap-3 pr-3">
-					<h2 class="text-lg font-bold">Domains</h2>
-					{#each domains as d, i (i)}
-						<Button
-							class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.value === domain.value
-								? 'bg-blue-400'
-								: ''}"
-							onclick={() => {
-								domain = d;
-								url.searchParams.set('domain', d.value);
-								history.pushState({}, '', url);
-								changeOMfileURL();
-							}}>{d.label}</Button
-						>
-					{/each}
+		<Drawer.Content class=" h-1/2 ">
+			<div class="flex w-full flex-col items-center overflow-y-scroll">
+				<div class="mt-3 md:absolute md:top-3 md:left-3">
+					Domain: {domain.value} <br />
+					Model: {modelRunSelected.getUTCFullYear()}-{pad(modelRunSelected.getUTCMonth() + 1)}-{pad(
+						modelRunSelected.getUTCDate()
+					)}T{pad(modelRunSelected.getUTCHours())}:00Z <br />
+					Time: {timeSelected.getUTCFullYear()}-{pad(timeSelected.getUTCMonth() + 1)}-{pad(
+						timeSelected.getUTCDate()
+					)}T{pad(timeSelected.getUTCHours())}:00Z <br />
+					Variable: {variable.value}
+					<br />
 				</div>
-
-				{#await latestRequest}
-					<div class="flex w-1/3 flex-col gap-1 px-3">
-						<h2 class="mb-2 text-lg font-bold">Valid times in model run</h2>
-						Loading latest times...
-					</div>
-					<div class="flex w-1/3 flex-col gap-1 pl-3">
-						<h2 class="mb-2 text-lg font-bold">Variables</h2>
-						Loading domain variables...
-					</div>
-				{:then latest}
-					<div class="flex w-1/3 flex-col gap-1 px-3">
-						<h2 class="mb-2 text-lg font-bold">Valid times in model run</h2>
-						{#each latest.valid_times as vt, i (i)}
-							{@const d = new Date(vt)}
+				<div class="mt-3 flex flex-col gap-6 md:flex-row md:gap-0">
+					<div class="flex flex-col gap-3 md:w-1/3 md:pr-3">
+						<h2 class="text-lg font-bold">Domains</h2>
+						{#each domains as d, i (i)}
 							<Button
-								class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.getTime() ===
-								timeSelected.getTime()
+								class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.value === domain.value
 									? 'bg-blue-400'
 									: ''}"
 								onclick={() => {
-									timeSelected = d;
-									url.searchParams.set('time', d.toISOString().replace(/[:Z]/g, '').slice(0, 15));
+									domain = d;
+									url.searchParams.set('domain', d.value);
 									history.pushState({}, '', url);
 									changeOMfileURL();
-								}}
-								>{d.getUTCFullYear() +
-									'-' +
-									pad(d.getUTCMonth() + 1) +
-									'-' +
-									d.getUTCDate() +
-									' ' +
-									d.getUTCHours() +
-									':' +
-									pad(d.getUTCMinutes())}</Button
+								}}>{d.label}</Button
 							>
 						{/each}
 					</div>
-					{#if timeValid}
-						<div class="flex w-1/3 flex-col gap-1 pl-3">
-							<h2 class="mb-2 text-lg font-bold">Variables</h2>
 
-							{#each latest.variables as vr, i (i)}
+					{#await latestRequest}
+						<div class="flex flex-col gap-1 md:w-1/3 md:px-3">
+							<h2 class="mb-2 text-lg font-bold">Valid times in model run</h2>
+							Loading latest times...
+						</div>
+						<div class="flex flex-col gap-1 md:w-1/3 md:pl-3">
+							<h2 class="mb-2 text-lg font-bold">Variables</h2>
+							Loading domain variables...
+						</div>
+					{:then latest}
+						<div class="flex flex-col gap-1 md:w-1/3 md:px-3">
+							<h2 class="mb-2 text-lg font-bold">Valid times in model run</h2>
+							{#each latest.valid_times as vt, i (i)}
+								{@const d = new Date(vt)}
 								<Button
-									class="cursor-pointer bg-blue-200 hover:bg-blue-600 {variable.value === vr
+									class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.getTime() ===
+									timeSelected.getTime()
 										? 'bg-blue-400'
 										: ''}"
 									onclick={() => {
-										variable = variables.find((v) => v.value === vr) ?? variables[0];
-										url.searchParams.set('variable', vr);
+										timeSelected = d;
+										url.searchParams.set('time', d.toISOString().replace(/[:Z]/g, '').slice(0, 15));
 										history.pushState({}, '', url);
 										changeOMfileURL();
-									}}>{vr}</Button
+									}}
+									>{d.getUTCFullYear() +
+										'-' +
+										pad(d.getUTCMonth() + 1) +
+										'-' +
+										d.getUTCDate() +
+										' ' +
+										d.getUTCHours() +
+										':' +
+										pad(d.getUTCMinutes())}</Button
 								>
 							{/each}
 						</div>
-					{:else}
-						<div class="flex min-w-1/4 flex-col gap-1">No valid time selected</div>
-					{/if}
-				{/await}
+						{#if timeValid}
+							<div class="flex flex-col gap-1 md:w-1/3 md:pl-3">
+								<h2 class="mb-2 text-lg font-bold">Variables</h2>
+
+								{#each latest.variables as vr, i (i)}
+									<Button
+										class="cursor-pointer bg-blue-200 hover:bg-blue-600 {variable.value === vr
+											? 'bg-blue-400'
+											: ''}"
+										onclick={() => {
+											variable = variables.find((v) => v.value === vr) ?? variables[0];
+											url.searchParams.set('variable', vr);
+											history.pushState({}, '', url);
+											changeOMfileURL();
+										}}>{vr}</Button
+									>
+								{/each}
+							</div>
+						{:else}
+							<div class="flex min-w-1/4 flex-col gap-1">No valid time selected</div>
+						{/if}
+					{/await}
+				</div>
 			</div>
 		</Drawer.Content>
 	</Drawer.Root>
