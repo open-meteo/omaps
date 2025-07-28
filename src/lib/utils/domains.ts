@@ -9,7 +9,7 @@ import {
 import { DynamicProjection, ProjectionGrid, type Projection } from './projection';
 
 export const domainGroups = [
-	'bom',
+	//'bom',
 	'dmi',
 	'dwd',
 	'ecmwf',
@@ -77,40 +77,40 @@ export const getDomainOptions = (domainName: string) => {
 
 export const domains: Array<Domain> = [
 	// BOM
-	{
-		value: 'bom_access_global',
-		label: 'BOM Global',
-		grid: {
-			nx: 2048,
-			ny: 1536,
-			latMin: -89.941406,
-			lonMin: -179.912109,
-			dx: 360 / 2048,
-			dy: 180 / 1536,
-			zoom: 1,
-			center: function () {
-				this.center = getCenterPoint(this);
-				return this;
-			}
-		},
-		time_interval: 1,
-		variables: [
-			'cloud_cover',
-			'precipitation',
-			'pressure_msl',
-			'relative_humidity_2m',
-			'shortwave_radiation',
-			'temperature_2m',
-			'visibility',
-			'weather_code',
-			'wind_10m',
-			'wind_40m',
-			'wind_80m',
-			'wind_120m',
-			'wind_gusts_10m'
-		],
-		windUVComponents: false
-	},
+	// {
+	// 	value: 'bom_access_global',
+	// 	label: 'BOM Global',
+	// 	grid: {
+	// 		nx: 2048,
+	// 		ny: 1536,
+	// 		latMin: -89.941406,
+	// 		lonMin: -179.912109,
+	// 		dx: 360 / 2048,
+	// 		dy: 180 / 1536,
+	// 		zoom: 1,
+	// 		center: function () {
+	// 			this.center = getCenterPoint(this);
+	// 			return this;
+	// 		}
+	// 	},
+	// 	time_interval: 1,
+	// 	variables: [
+	// 		'cloud_cover',
+	// 		'precipitation',
+	// 		'pressure_msl',
+	// 		'relative_humidity_2m',
+	// 		'shortwave_radiation',
+	// 		'temperature_2m',
+	// 		'visibility',
+	// 		'weather_code',
+	// 		'wind_10m',
+	// 		'wind_40m',
+	// 		'wind_80m',
+	// 		'wind_120m',
+	// 		'wind_gusts_10m'
+	// 	],
+	// 	windUVComponents: false
+	// },
 
 	// DMI
 	{

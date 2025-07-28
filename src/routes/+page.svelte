@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 
+	import { toast } from 'svelte-sonner';
+
 	import * as maplibregl from 'maplibre-gl';
 	import 'maplibre-gl/dist/maplibre-gl.css';
 
 	import { omProtocol, getValueFromLatLong } from '../om-protocol';
 	import { pad } from '$lib/utils/pad';
-	import { domains, domainGroups, getDomainOptions } from '$lib/utils/domains';
-	import { hideZero, variables, getVariableOptions } from '$lib/utils/variables';
-	import { createTimeSlider } from '$lib/components/time-slider';
+	import { domains, domainGroups } from '$lib/utils/domains';
+	import { hideZero, variables } from '$lib/utils/variables';
 
 	import type { Variable, Domain } from '../types';
 
@@ -25,7 +26,7 @@
 	let darkMode = $state();
 
 	class SettingsButton {
-		onAdd(map: maplibregl.Map) {
+		onAdd() {
 			const div = document.createElement('div');
 			div.className = 'maplibregl-ctrl maplibregl-ctrl-group';
 			div.innerHTML = `<button style="display:flex;justify-content:center;align-items:center;">
@@ -38,10 +39,10 @@
 
 			return div;
 		}
-		onRemove(map: maplibregl.Map) {}
+		onRemove() {}
 	}
 	class VariableButton {
-		onAdd(map: maplibregl.Map) {
+		onAdd() {
 			const div = document.createElement('div');
 			div.className = 'maplibregl-ctrl maplibregl-ctrl-group';
 			div.innerHTML = `<button style="display:flex;justify-content:center;align-items:center;">
@@ -54,10 +55,10 @@
 
 			return div;
 		}
-		onRemove(map: maplibregl.Map) {}
+		onRemove() {}
 	}
 	class DarkModeButton {
-		onAdd(map: maplibregl.Map) {
+		onAdd() {
 			const div = document.createElement('div');
 			div.className = 'maplibregl-ctrl maplibregl-ctrl-group';
 			div.innerHTML = !darkMode
@@ -77,7 +78,7 @@
 
 			return div;
 		}
-		onRemove(map: maplibregl.Map) {}
+		onRemove() {}
 	}
 
 	let map: maplibregl.Map;
@@ -94,14 +95,10 @@
 	let variable: Variable = $state({ value: 'temperature_2m', label: 'Temperature 2m' });
 	let timeSelected = $state(new Date());
 	let modelRunSelected = $state(new Date());
-	modelRunSelected.setUTCHours(0);
-	modelRunSelected.setUTCMinutes(0);
 
 	const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
 
 	let source: maplibregl.Map;
-	let domainSelector: HTMLSelectElement, variableSelector: HTMLSelectElement;
-
 	let timeSliderApi: { setDisabled: (d: boolean) => void };
 
 	let checkSourceLoadedInterval: ReturnType<typeof setInterval>;
@@ -119,29 +116,34 @@
 		map.removeLayer('omFileLayer');
 		map.removeSource('omFileSource');
 
-		source = map.addSource('omFileSource', {
-			type: 'raster',
-			url: 'om://' + omUrl,
-			tileSize: TILE_SIZE,
-			volatile: import.meta.env.DEV
-		});
+		if (true) {
+			source = map.addSource('omFileSource', {
+				type: 'raster',
+				url: 'om://' + omUrl,
+				tileSize: TILE_SIZE,
+				volatile: import.meta.env.DEV
+			});
 
-		map.addLayer(
-			{
-				source: 'omFileSource',
-				id: 'omFileLayer',
-				type: 'raster'
-			},
-			'landuse_overlay_national_park'
-		);
-		checkSourceLoadedInterval = setInterval(() => {
-			checked++;
-			if (source.loaded() || checked >= 30) {
-				checked = 0;
-				clearInterval(checkSourceLoadedInterval);
-			}
-		}, 100);
+			map.addLayer(
+				{
+					source: 'omFileSource',
+					id: 'omFileLayer',
+					type: 'raster'
+				},
+				'landuse_overlay_national_park'
+			);
+			checkSourceLoadedInterval = setInterval(() => {
+				checked++;
+				if (source.loaded() || checked >= 30) {
+					checked = 0;
+					clearInterval(checkSourceLoadedInterval);
+				}
+			}, 100);
+		}
 	};
+
+	let latest = $state();
+	let progress = $state();
 
 	onMount(() => {
 		url = new URL(document.location.href);
@@ -162,6 +164,19 @@
 			domain = domains.find((dm) => dm.value === params.get('domain')) ?? domains[0];
 		} else {
 			domain = domains.find((dm) => dm.value === import.meta.env.VITE_DOMAIN) ?? domains[0];
+		}
+
+		let urlModelTime = params.get('model_time');
+		if (urlModelTime && urlModelTime.length == 15) {
+			const year = parseInt(urlModelTime.slice(0, 4));
+			const month = parseInt(urlModelTime.slice(5, 7)) - 1; // zero-based
+			const day = parseInt(urlModelTime.slice(8, 10));
+			const hour = parseInt(urlModelTime.slice(11, 13));
+			const minute = parseInt(urlModelTime.slice(13, 15));
+			// Parse Date from UTC components (urlTime is in UTC)
+			modelRunSelected = new Date(Date.UTC(year, month, day, hour, minute, 0, 0));
+		} else {
+			modelRunSelected.setHours(0, 0, 0, 0); // Default to 12:00 local time
 		}
 
 		let urlTime = params.get('time');
@@ -279,6 +294,7 @@
 			map.addControl(new VariableButton());
 			map.addControl(new DarkModeButton());
 
+			latest = await getDomainData();
 			omUrl = getOMUrl();
 			source = map.addSource('omFileSource', {
 				type: 'raster',
@@ -339,69 +355,6 @@
 					popup.setLngLat(coordinates).addTo(map);
 				}
 			});
-
-			if (infoBox) {
-				infoBox.innerHTML = `
-		 			<div>
-						Selected domain:
-						<select id="domain_selection" class="domain-selection" name="domains" value="${domain.value}">
-		 					${getDomainOptions(domain.value)}
-						</select>
-						<br>
-						Selected variable:
-						<select id="variable_selection" class="variable-selection" name="variables" value="${variable.value}">
-		 					${getVariableOptions(domain, variable)}
-						</select>
-						<br>
-						Selected time:
-						<div id="time_slider_container"></div>
-		    				<div id="darkmode_toggle">${darkMode ? 'Light mode' : 'Dark mode'}</div>
-		 			</div>
-				`;
-
-				const timeSliderContainer = document.getElementById('time_slider_container') as HTMLElement;
-				timeSliderApi = createTimeSlider({
-					container: timeSliderContainer,
-					initialDate: timeSelected,
-					onChange: (newDate) => {
-						timeSelected = newDate;
-						url.searchParams.set('time', newDate.toISOString().replace(/[:Z]/g, '').slice(0, 15));
-						history.pushState({}, '', url);
-						changeOMfileURL();
-					}
-				});
-
-				domainSelector = document.querySelector('#domain_selection') as HTMLSelectElement;
-				domainSelector?.addEventListener('change', (e) => {
-					const target = e.target as HTMLSelectElement;
-					if (target) {
-						domain = domains.find((dm) => dm.value === target.value) ?? domains[0];
-
-						url.searchParams.set('domain', target.value);
-						history.pushState({}, '', url);
-						changeOMfileURL();
-					}
-				});
-
-				variableSelector = document.querySelector('#variable_selection') as HTMLSelectElement;
-				variableSelector?.addEventListener('change', (e) => {
-					const target = e.target as HTMLSelectElement;
-					if (target) {
-						variable = variables.find((v) => v.value === target.value) ?? variables[0];
-						url.searchParams.set('variable', target.value);
-						history.pushState({}, '', url);
-						changeOMfileURL();
-					}
-				});
-
-				const darkmodeToggle = document.getElementById('darkmode_toggle') as HTMLElement;
-				darkmodeToggle?.addEventListener('click', (e) => {
-					darkMode = !darkMode;
-					url.searchParams.set('dark', String(darkMode));
-					history.pushState({}, '', url);
-					window.location.reload();
-				});
-			}
 		});
 	});
 	onDestroy(() => {
@@ -410,7 +363,6 @@
 		}
 	});
 
-	let latestRequested = $state(false);
 	const getDomainData = async (latest = true) => {
 		return new Promise((resolve) => {
 			fetch(
@@ -418,7 +370,6 @@
 			).then(async (result) => {
 				const json = await result.json();
 				const referenceTime = json.reference_time;
-				latestRequested = true;
 				modelRunSelected = new Date(referenceTime);
 				resolve(json);
 			});
@@ -426,11 +377,6 @@
 	};
 
 	let latestRequest = $derived(getDomainData());
-	// let progressRequest = $derived(getDomainData(false));
-	let latestModelRunPromise = $derived.by(async () => {
-		let latest = await latestRequest;
-		return new Date(latest.reference_time);
-	});
 
 	const getOMUrl = () => {
 		return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${modelRunSelected.getUTCFullYear()}/${pad(modelRunSelected.getUTCMonth() + 1)}/${pad(modelRunSelected.getUTCDate())}/${pad(modelRunSelected.getUTCHours())}00Z/${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())}T${pad(timeSelected.getUTCHours())}00.om?dark=${darkMode}&variable=${variable.value}`;
@@ -490,7 +436,7 @@
 					<br />
 				</div>
 				<div class="mt-3 flex flex-col gap-6 md:flex-row md:gap-0">
-					<div class="flex flex-col gap-3 md:w-1/3 md:pr-3">
+					<div class="flex flex-col gap-3 md:w-1/4 md:pr-3">
 						<h2 class="text-lg font-bold">Domains</h2>
 						{#each domains as d, i (i)}
 							<Button
@@ -501,23 +447,53 @@
 									domain = d;
 									url.searchParams.set('domain', d.value);
 									history.pushState({}, '', url);
-									changeOMfileURL();
+									toast('Domain set to: ' + d.value);
 								}}>{d.label}</Button
 							>
 						{/each}
 					</div>
 
 					{#await latestRequest}
-						<div class="flex flex-col gap-1 md:w-1/3 md:px-3">
-							<h2 class="mb-2 text-lg font-bold">Valid times in model run</h2>
-							Loading latest times...
+						<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
+							<h2 class="mb-2 text-lg font-bold">Model runs</h2>
+							Loading latest model runs...
 						</div>
-						<div class="flex flex-col gap-1 md:w-1/3 md:pl-3">
+						<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
+							<h2 class="mb-2 text-lg font-bold">Valid times in model run</h2>
+							Loading latest valid times...
+						</div>
+						<div class="flex flex-col gap-1 md:w-1/4 md:pl-3">
 							<h2 class="mb-2 text-lg font-bold">Variables</h2>
 							Loading domain variables...
 						</div>
 					{:then latest}
-						<div class="flex flex-col gap-1 md:w-1/3 md:px-3">
+						<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
+							<h2 class="mb-2 text-lg font-bold">Model runs</h2>
+							{#each [modelRunSelected] as vt, i (i)}
+								{@const d = new Date(vt)}
+								<Button
+									class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.getTime() ===
+									modelRunSelected.getTime()
+										? 'bg-blue-400'
+										: ''}"
+									onclick={() => {
+										timeSelected = d;
+										url.searchParams.set('time', d.toISOString().replace(/[:Z]/g, '').slice(0, 15));
+										history.pushState({}, '', url);
+									}}
+									>{d.getUTCFullYear() +
+										'-' +
+										pad(d.getUTCMonth() + 1) +
+										'-' +
+										d.getUTCDate() +
+										' ' +
+										d.getUTCHours() +
+										':' +
+										pad(d.getUTCMinutes())}</Button
+								>
+							{/each}
+						</div>
+						<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
 							<h2 class="mb-2 text-lg font-bold">Valid times in model run</h2>
 							{#each latest.valid_times as vt, i (i)}
 								{@const d = new Date(vt)}
@@ -530,7 +506,6 @@
 										timeSelected = d;
 										url.searchParams.set('time', d.toISOString().replace(/[:Z]/g, '').slice(0, 15));
 										history.pushState({}, '', url);
-										changeOMfileURL();
 									}}
 									>{d.getUTCFullYear() +
 										'-' +
@@ -545,7 +520,7 @@
 							{/each}
 						</div>
 						{#if timeValid}
-							<div class="flex flex-col gap-1 md:w-1/3 md:pl-3">
+							<div class="flex flex-col gap-1 md:w-1/4 md:pl-3">
 								<h2 class="mb-2 text-lg font-bold">Variables</h2>
 
 								{#each latest.variables as vr, i (i)}
