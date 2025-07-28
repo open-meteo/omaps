@@ -22,16 +22,57 @@
 
 	import '../styles.css';
 
+	let darkMode = $state();
+
 	class SettingsButton {
 		onAdd(map: maplibregl.Map) {
 			const div = document.createElement('div');
 			div.className = 'maplibregl-ctrl maplibregl-ctrl-group';
 			div.innerHTML = `<button style="display:flex;justify-content:center;align-items:center;">
-				<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+				<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>`;
 			div.addEventListener('contextmenu', (e) => e.preventDefault());
 			div.addEventListener('click', () => {
 				sheetOpen = !sheetOpen;
+			});
+
+			return div;
+		}
+		onRemove(map: maplibregl.Map) {}
+	}
+	class VariableButton {
+		onAdd(map: maplibregl.Map) {
+			const div = document.createElement('div');
+			div.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+			div.innerHTML = `<button style="display:flex;justify-content:center;align-items:center;">
+				<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" stroke-width="1.2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-images-icon lucide-images"><path d="M18 22H4a2 2 0 0 1-2-2V6"/><path d="m22 13-1.296-1.296a2.41 2.41 0 0 0-3.408 0L11 18"/><circle cx="12" cy="8" r="2"/><rect width="16" height="16" x="6" y="2" rx="2"/></svg>
+        </button>`;
+			div.addEventListener('contextmenu', (e) => e.preventDefault());
+			div.addEventListener('click', () => {
+				drawerOpen = !drawerOpen;
+			});
+
+			return div;
+		}
+		onRemove(map: maplibregl.Map) {}
+	}
+	class DarkModeButton {
+		onAdd(map: maplibregl.Map) {
+			const div = document.createElement('div');
+			div.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+			div.innerHTML = !darkMode
+				? `<button style="display:flex;justify-content:center;align-items:center;">
+				<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" stroke-width="1.2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon-icon lucide-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>`
+				: `<button style="display:flex;justify-content:center;align-items:center;">
+				<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" stroke-width="1.2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun-icon lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+             </button>`;
+			div.addEventListener('contextmenu', (e) => e.preventDefault());
+			div.addEventListener('click', () => {
+				darkMode = !darkMode;
+				url.searchParams.set('dark', String(darkMode));
+				history.pushState({}, '', url);
+				window.location.reload();
 			});
 
 			return div;
@@ -46,17 +87,17 @@
 	let infoBox: HTMLElement | null;
 	let popup: maplibregl.Popup | undefined;
 
+	let url: URL;
+	let params: URLSearchParams;
+
 	let domain: Domain = $state({ value: 'meteoswiss_icon_ch1', label: 'DWD ICON D2' });
 	let variable: Variable = $state({ value: 'temperature_2m', label: 'Temperature 2m' });
-	let darkMode = $state();
 	let timeSelected = $state(new Date());
+	let modelRunSelected = $state(new Date());
+	modelRunSelected.setUTCHours(0);
+	modelRunSelected.setUTCMinutes(0);
 
 	const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
-
-	const getOMUrl = () => {
-		//return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${timeSelected.getUTCFullYear()}/${pad(timeSelected.getUTCMonth() + 1)}/${pad(timeSelected.getUTCDate())}/${pad(Math.ceil(timeSelected.getUTCHours()))}00Z/${'2025-07-25T0600'}.om?dark=${darkMode}&variable=${variable.value}`;
-		return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/2025/07/25/0600Z/${'2025-07-25T0600'}.om?dark=${darkMode}&variable=${variable.value}`;
-	};
 
 	let source: maplibregl.Map;
 	let domainSelector: HTMLSelectElement, variableSelector: HTMLSelectElement;
@@ -66,9 +107,6 @@
 	let checkSourceLoadedInterval: ReturnType<typeof setInterval>;
 	let checked = 0;
 	const changeOMfileURL = () => {
-		variableSelector.replaceChildren('');
-		variableSelector.innerHTML = `${getVariableOptions(domain, variable)}`;
-
 		if (popup) {
 			popup.remove();
 		}
@@ -80,10 +118,6 @@
 		omUrl = getOMUrl();
 		map.removeLayer('omFileLayer');
 		map.removeSource('omFileSource');
-
-		domainSelector.disabled = true;
-		variableSelector.disabled = true;
-		timeSliderApi.setDisabled(true);
 
 		source = map.addSource('omFileSource', {
 			type: 'raster',
@@ -98,26 +132,22 @@
 				id: 'omFileLayer',
 				type: 'raster'
 			},
-			'road_area_pier'
+			'landuse_overlay_national_park'
 		);
 		checkSourceLoadedInterval = setInterval(() => {
 			checked++;
 			if (source.loaded() || checked >= 30) {
-				domainSelector.disabled = false;
-				variableSelector.disabled = false;
-				timeSliderApi.setDisabled(false);
 				checked = 0;
 				clearInterval(checkSourceLoadedInterval);
 			}
 		}, 100);
 	};
 
-	let showPopup = false;
 	onMount(() => {
-		let url = new URL(document.location.href);
-		let params = new URLSearchParams(url.search);
+		url = new URL(document.location.href);
+		params = new URLSearchParams(url.search);
 
-		let darkMode = false;
+		darkMode = false;
 		if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 			darkMode = true;
 		}
@@ -147,15 +177,15 @@
 			timeSelected.setHours(12, 0, 0, 0); // Default to 12:00 local time
 		}
 
-		let variable: Variable;
 		if (params.get('variable')) {
 			variable = variables.find((v) => v.value === params.get('variable')) ?? variables[0];
 		} else {
 			variable = variables.find((v) => v.value === import.meta.env.VITE_VARIABLE) ?? variables[0];
 		}
+	});
 
-		infoBox = document.getElementById('info_box');
-
+	let showPopup = false;
+	onMount(() => {
 		maplibregl.addProtocol('om', omProtocol);
 
 		map = new maplibregl.Map({
@@ -235,7 +265,7 @@
 						'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
 					}
 				},
-				'road_area_pier'
+				'landuse_overlay_national_park'
 			);
 
 			map.addControl(
@@ -246,6 +276,8 @@
 			);
 
 			map.addControl(new SettingsButton());
+			map.addControl(new VariableButton());
+			map.addControl(new DarkModeButton());
 
 			omUrl = getOMUrl();
 			source = map.addSource('omFileSource', {
@@ -261,7 +293,7 @@
 					id: 'omFileLayer',
 					type: 'raster'
 				},
-				'road_area_pier'
+				'landuse_overlay_national_park'
 			);
 
 			map.on('mousemove', function (e) {
@@ -377,10 +409,58 @@
 			map.remove();
 		}
 	});
+
+	let latestRequested = $state(false);
+	const getDomainData = async (latest = true) => {
+		return new Promise((resolve) => {
+			fetch(
+				`https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${latest ? 'latest' : 'progress'}.json`
+			).then(async (result) => {
+				const json = await result.json();
+				const referenceTime = json.reference_time;
+				latestRequested = true;
+				modelRunSelected = new Date(referenceTime);
+				resolve(json);
+			});
+		});
+	};
+
+	let latestRequest = $derived(getDomainData());
+	// let progressRequest = $derived(getDomainData(false));
+	let latestModelRunPromise = $derived.by(async () => {
+		let latest = await latestRequest;
+		return new Date(latest.reference_time);
+	});
+
+	const getOMUrl = () => {
+		return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${modelRunSelected.getUTCFullYear()}/${pad(modelRunSelected.getUTCMonth() + 1)}/${pad(modelRunSelected.getUTCDate())}/${pad(modelRunSelected.getUTCHours())}00Z/${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())}T${pad(timeSelected.getUTCHours())}00.om?dark=${darkMode}&variable=${variable.value}`;
+	};
+
+	const timeValid = $derived.by(async () => {
+		let latest = await latestRequest;
+		for (let vt of latest.valid_times) {
+			let d = new Date(vt);
+			if (timeSelected - d == 0) {
+				return true;
+			}
+		}
+		return false;
+	});
+
+	// let progress = $state('');
+
+	// onMount(async () => {
+
+	// 	fetch(`https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/progress.json`).then(
+	// 		async (result) => {
+	// 			latest = await result.json();
+	// 			console.log(latest);
+	// 		}
+	// 	);
+	// });
 </script>
 
 <div class="map" id="#map_container" bind:this={mapContainer}></div>
-<div class="info-wrapper"><div id="info_box"></div></div>
 
 <div class="absolute">
 	<Sheet.Root bind:open={sheetOpen}>
@@ -396,15 +476,96 @@
 	</Sheet.Root>
 
 	<Drawer.Root bind:open={drawerOpen}>
-		<Drawer.Content>
-			<Drawer.Header>
-				<Drawer.Title>Are you sure absolutely sure?</Drawer.Title>
-				<Drawer.Description>This action cannot be undone.</Drawer.Description>
-			</Drawer.Header>
-			<Drawer.Footer>
-				<Button>Submit</Button>
-				<Drawer.Close>Cancel</Drawer.Close>
-			</Drawer.Footer>
+		<Drawer.Content class="flex h-1/2 items-center">
+			<div class="absolute top-2 left-2">
+				Domain: {domain.value} <br />
+				Model: {modelRunSelected.getUTCFullYear()}-{pad(modelRunSelected.getUTCMonth() + 1)}-{pad(
+					modelRunSelected.getUTCDate()
+				)}T{pad(modelRunSelected.getUTCHours())}:00Z <br />
+				Time: {timeSelected.getUTCFullYear()}-{pad(timeSelected.getUTCMonth() + 1)}-{pad(
+					timeSelected.getUTCDate()
+				)}T{pad(timeSelected.getUTCHours())}:00Z <br />
+				Variable: {variable.value}
+				<br />
+			</div>
+			<div class="flex overflow-scroll">
+				<div class="flex w-1/3 flex-col gap-3 pr-3">
+					<h2 class="text-lg font-bold">Domains</h2>
+					{#each domains as d, i (i)}
+						<Button
+							class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.value === domain.value
+								? 'bg-blue-400'
+								: ''}"
+							onclick={() => {
+								domain = d;
+								url.searchParams.set('domain', d.value);
+								history.pushState({}, '', url);
+								changeOMfileURL();
+							}}>{d.label}</Button
+						>
+					{/each}
+				</div>
+
+				{#await latestRequest}
+					<div class="flex w-1/3 flex-col gap-1 px-3">
+						<h2 class="mb-2 text-lg font-bold">Valid times in model run</h2>
+						Loading latest times...
+					</div>
+					<div class="flex w-1/3 flex-col gap-1 pl-3">
+						<h2 class="mb-2 text-lg font-bold">Variables</h2>
+						Loading domain variables...
+					</div>
+				{:then latest}
+					<div class="flex w-1/3 flex-col gap-1 px-3">
+						<h2 class="mb-2 text-lg font-bold">Valid times in model run</h2>
+						{#each latest.valid_times as vt, i (i)}
+							{@const d = new Date(vt)}
+							<Button
+								class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.getTime() ===
+								timeSelected.getTime()
+									? 'bg-blue-400'
+									: ''}"
+								onclick={() => {
+									timeSelected = d;
+									url.searchParams.set('time', d.toISOString().replace(/[:Z]/g, '').slice(0, 15));
+									history.pushState({}, '', url);
+									changeOMfileURL();
+								}}
+								>{d.getUTCFullYear() +
+									'-' +
+									pad(d.getUTCMonth() + 1) +
+									'-' +
+									d.getUTCDate() +
+									' ' +
+									d.getUTCHours() +
+									':' +
+									pad(d.getUTCMinutes())}</Button
+							>
+						{/each}
+					</div>
+					{#if timeValid}
+						<div class="flex w-1/3 flex-col gap-1 pl-3">
+							<h2 class="mb-2 text-lg font-bold">Variables</h2>
+
+							{#each latest.variables as vr, i (i)}
+								<Button
+									class="cursor-pointer bg-blue-200 hover:bg-blue-600 {variable.value === vr
+										? 'bg-blue-400'
+										: ''}"
+									onclick={() => {
+										variable = variables.find((v) => v.value === vr) ?? variables[0];
+										url.searchParams.set('variable', vr);
+										history.pushState({}, '', url);
+										changeOMfileURL();
+									}}>{vr}</Button
+								>
+							{/each}
+						</div>
+					{:else}
+						<div class="flex min-w-1/4 flex-col gap-1">No valid time selected</div>
+					{/if}
+				{/await}
+			</div>
 		</Drawer.Content>
 	</Drawer.Root>
 </div>

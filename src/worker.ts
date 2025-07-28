@@ -151,7 +151,7 @@ self.onmessage = async (message) => {
 		const rgba = new Uint8ClampedArray(pixels * 4);
 		const dark = message.data.dark;
 
-		colors = colorScales[variable.value.split('_')[0]];
+		colors = colorScales[variable.value.split('_')[0]] ?? colors['temperature'];
 
 		let projectionGrid;
 		if (domain.grid.projection) {

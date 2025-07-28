@@ -16,9 +16,7 @@ import {
 } from '$lib/utils/math';
 
 import { domains } from '$lib/utils/domains';
-import { variables, requestMultiple } from '$lib//utils/variables';
-
-import arrowPixelsSource from '$lib//utils/arrow';
+import { variables } from '$lib//utils/variables';
 
 import TileWorker from './worker?worker';
 
@@ -45,32 +43,17 @@ interface FileReader {
 	reader: OmFileReader | undefined;
 	backend: MemoryHttpBackend | undefined;
 	child?: OmFileReader | null;
-
-	readeru: OmFileReader | undefined;
-	readerv: OmFileReader | undefined;
-	readerDirections: OmFileReader | undefined;
-
-	backendu: MemoryHttpBackend | undefined;
-	backendv: MemoryHttpBackend | undefined;
-	backendDirections: MemoryHttpBackend | undefined;
 }
 
 const fileReader: FileReader = {
 	reader: undefined,
 	backend: undefined,
-
-	readeru: undefined,
-	readerv: undefined,
-	readerDirections: undefined,
-
-	backendu: undefined,
-	backendv: undefined,
-	backendDirections: undefined
+	child: undefined
 };
 
 interface Data {
-	values: number[] | TypedArray;
-	directions?: number[] | TypedArray;
+	values: TypedArray | undefined;
+	//directions?: TypedArray | undefined;
 }
 
 let data: Data;
@@ -106,41 +89,13 @@ export const getValueFromLatLong = (
 				xFraction,
 				yFraction
 			);
-			if (variable.value.startsWith('wind_')) {
-				const directions = data.directions as TypedArray;
-				const dir = interpolate2DHermite(directions, domain.grid.nx, index, xFraction, yFraction);
-				return { index: index, value: px, direction: dir };
-			} else {
-				return { index: index, value: px };
-			}
+
+			return { index: index, value: px };
 		} else {
 			return { index: NaN, value: NaN };
 		}
 	} else {
 		return { index: NaN, value: NaN };
-	}
-};
-
-let arrowPixelData = {};
-const initPixelData = async () => {
-	for (let [key, iconUrl] of Object.entries(arrowPixelsSource)) {
-		const response = await fetch(iconUrl);
-		const svgString = await response.text();
-
-		const svg64 = btoa(svgString);
-		const b64Start = 'data:image/svg+xml;base64,';
-
-		const image64 = b64Start + svg64;
-		const canvas = new OffscreenCanvas(32, 32);
-
-		let img = new Image();
-		img.onload = () => {
-			canvas.getContext('2d').drawImage(img, 0, 0);
-			const iconData = canvas.getContext('2d').getImageData(0, 0, 32, 32);
-
-			arrowPixelData[key] = iconData.data;
-		};
-		img.src = image64;
 	}
 };
 
@@ -217,13 +172,14 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 };
 
 const initOMFile = async (url: string) => {
-	initPixelData();
-
 	const [omUrl, omParams] = url.replace('om://', '').split('?');
 
 	const urlParams = new URLSearchParams(omParams);
 	dark = urlParams.get('dark') === 'true';
+	domain = domains.find((dm) => dm.value === omUrl.split('/')[4]) ?? domains[0];
 	variable = variables.find((v) => urlParams.get('variable') === v.value) ?? variables[0];
+
+	console.log(currentPath, omUrl, omUrl !== currentPath);
 
 	if (omUrl !== currentPath) {
 		if (fileReader.child) {
@@ -232,31 +188,13 @@ const initOMFile = async (url: string) => {
 		if (fileReader.reader) {
 			fileReader.reader.dispose();
 		}
-		if (fileReader.readeru) {
-			fileReader.readeru.dispose();
-		}
-		if (fileReader.readerv) {
-			fileReader.readerv.dispose();
-		}
-		if (fileReader.readerDirections) {
-			fileReader.readerDirections.dispose();
+		if (fileReader.backend) {
+			fileReader.backend.close();
 		}
 
 		delete fileReader.child;
-
 		delete fileReader.reader;
-		delete fileReader.readeru;
-		delete fileReader.readerv;
-		delete fileReader.readerDirections;
-
 		delete fileReader.backend;
-		delete fileReader.backendu;
-		delete fileReader.backendv;
-		delete fileReader.backendDirections;
-
-		domain = domains.find((dm) => dm.value === omUrl.split('/')[4]) ?? domains[0];
-		// const variableString = omUrl.split('/')[omUrl.split('/').length - 1].replace('.om', '');
-		// variable = variables.find((v) => v.value === variableString) ?? variables[0];
 
 		nx = domain.grid.nx;
 		ny = domain.grid.ny;
@@ -284,118 +222,48 @@ const initOMFile = async (url: string) => {
 			);
 		}
 
-		if (requestMultiple.includes(variable.value)) {
-			let reg = new RegExp(/wind_(\d+)m\.om/);
-			const matches = url.match(reg);
-			if (domain.windUVComponents) {
-				fileReader.backendu = new MemoryHttpBackend({
-					url: omUrl.replace(matches[0], `wind_u_component_${matches[1]}m.om`),
-					maxFileSize: 500 * 1024 * 1024 // 500 MB
-				});
-				fileReader.backendv = new MemoryHttpBackend({
-					url: omUrl.replace(matches[0], `wind_v_component_${matches[1]}m.om`),
-					maxFileSize: 500 * 1024 * 1024 // 500 MB
-				});
-				fileReader.readeru = await OmFileReader.create(fileReader.backendu).catch(() => {
-					throw new Error(`OMFile error: 404 file not found`);
-				});
-				fileReader.readerv = await OmFileReader.create(fileReader.backendv).catch(() => {
-					throw new Error(`OMFile error: 404 file not found`);
-				});
-				if (fileReader.readeru && fileReader.readerv) {
-					const dimensions = fileReader.readeru.getDimensions();
+		fileReader.backend = new MemoryHttpBackend({
+			url: omUrl,
+			maxFileSize: 1000 * 1024 * 1024 // 500 MB,
+		});
+		fileReader.reader = await OmFileReader.create(fileReader.backend).catch(() => {
+			throw new Error(`OMFile error: 404 file not found`);
+		});
 
-					// Create ranges for each dimension
-					const ranges = dimensions.map((dim, _) => {
-						return { start: 0, end: dim };
-					});
-					const datau = await fileReader.readeru.read(OmDataType.FloatArray, ranges);
-					const datav = await fileReader.readerv.read(OmDataType.FloatArray, ranges);
+		for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
+			const child = await fileReader.reader.getChild(i);
+			if (child.getName() === variable.value) {
+				const dimensions = child.getDimensions();
 
-					const dataValues = [];
-					const dataDirections = [];
-
-					for (let [i, dp] of datau.entries()) {
-						dataValues.push(Math.sqrt(Math.pow(dp, 2) + Math.pow(datav[i], 2)) * 1.94384);
-
-						dataDirections.push((Math.atan2(dp, datav[i]) * (180 / Math.PI) + 360) % 360);
+				// Create ranges for each dimension
+				const ranges = dimensions.map((dim, _) => {
+					return { start: 0, end: dim };
+				});
+				let dataValues;
+				try {
+					dataValues = await child.read(OmDataType.FloatArray, ranges);
+				} catch (e) {
+					if (e.message === 'memory access out of bounds') {
+						console.log('memory access out of bounds');
+						throw new Error('Out of memory');
 					}
-					data = { values: dataValues, directions: dataDirections };
 				}
+
+				fileReader.child = child;
+				data = { values: dataValues };
+				break;
 			} else {
-				fileReader.backend = new MemoryHttpBackend({
-					url: omUrl.replace(matches[0], `wind_speed_${matches[1]}m.om`),
-					maxFileSize: 500 * 1024 * 1024 // 500 MB
-				});
-				fileReader.backendDirections = new MemoryHttpBackend({
-					url: omUrl.replace(matches[0], `wind_direction_${matches[1]}m.om`),
-					maxFileSize: 500 * 1024 * 1024 // 500 MB
-				});
-
-				fileReader.reader = await OmFileReader.create(fileReader.backend).catch(() => {
-					throw new Error(`OMFile error: 404 file not found`);
-				});
-				fileReader.readerDirections = await OmFileReader.create(fileReader.backendDirections).catch(
-					() => {
-						throw new Error(`OMFile error: 404 file not found`);
-					}
-				);
-
-				if (fileReader.reader && fileReader.readerDirections) {
-					const dimensions = fileReader.reader.getDimensions();
-
-					// Create ranges for each dimension
-					const ranges = dimensions.map((dim, _) => {
-						return { start: 0, end: dim };
-					});
-					const dataWind = await fileReader.reader.read(OmDataType.FloatArray, ranges);
-					const dataDirs = await fileReader.readerDirections.read(OmDataType.FloatArray, ranges);
-
-					const dataValues = [];
-					const dataDirections = [];
-
-					for (let [i, dp] of dataWind.entries()) {
-						dataValues.push(dp * 1.94384);
-						dataDirections.push(360 - dataDirs[i]);
-					}
-
-					data = { values: dataValues, directions: dataDirections };
-				}
-			}
-		} else {
-			fileReader.backend = new MemoryHttpBackend({
-				url: omUrl,
-				maxFileSize: 500 * 1024 * 1024 // 500 MB,
-			});
-			fileReader.reader = await OmFileReader.create(fileReader.backend).catch(() => {
-				throw new Error(`OMFile error: 404 file not found`);
-			});
-
-			for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
-				const child = await fileReader.reader.getChild(i);
-				if (child.getName() === variable.value) {
-					const dimensions = child.getDimensions();
-
-					// Create ranges for each dimension
-					const ranges = dimensions.map((dim, _) => {
-						return { start: 0, end: dim };
-					});
-					let dataValues = await child.read(OmDataType.FloatArray, ranges);
-
-					if (variable.value == 'wind_gusts_10m') {
-						dataValues = dataValues.map((val) => val * 1.94384);
-					}
-					fileReader.child = child;
-					data = { values: dataValues };
-					break;
-				} else {
-					child.dispose();
-				}
+				child.dispose();
 			}
 		}
+
 		currentPath = omUrl;
 	} else {
-		fileReader.child.dispose();
+		if (fileReader.child) {
+			fileReader.child.dispose();
+		}
+		delete fileReader.child;
+
 		for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
 			const child = await fileReader.reader.getChild(i);
 			if (child.getName() === variable.value) {
