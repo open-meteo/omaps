@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 
+	import { setMode, mode } from 'mode-watcher';
+
 	import { toast } from 'svelte-sonner';
 
 	import * as maplibregl from 'maplibre-gl';
@@ -23,7 +25,7 @@
 
 	import '../styles.css';
 
-	let darkMode = $state();
+	let darkMode = $derived(mode.current);
 
 	class SettingsButton {
 		onAdd() {
@@ -61,21 +63,28 @@
 		onAdd() {
 			const div = document.createElement('div');
 			div.className = 'maplibregl-ctrl maplibregl-ctrl-group';
-			div.innerHTML = !darkMode
-				? `<button style="display:flex;justify-content:center;align-items:center;">
-				<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" stroke-width="1.2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon-icon lucide-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-        </button>`
-				: `<button style="display:flex;justify-content:center;align-items:center;">
-				<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" stroke-width="1.2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun-icon lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+
+			const darkSVG = `<button style="display:flex;justify-content:center;align-items:center;">
+		<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" stroke-width="1.2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun-icon lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
              </button>`;
+
+			const lightSVG = `<button style="display:flex;justify-content:center;align-items:center;">
+		<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" stroke-width="1.2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon-icon lucide-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>`;
+			div.innerHTML = mode.current !== 'dark' ? lightSVG : darkSVG;
 			div.addEventListener('contextmenu', (e) => e.preventDefault());
 			div.addEventListener('click', () => {
-				darkMode = !darkMode;
-				url.searchParams.set('dark', String(darkMode));
-				history.pushState({}, '', url);
-				window.location.reload();
+				if (mode.current === 'light') {
+					setMode('dark');
+				} else {
+					setMode('light');
+				}
+				div.innerHTML = mode.current !== 'dark' ? lightSVG : darkSVG;
+				map.setStyle(
+					`https://maptiler.servert.nl/styles/basic-world-maps${mode.current === 'dark' ? '-dark' : ''}/style.json`
+				);
+				setTimeout(() => changeOMfileURL(), 500);
 			});
-
 			return div;
 		}
 		onRemove() {}
@@ -113,8 +122,12 @@
 		}
 
 		omUrl = getOMUrl();
-		map.removeLayer('omFileLayer');
-		map.removeSource('omFileSource');
+		if (map.getLayer('omFileLayer')) {
+			map.removeLayer('omFileLayer');
+		}
+		if (map.getSource('omFileSource')) {
+			map.removeSource('omFileSource');
+		}
 
 		if (true) {
 			source = map.addSource('omFileSource', {
@@ -148,17 +161,6 @@
 	onMount(() => {
 		url = new URL(document.location.href);
 		params = new URLSearchParams(url.search);
-
-		darkMode = false;
-		if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-			darkMode = true;
-		}
-		if (params.get('dark')) {
-			darkMode = params.get('dark') === 'true';
-		}
-		if (darkMode) {
-			document.body.classList.add('dark');
-		}
 
 		if (params.get('domain')) {
 			domain = domains.find((dm) => dm.value === params.get('domain')) ?? domains[0];
@@ -205,7 +207,7 @@
 
 		map = new maplibregl.Map({
 			container: mapContainer as HTMLElement,
-			style: `https://maptiler.servert.nl/styles/basic-world-maps${darkMode ? '-dark' : ''}/style.json`,
+			style: `https://maptiler.servert.nl/styles/basic-world-maps${mode.current === 'dark' ? '-dark' : ''}/style.json`,
 			center: typeof domain.grid.center == 'object' ? domain.grid.center : [0, 0],
 			zoom: domain?.grid.zoom,
 			keyboard: false,
@@ -371,6 +373,11 @@
 				const json = await result.json();
 				const referenceTime = json.reference_time;
 				modelRunSelected = new Date(referenceTime);
+
+				if (modelRunSelected - timeSelected > 0) {
+					timeSelected = new Date(referenceTime);
+				}
+
 				resolve(json);
 			});
 		});
@@ -410,137 +417,144 @@
 
 <div class="absolute">
 	<Sheet.Root bind:open={sheetOpen}>
-		<Sheet.Content>
-			<Sheet.Header>
-				<Sheet.Title>Are you sure absolutely sure?</Sheet.Title>
-				<Sheet.Description>
-					This action cannot be undone. This will permanently delete your account and remove your
-					data from our servers.
-				</Sheet.Description>
-			</Sheet.Header>
-		</Sheet.Content>
+		<Sheet.Content><div class="px-6 pt-12">Units</div></Sheet.Content>
 	</Sheet.Root>
 
 	<Drawer.Root bind:open={drawerOpen}>
 		<Drawer.Content class=" h-1/2 ">
-			<div class="flex w-full flex-col items-center overflow-y-scroll">
-				<div class="mt-3 md:absolute md:top-3 md:left-3">
-					Domain: {domain.value} <br />
-					Model: {modelRunSelected.getUTCFullYear()}-{pad(modelRunSelected.getUTCMonth() + 1)}-{pad(
-						modelRunSelected.getUTCDate()
-					)}T{pad(modelRunSelected.getUTCHours())}:00Z <br />
-					Time: {timeSelected.getUTCFullYear()}-{pad(timeSelected.getUTCMonth() + 1)}-{pad(
-						timeSelected.getUTCDate()
-					)}T{pad(timeSelected.getUTCHours())}:00Z <br />
-					Variable: {variable.value}
-					<br />
-				</div>
-				<div class="mt-3 flex flex-col gap-6 md:flex-row md:gap-0">
-					<div class="flex flex-col gap-3 md:w-1/4 md:pr-3">
-						<h2 class="text-lg font-bold">Domains</h2>
-						{#each domains as d, i (i)}
-							<Button
-								class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.value === domain.value
-									? 'bg-blue-400'
-									: ''}"
-								onclick={() => {
-									domain = d;
-									url.searchParams.set('domain', d.value);
-									history.pushState({}, '', url);
-									toast('Domain set to: ' + d.value);
-								}}>{d.label}</Button
-							>
-						{/each}
-					</div>
+			<div class="flex flex-col items-center overflow-y-scroll">
+				<div class="container px-3">
+					<!-- <div class="mt-3 md:absolute md:top-3 md:left-3">
+						Domain: {domain.value} <br />
+						Model: {modelRunSelected.getUTCFullYear()}-{pad(
+							modelRunSelected.getUTCMonth() + 1
+						)}-{pad(modelRunSelected.getUTCDate())}T{pad(modelRunSelected.getUTCHours())}:00Z
+						<br />
+						Time: {timeSelected.getUTCFullYear()}-{pad(timeSelected.getUTCMonth() + 1)}-{pad(
+							timeSelected.getUTCDate()
+						)}T{pad(timeSelected.getUTCHours())}:00Z <br />
+						Variable: {variable.value}
+						<br />
+					</div> -->
+					<div class="mt-3 flex w-full flex-col gap-6 md:flex-row md:gap-0">
+						<div class="flex flex-col gap-3 md:w-1/4 md:pr-3">
+							<h2 class="text-lg font-bold">Domains</h2>
+							{#each domains as d, i (i)}
+								<Button
+									class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.value === domain.value
+										? 'bg-blue-400'
+										: ''}"
+									onclick={() => {
+										domain = d;
+										url.searchParams.set('domain', d.value);
+										history.pushState({}, '', url);
+										toast('Domain set to: ' + domain.label);
+									}}>{d.label}</Button
+								>
+							{/each}
+						</div>
 
-					{#await latestRequest}
-						<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
-							<h2 class="mb-2 text-lg font-bold">Model runs</h2>
-							Loading latest model runs...
-						</div>
-						<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
-							<h2 class="mb-2 text-lg font-bold">Valid times in model run</h2>
-							Loading latest valid times...
-						</div>
-						<div class="flex flex-col gap-1 md:w-1/4 md:pl-3">
-							<h2 class="mb-2 text-lg font-bold">Variables</h2>
-							Loading domain variables...
-						</div>
-					{:then latest}
-						<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
-							<h2 class="mb-2 text-lg font-bold">Model runs</h2>
-							{#each [modelRunSelected] as vt, i (i)}
-								{@const d = new Date(vt)}
-								<Button
-									class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.getTime() ===
-									modelRunSelected.getTime()
-										? 'bg-blue-400'
-										: ''}"
-									onclick={() => {
-										timeSelected = d;
-										url.searchParams.set('time', d.toISOString().replace(/[:Z]/g, '').slice(0, 15));
-										history.pushState({}, '', url);
-									}}
-									>{d.getUTCFullYear() +
-										'-' +
-										pad(d.getUTCMonth() + 1) +
-										'-' +
-										d.getUTCDate() +
-										' ' +
-										d.getUTCHours() +
-										':' +
-										pad(d.getUTCMinutes())}</Button
-								>
-							{/each}
-						</div>
-						<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
-							<h2 class="mb-2 text-lg font-bold">Valid times in model run</h2>
-							{#each latest.valid_times as vt, i (i)}
-								{@const d = new Date(vt)}
-								<Button
-									class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.getTime() ===
-									timeSelected.getTime()
-										? 'bg-blue-400'
-										: ''}"
-									onclick={() => {
-										timeSelected = d;
-										url.searchParams.set('time', d.toISOString().replace(/[:Z]/g, '').slice(0, 15));
-										history.pushState({}, '', url);
-									}}
-									>{d.getUTCFullYear() +
-										'-' +
-										pad(d.getUTCMonth() + 1) +
-										'-' +
-										d.getUTCDate() +
-										' ' +
-										d.getUTCHours() +
-										':' +
-										pad(d.getUTCMinutes())}</Button
-								>
-							{/each}
-						</div>
-						{#if timeValid}
+						{#await latestRequest}
+							<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
+								<h2 class="mb-2 text-lg font-bold">Model runs</h2>
+								Loading latest model runs...
+							</div>
+							<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
+								<h2 class="mb-2 text-lg font-bold">Valid times</h2>
+								Loading latest valid times...
+							</div>
 							<div class="flex flex-col gap-1 md:w-1/4 md:pl-3">
 								<h2 class="mb-2 text-lg font-bold">Variables</h2>
-
-								{#each latest.variables as vr, i (i)}
+								Loading domain variables...
+							</div>
+						{:then latest}
+							<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
+								<h2 class="mb-2 text-lg font-bold">Model runs</h2>
+								{#each [modelRunSelected] as vt, i (i)}
+									{@const d = new Date(vt)}
 									<Button
-										class="cursor-pointer bg-blue-200 hover:bg-blue-600 {variable.value === vr
+										class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.getTime() ===
+										modelRunSelected.getTime()
 											? 'bg-blue-400'
 											: ''}"
 										onclick={() => {
-											variable = variables.find((v) => v.value === vr) ?? variables[0];
-											url.searchParams.set('variable', vr);
-											history.pushState({}, '', url);
-											changeOMfileURL();
-										}}>{vr}</Button
+											toast(
+												'Model run set to: ' +
+													d.getUTCFullYear() +
+													'-' +
+													pad(d.getUTCMonth() + 1) +
+													'-' +
+													d.getUTCDate() +
+													' ' +
+													d.getUTCHours() +
+													':' +
+													pad(d.getUTCMinutes())
+											);
+										}}
+										>{d.getUTCFullYear() +
+											'-' +
+											pad(d.getUTCMonth() + 1) +
+											'-' +
+											d.getUTCDate() +
+											' ' +
+											d.getUTCHours() +
+											':' +
+											pad(d.getUTCMinutes())}</Button
 									>
 								{/each}
 							</div>
-						{:else}
-							<div class="flex min-w-1/4 flex-col gap-1">No valid time selected</div>
-						{/if}
-					{/await}
+							<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
+								<h2 class="mb-2 text-lg font-bold">Valid times</h2>
+								{#each latest.valid_times as vt, i (i)}
+									{@const d = new Date(vt)}
+									<Button
+										class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.getTime() ===
+										timeSelected.getTime()
+											? 'bg-blue-400'
+											: ''}"
+										onclick={() => {
+											timeSelected = d;
+											url.searchParams.set(
+												'time',
+												d.toISOString().replace(/[:Z]/g, '').slice(0, 15)
+											);
+											history.pushState({}, '', url);
+										}}
+										>{d.getUTCFullYear() +
+											'-' +
+											pad(d.getUTCMonth() + 1) +
+											'-' +
+											d.getUTCDate() +
+											' ' +
+											d.getUTCHours() +
+											':' +
+											pad(d.getUTCMinutes())}</Button
+									>
+								{/each}
+							</div>
+							{#if timeValid}
+								<div class="flex flex-col gap-1 md:w-1/4 md:pl-3">
+									<h2 class="mb-2 text-lg font-bold">Variables</h2>
+
+									{#each latest.variables as vr, i (i)}
+										<Button
+											class="cursor-pointer bg-blue-200 hover:bg-blue-600 {variable.value === vr
+												? 'bg-blue-400'
+												: ''}"
+											onclick={() => {
+												variable = variables.find((v) => v.value === vr) ?? variables[0];
+												url.searchParams.set('variable', vr);
+												history.pushState({}, '', url);
+												changeOMfileURL();
+											}}>{vr}</Button
+										>
+									{/each}
+								</div>
+							{:else}
+								<div class="flex min-w-1/4 flex-col gap-1">No valid time selected</div>
+							{/if}
+						{/await}
+					</div>
 				</div>
 			</div>
 		</Drawer.Content>
