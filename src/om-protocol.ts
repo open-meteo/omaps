@@ -12,7 +12,8 @@ import {
 	getBorderPoints,
 	getBoundsFromGrid,
 	getIndexFromLatLong,
-	getBoundsFromBorderPoints
+	getBoundsFromBorderPoints,
+	getIndicesFromBounds
 } from '$lib/utils/math';
 
 import { domains } from '$lib/utils/domains';
@@ -20,13 +21,16 @@ import { variables } from '$lib//utils/variables';
 
 import TileWorker from './worker?worker';
 
-import type { TileJSON, TileIndex, Domain, Variable, Bounds } from './types';
+import type { TileJSON, TileIndex, Domain, Variable, Bounds, Range } from './types';
 import { DynamicProjection, ProjectionGrid, type Projection } from '$lib/utils/projection';
 
 let dark = false;
 let domain: Domain;
 let variable: Variable;
 let currentPath: string;
+let mapBounds: number[];
+let mapBoundsIndexes: number[];
+let ranges: Range[];
 
 let projection: Projection;
 let projectionGrid: ProjectionGrid;
@@ -113,6 +117,7 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 		data,
 		domain,
 		variable,
+		ranges,
 		dark: dark
 	});
 	const tilePromise = new Promise<ImageBitmap>((resolve) => {
@@ -165,15 +170,25 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 	};
 };
 
-const initOMFile = async (url: string) => {
+const initOMFile = async (url: string): Promise<void> => {
 	const [omUrl, omParams] = url.replace('om://', '').split('?');
 
 	const urlParams = new URLSearchParams(omParams);
 	dark = urlParams.get('dark') === 'true';
 	domain = domains.find((dm) => dm.value === omUrl.split('/')[4]) ?? domains[0];
 	variable = variables.find((v) => urlParams.get('variable') === v.value) ?? variables[0];
+	mapBounds = urlParams
+		.get('bounds')
+		?.split(',')
+		.map((b: string): number => Number(b)) as number[];
 
-	console.log(currentPath, omUrl, omUrl !== currentPath);
+	let mapBoundsIndexes = getIndicesFromBounds(
+		mapBounds[0],
+		mapBounds[1],
+		mapBounds[2],
+		mapBounds[3],
+		domain
+	);
 
 	if (omUrl !== currentPath) {
 		if (fileReader.child) {
@@ -230,20 +245,23 @@ const initOMFile = async (url: string) => {
 				const dimensions = child.getDimensions();
 
 				// Create ranges for each dimension
-				const ranges = dimensions.map((dim, _) => {
-					return { start: 0, end: dim };
-				});
+				// ranges = [
+				// 	{ start: mapBoundsIndexes[1], end: mapBoundsIndexes[3] },
+				// 	{ start: mapBoundsIndexes[0], end: mapBoundsIndexes[2] }
+				// ];
+				ranges = [
+					{ start: 0, end: dimensions[0] },
+					{ start: 0, end: dimensions[1] }
+				];
 				let dataValues;
 				try {
 					dataValues = await child.read(OmDataType.FloatArray, ranges);
 				} catch (e) {
-					if (e.message === 'memory access out of bounds') {
-						console.log('memory access out of bounds');
-						throw new Error('Out of memory');
-					}
+					throw new Error(e);
 				}
 
 				fileReader.child = child;
+
 				data = { values: dataValues };
 				break;
 			} else {
@@ -264,9 +282,14 @@ const initOMFile = async (url: string) => {
 				const dimensions = child.getDimensions();
 
 				// Create ranges for each dimension
-				const ranges = dimensions.map((dim, _) => {
-					return { start: 0, end: dim };
-				});
+				// ranges = [
+				// 	{ start: mapBoundsIndexes[1], end: mapBoundsIndexes[3] },
+				// 	{ start: mapBoundsIndexes[0], end: mapBoundsIndexes[2] }
+				// ];
+				ranges = [
+					{ start: 0, end: dimensions[0] },
+					{ start: 0, end: dimensions[1] }
+				];
 				let dataValues = await child.read(OmDataType.FloatArray, ranges);
 
 				if (variable.value == 'wind_gusts_10m') {

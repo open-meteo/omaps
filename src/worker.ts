@@ -115,13 +115,17 @@ const getIndexAndFractions = (
 	lat: number,
 	lon: number,
 	domain: Domain,
-	projectionGrid: ProjectionGrid
+	projectionGrid: ProjectionGrid,
+	ranges = [
+		{ start: 0, end: domain.grid.ny },
+		{ start: 0, end: domain.grid.nx }
+	]
 ) => {
 	let indexObject: IndexAndFractions;
 	if (domain.grid.projection && projectionGrid) {
 		indexObject = projectionGrid.findPointInterpolated(lat, lon);
 	} else {
-		indexObject = getIndexFromLatLong(lat, lon, domain);
+		indexObject = getIndexFromLatLong(lat, lon, domain, ranges);
 	}
 
 	return (
@@ -141,7 +145,8 @@ self.onmessage = async (message) => {
 		const y = message.data.y;
 		const z = message.data.z;
 		const values = message.data.data.values;
-		const directions = message.data.data.directions;
+		const ranges = message.data.ranges;
+		//const directions = message.data.data.directions;
 
 		const domain = message.data.domain;
 		const variable = message.data.variable;
@@ -162,7 +167,7 @@ self.onmessage = async (message) => {
 			const dy = domain.grid.dy;
 			const projectOrigin = domain.grid.projection.projectOrigin ?? true;
 
-			let projectionName = domain.grid.projection.name;
+			const projectionName = domain.grid.projection.name;
 
 			const projection = new DynamicProjection(
 				projectionName,
@@ -190,7 +195,8 @@ self.onmessage = async (message) => {
 					lat,
 					lon,
 					domain,
-					projectionGrid
+					projectionGrid,
+					ranges
 				);
 
 				let px = interpolate2DHermite(values, nx, index, xFraction, yFraction);

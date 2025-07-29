@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 
+	import { pushState } from '$app/navigation';
+
 	import { setMode, mode } from 'mode-watcher';
 
 	import { toast } from 'svelte-sonner';
@@ -103,6 +105,7 @@
 	let variable: Variable = $state({ value: 'temperature_2m', label: 'Temperature 2m' });
 	let timeSelected = $state(new Date());
 	let modelRunSelected = $state(new Date());
+	let mapBounds: maplibregl.LngLatBounds = $state();
 
 	const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
 
@@ -118,6 +121,8 @@
 		if (!domain.variables.includes(variable.value)) {
 			variable = variables.find((v) => v.value === domain.variables[0]) as Variable;
 		}
+
+		mapBounds = map.getBounds();
 
 		omUrl = getOMUrl();
 		if (map.getLayer('omFileLayer')) {
@@ -243,6 +248,7 @@
 		map.scrollZoom.setWheelZoomRate(1 / 90);
 
 		map.on('load', async () => {
+			mapBounds = map.getBounds();
 			map.setSky({
 				'sky-color': '#000000',
 				'sky-horizon-blend': 0.8,
@@ -382,7 +388,7 @@
 	let latestRequest = $derived(getDomainData());
 
 	const getOMUrl = () => {
-		return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${modelRunSelected.getUTCFullYear()}/${pad(modelRunSelected.getUTCMonth() + 1)}/${pad(modelRunSelected.getUTCDate())}/${pad(modelRunSelected.getUTCHours())}00Z/${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())}T${pad(timeSelected.getUTCHours())}00.om?dark=${darkMode}&variable=${variable.value}`;
+		return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${modelRunSelected.getUTCFullYear()}/${pad(modelRunSelected.getUTCMonth() + 1)}/${pad(modelRunSelected.getUTCDate())}/${pad(modelRunSelected.getUTCHours())}00Z/${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())}T${pad(timeSelected.getUTCHours())}00.om?dark=${darkMode}&variable=${variable.value}&bounds=${mapBounds.getSouth()},${mapBounds.getEast()},${mapBounds.getNorth()},${mapBounds.getWest()}`;
 	};
 
 	const timeValid = $derived.by(async () => {
@@ -419,7 +425,7 @@
 									onclick={() => {
 										domain = d;
 										url.searchParams.set('domain', d.value);
-										history.pushState({}, '', url);
+										pushState(url + map._hash.getHashString(), {});
 										toast('Domain set to: ' + domain.label);
 									}}>{d.label}</Button
 								>
@@ -490,7 +496,7 @@
 												'time',
 												d.toISOString().replace(/[:Z]/g, '').slice(0, 15)
 											);
-											history.pushState({}, '', url);
+											pushState(url + map._hash.getHashString(), {});
 										}}
 										>{d.getUTCFullYear() +
 											'-' +
@@ -519,7 +525,7 @@
 												onclick={() => {
 													variable = vrb ?? variables[0];
 													url.searchParams.set('variable', vr);
-													history.pushState({}, '', url);
+													pushState(url + map._hash.getHashString(), {});
 													changeOMfileURL();
 												}}>{vrb ? vrb.label : vr}</Button
 											>

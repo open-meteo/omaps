@@ -1,6 +1,7 @@
 import type { TypedArray } from '@openmeteo/file-reader';
 import type { Domain, Bounds, Center, IndexAndFractions } from '../types';
 import type { Projection, ProjectionGrid } from './projection';
+import type { Range } from '../../types';
 
 const r2d = 180 / Math.PI;
 export const tile2lon = (x: number, z: number): number => {
@@ -182,25 +183,77 @@ export const quinticHermite2D = (
 export const getIndexFromLatLong = (
 	lat: number,
 	lon: number,
-	domain: Domain
+	domain: Domain,
+	ranges: Range[]
 ): IndexAndFractions => {
-	if (
-		lat < domain.grid.latMin ||
-		lat > domain.grid.latMin + domain.grid.dy * domain.grid.ny ||
-		lon < domain.grid.lonMin ||
-		lon > domain.grid.lonMin + domain.grid.dx * domain.grid.nx
-	) {
+	const lonMin = domain.grid.lonMin + domain.grid.dx * ranges[1]['start'];
+	const latMin = domain.grid.latMin + domain.grid.dy * ranges[0]['start'];
+	const lonMax = domain.grid.lonMin + domain.grid.dx * ranges[1]['end'];
+	const latMax = domain.grid.latMin + domain.grid.dy * ranges[0]['end'];
+
+	if (lat < latMin || lat > latMax || lon < lonMin || lon > lonMax) {
 		return { index: NaN, xFraction: 0, yFraction: 0 };
 	} else {
-		const x = (lon - domain.grid.lonMin) / domain.grid.dx;
-		const y = (lat - domain.grid.latMin) / domain.grid.dy;
+		const x = Math.floor((lon - lonMin) / domain.grid.dx);
+		const y = Math.floor((lat - latMin) / domain.grid.dy);
 
-		const xFraction = ((lon - domain.grid.lonMin) % domain.grid.dx) / domain.grid.dx;
-		const yFraction = ((lat - domain.grid.latMin) % domain.grid.dy) / domain.grid.dy;
+		const xFraction = ((lon - lonMin) % domain.grid.dx) / domain.grid.dx;
+		const yFraction = ((lat - latMin) % domain.grid.dy) / domain.grid.dy;
 
-		const index = Math.floor(y) * domain.grid.nx + Math.floor(x);
+		const index = y * (ranges[1]['end'] - ranges[1]['start']) + x;
 		return { index, xFraction, yFraction };
 	}
+};
+
+export const getIndicesFromBounds = (
+	south: number,
+	east: number,
+	north: number,
+	west: number,
+	domain: Domain
+) => {
+	const dx = domain.grid.dx;
+	const dy = domain.grid.dy;
+	const nx = domain.grid.nx;
+	const ny = domain.grid.ny;
+
+	const minLat = domain.grid.latMin;
+	const minLon = domain.grid.lonMin;
+
+	const xPrecision = String(dx).split('.')[1].length;
+	const yPrecision = String(dy).split('.')[1].length;
+
+	const s = Number((south - (south % dy)).toFixed(yPrecision));
+	const e = Number((east - (east % dx)).toFixed(xPrecision));
+	const n = Number((north - (north % dy) + dy).toFixed(yPrecision));
+	const w = Number((west - (west % dx) + dy).toFixed(xPrecision));
+
+	let minX: number, minY: number, maxX: number, maxY: number;
+	if (w - minLon < 0) {
+		minX = 0;
+	} else {
+		minX = Math.round(Math.max((w - minLon) / dx, 0));
+	}
+
+	if (s - minLat < 0) {
+		minY = 0;
+	} else {
+		minY = Math.round(Math.max((s - minLat) / dy, 0));
+	}
+
+	if (e - minLon < 0) {
+		maxX = nx;
+	} else {
+		maxX = Math.round(Math.min((e - minLon) / dx, nx));
+	}
+
+	if (n - minLat < 0) {
+		maxY = ny;
+	} else {
+		maxY = Math.round(Math.min((n - minLat) / dy, ny));
+	}
+
+	return [minX, minY, maxX, maxY];
 };
 
 // 1D Cardinal Spline for 4 values
@@ -275,10 +328,7 @@ const interpolateCardinal2D = (
 export const getBorderPoints = (projectionGrid: ProjectionGrid) => {
 	const points = [];
 	for (let i = 0; i < projectionGrid.ny; i++) {
-		points.push([
-			projectionGrid.origin[0],
-			projectionGrid.origin[1] + i * projectionGrid.dy
-		]);
+		points.push([projectionGrid.origin[0], projectionGrid.origin[1] + i * projectionGrid.dy]);
 	}
 	for (let i = 0; i < projectionGrid.nx; i++) {
 		points.push([
@@ -293,10 +343,7 @@ export const getBorderPoints = (projectionGrid: ProjectionGrid) => {
 		]);
 	}
 	for (let i = projectionGrid.nx; i >= 0; i--) {
-		points.push([
-			projectionGrid.origin[0] + i * projectionGrid.dx,
-			projectionGrid.origin[1]
-		]);
+		points.push([projectionGrid.origin[0] + i * projectionGrid.dx, projectionGrid.origin[1]]);
 	}
 
 	return points;

@@ -103,3 +103,8 @@ export interface IndexAndFractions {
 	xFraction: number;
 	yFraction: number;
 }
+
+export interface Range {
+	start: number;
+	end: number;
+}
