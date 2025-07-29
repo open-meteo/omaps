@@ -10,7 +10,7 @@
 
 	import { omProtocol, getValueFromLatLong } from '../om-protocol';
 	import { pad } from '$lib/utils/pad';
-	import { domains, domainGroups } from '$lib/utils/domains';
+	import { domains } from '$lib/utils/domains';
 	import { hideZero, variables } from '$lib/utils/variables';
 
 	import type { Variable, Domain } from '../types';
@@ -94,7 +94,6 @@
 	let mapContainer: HTMLElement | null;
 
 	let omUrl: string;
-	let infoBox: HTMLElement | null;
 	let popup: maplibregl.Popup | undefined;
 
 	let url: URL;
@@ -108,7 +107,6 @@
 	const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE);
 
 	let source: maplibregl.Map;
-	let timeSliderApi: { setDisabled: (d: boolean) => void };
 
 	let checkSourceLoadedInterval: ReturnType<typeof setInterval>;
 	let checked = 0;
@@ -129,30 +127,28 @@
 			map.removeSource('omFileSource');
 		}
 
-		if (true) {
-			source = map.addSource('omFileSource', {
-				type: 'raster',
-				url: 'om://' + omUrl,
-				tileSize: TILE_SIZE,
-				volatile: import.meta.env.DEV
-			});
+		source = map.addSource('omFileSource', {
+			type: 'raster',
+			url: 'om://' + omUrl,
+			tileSize: TILE_SIZE,
+			volatile: import.meta.env.DEV
+		});
 
-			map.addLayer(
-				{
-					source: 'omFileSource',
-					id: 'omFileLayer',
-					type: 'raster'
-				},
-				'landuse_overlay_national_park'
-			);
-			checkSourceLoadedInterval = setInterval(() => {
-				checked++;
-				if (source.loaded() || checked >= 30) {
-					checked = 0;
-					clearInterval(checkSourceLoadedInterval);
-				}
-			}, 100);
-		}
+		map.addLayer(
+			{
+				source: 'omFileSource',
+				id: 'omFileLayer',
+				type: 'raster'
+			},
+			'landuse_overlay_national_park'
+		);
+		checkSourceLoadedInterval = setInterval(() => {
+			checked++;
+			if (source.loaded() || checked >= 30) {
+				checked = 0;
+				clearInterval(checkSourceLoadedInterval);
+			}
+		}, 100);
 	};
 
 	let latest = $state();
@@ -399,18 +395,6 @@
 		}
 		return false;
 	});
-
-	// let progress = $state('');
-
-	// onMount(async () => {
-
-	// 	fetch(`https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/progress.json`).then(
-	// 		async (result) => {
-	// 			latest = await result.json();
-	// 			console.log(latest);
-	// 		}
-	// 	);
-	// });
 </script>
 
 <div class="map" id="#map_container" bind:this={mapContainer}></div>
@@ -424,18 +408,6 @@
 		<Drawer.Content class=" h-1/2 ">
 			<div class="flex flex-col items-center overflow-y-scroll">
 				<div class="container px-3">
-					<!-- <div class="mt-3 md:absolute md:top-3 md:left-3">
-						Domain: {domain.value} <br />
-						Model: {modelRunSelected.getUTCFullYear()}-{pad(
-							modelRunSelected.getUTCMonth() + 1
-						)}-{pad(modelRunSelected.getUTCDate())}T{pad(modelRunSelected.getUTCHours())}:00Z
-						<br />
-						Time: {timeSelected.getUTCFullYear()}-{pad(timeSelected.getUTCMonth() + 1)}-{pad(
-							timeSelected.getUTCDate()
-						)}T{pad(timeSelected.getUTCHours())}:00Z <br />
-						Variable: {variable.value}
-						<br />
-					</div> -->
 					<div class="mt-3 flex w-full flex-col gap-6 md:flex-row md:gap-0">
 						<div class="flex flex-col gap-3 md:w-1/4 md:pr-3">
 							<h2 class="text-lg font-bold">Domains</h2>
@@ -537,17 +509,21 @@
 									<h2 class="mb-2 text-lg font-bold">Variables</h2>
 
 									{#each latest.variables as vr, i (i)}
-										<Button
-											class="cursor-pointer bg-blue-200 hover:bg-blue-600 {variable.value === vr
-												? 'bg-blue-400'
-												: ''}"
-											onclick={() => {
-												variable = variables.find((v) => v.value === vr) ?? variables[0];
-												url.searchParams.set('variable', vr);
-												history.pushState({}, '', url);
-												changeOMfileURL();
-											}}>{vr}</Button
-										>
+										{#if !vr.startsWith('wind_') || vr === 'wind_gusts_10m'}
+											{@const vrb = variables.find((v) => v.value === vr)}
+
+											<Button
+												class="cursor-pointer bg-blue-200 hover:bg-blue-600 {variable.value === vr
+													? 'bg-blue-400'
+													: ''}"
+												onclick={() => {
+													variable = vrb ?? variables[0];
+													url.searchParams.set('variable', vr);
+													history.pushState({}, '', url);
+													changeOMfileURL();
+												}}>{vrb ? vrb.label : vr}</Button
+											>
+										{/if}
 									{/each}
 								</div>
 							{:else}
