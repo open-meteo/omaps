@@ -38,10 +38,7 @@ export class RotatedLatLonProjection implements Projection {
 			Math.sin(this.θ) * Math.sin(this.ϕ) * y +
 			Math.cos(this.θ) * z;
 
-		return [
-			-1 * radiansToDegrees(Math.atan2(y2, x2)),
-			-1 * radiansToDegrees(Math.asin(z2))
-		];
+		return [-1 * radiansToDegrees(Math.atan2(y2, x2)), -1 * radiansToDegrees(Math.asin(z2))];
 	}
 
 	reverse(x: number, y: number): [latitude: number, longitude: number] {
@@ -52,8 +49,7 @@ export class RotatedLatLonProjection implements Projection {
 		let lat2 =
 			-1 *
 			Math.asin(
-				Math.cos(this.θ) * Math.sin(lat) -
-					Math.cos(lon) * Math.sin(this.θ) * Math.cos(lat)
+				Math.cos(this.θ) * Math.sin(lat) - Math.cos(lon) * Math.sin(this.θ) * Math.cos(lat)
 			);
 		let lon2 =
 			-1 *
@@ -90,14 +86,9 @@ export class LambertConformalConicProjection implements Projection {
 			} else {
 				this.n =
 					Math.log(Math.cos(ϕ1) / Math.cos(ϕ2)) /
-					Math.log(
-						Math.tan(Math.PI / 4 + ϕ2 / 2) /
-							Math.tan(Math.PI / 4 + ϕ1 / 2)
-					);
+					Math.log(Math.tan(Math.PI / 4 + ϕ2 / 2) / Math.tan(Math.PI / 4 + ϕ1 / 2));
 			}
-			this.F =
-				(Math.cos(ϕ1) * Math.pow(Math.tan(Math.PI / 4 + ϕ1 / 2), this.n)) /
-				this.n;
+			this.F = (Math.cos(ϕ1) * Math.pow(Math.tan(Math.PI / 4 + ϕ1 / 2), this.n)) / this.n;
 			this.ρ0 = this.F / Math.pow(Math.tan(Math.PI / 4 + ϕ0 / 2), this.n);
 
 			if (radius) {
@@ -127,8 +118,7 @@ export class LambertConformalConicProjection implements Projection {
 				? Math.atan2(x_scaled, this.ρ0 - y_scaled)
 				: Math.atan2(-1 * x_scaled, y_scaled - this.ρ0);
 		let ρ =
-			(this.n > 0 ? 1 : -1) *
-			Math.sqrt(Math.pow(x_scaled, 2) + Math.pow(this.ρ0 - y_scaled, 2));
+			(this.n > 0 ? 1 : -1) * Math.sqrt(Math.pow(x_scaled, 2) + Math.pow(this.ρ0 - y_scaled, 2));
 
 		let ϕ_rad = 2 * Math.atan(Math.pow(this.F / ρ, 1 / this.n)) - Math.PI / 2;
 		let λ_rad = this.λ0 + θ / this.n;
@@ -175,8 +165,7 @@ export class LambertAzimuthalEqualAreaProjection implements Projection {
 		let y =
 			this.R *
 			k *
-			(Math.cos(this.ϕ1) * Math.sin(ϕ) -
-				Math.sin(this.ϕ1) * Math.cos(ϕ) * Math.cos(λ - this.λ0));
+			(Math.cos(this.ϕ1) * Math.sin(ϕ) - Math.sin(this.ϕ1) * Math.cos(ϕ) * Math.cos(λ - this.λ0));
 
 		return [x, y];
 	}
@@ -186,15 +175,12 @@ export class LambertAzimuthalEqualAreaProjection implements Projection {
 		y = y / this.R;
 		let ρ = Math.sqrt(x * x + y * y);
 		let c = 2 * Math.asin(0.5 * ρ);
-		let ϕ = Math.asin(
-			Math.cos(c) * Math.sin(this.ϕ1) + (y * Math.sin(c) * Math.cos(this.ϕ1)) / ρ
-		);
+		let ϕ = Math.asin(Math.cos(c) * Math.sin(this.ϕ1) + (y * Math.sin(c) * Math.cos(this.ϕ1)) / ρ);
 		let λ =
 			this.λ0 +
 			Math.atan(
 				(x * Math.sin(c)) /
-					(ρ * Math.cos(this.ϕ1) * Math.cos(c) -
-						y * Math.sin(this.ϕ1) * Math.sin(c))
+					(ρ * Math.cos(this.ϕ1) * Math.cos(c) - y * Math.sin(this.ϕ1) * Math.sin(c))
 			);
 
 		ϕ = radiansToDegrees(ϕ);
@@ -229,14 +215,9 @@ export class StereograpicProjection implements Projection {
 		let λ = degreesToRadians(longitude);
 		let k =
 			(2 * this.R) /
-			(1 +
-				this.sinϕ1 * Math.sin(ϕ) +
-				this.cosϕ1 * Math.cos(ϕ) * Math.cos(λ - this.λ0));
+			(1 + this.sinϕ1 * Math.sin(ϕ) + this.cosϕ1 * Math.cos(ϕ) * Math.cos(λ - this.λ0));
 		let x = k * Math.cos(ϕ) * Math.sin(λ - this.λ0);
-		let y =
-			k *
-			(this.cosϕ1 * Math.sin(ϕ) -
-				this.sinϕ1 * Math.cos(ϕ) * Math.cos(λ - this.λ0));
+		let y = k * (this.cosϕ1 * Math.sin(ϕ) - this.sinϕ1 * Math.cos(ϕ) * Math.cos(λ - this.λ0));
 		return [x, y];
 	}
 
@@ -246,10 +227,7 @@ export class StereograpicProjection implements Projection {
 		let ϕ = Math.asin(Math.cos(c) * this.sinϕ1 + (y * Math.sin(c) * this.cosϕ1) / p);
 		let λ =
 			this.λ0 +
-			Math.atan2(
-				x * Math.sin(c),
-				p * this.cosϕ1 * Math.cos(c) - y * this.sinϕ1 * Math.sin(c)
-			);
+			Math.atan2(x * Math.sin(c), p * this.cosϕ1 * Math.cos(c) - y * this.sinϕ1 * Math.sin(c));
 		return [radiansToDegrees(ϕ), radiansToDegrees(λ)];
 	}
 }
@@ -302,10 +280,7 @@ export class ProjectionGrid {
 		} else if (projectOrigin) {
 			this.dx = dx;
 			this.dy = dy;
-			this.origin = this.projection.forward(
-				latitude as number,
-				longitude as number
-			);
+			this.origin = this.projection.forward(latitude as number, longitude as number);
 		} else {
 			this.dx = dx;
 			this.dy = dy;
@@ -314,13 +289,13 @@ export class ProjectionGrid {
 	}
 
 	findPointInterpolated(lat: number, lon: number) {
-		let [xpos, ypos] = this.projection.forward(lat, lon);
-		let x = (xpos - this.origin[0]) / this.dx;
-		let y = (ypos - this.origin[1]) / this.dy;
-		let xFraction = x - Math.floor(x);
-		let yFraction = y - Math.floor(y);
+		const [xpos, ypos] = this.projection.forward(lat, lon);
+		const x = (xpos - this.origin[0]) / this.dx;
+		const y = (ypos - this.origin[1]) / this.dy;
+		const xFraction = x - Math.floor(x);
+		const yFraction = y - Math.floor(y);
 		if (y < 0 || x < 0 || y >= this.ny || x >= this.nx) {
-			return null;
+			return { index: NaN, xFraction: 0, yFraction: 0 };
 		}
 		return { index: Math.floor(y) * this.nx + Math.floor(x), xFraction, yFraction };
 	}

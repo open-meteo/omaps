@@ -61,20 +61,20 @@ export const interpolate2DHermite = (
 	xFraction: number,
 	yFraction: number
 ) => {
-	// if (import.meta.env.DEV) {
-	// 	if (xFraction < 0.05 && yFraction < 0.05) {
-	// 		return 40;
-	// 	}
-	// 	if (xFraction < 0.05 && yFraction > 0.95) {
-	// 		return 0;
-	// 	}
-	// 	if (xFraction > 0.95 && yFraction > 0.95) {
-	// 		return 40;
-	// 	}
-	// 	if (yFraction < 0.05 && xFraction > 0.95) {
-	// 		return 0;
-	// 	}
-	// }
+	if (import.meta.env.DEV) {
+		if (xFraction < 0.05 && yFraction < 0.05) {
+			return 40;
+		}
+		if (xFraction < 0.05 && yFraction > 0.95) {
+			return 0;
+		}
+		if (xFraction > 0.95 && yFraction > 0.95) {
+			return 40;
+		}
+		if (yFraction < 0.05 && xFraction > 0.95) {
+			return 0;
+		}
+	}
 	// tension = 0 is Hermite with Catmull-Rom. Tension = 1 is bilinear interpolation
 	// 0.5 is somewhat in the middle
 	return interpolateCardinal2D(values, nx, index, xFraction, yFraction, 0.3);
@@ -184,21 +184,27 @@ export const getIndexFromLatLong = (
 	lat: number,
 	lon: number,
 	domain: Domain,
-	ranges: Range[]
+	ranges: Range[] = [
+		{ start: 0, end: domain.grid.ny },
+		{ start: 0, end: domain.grid.nx }
+	]
 ): IndexAndFractions => {
-	const lonMin = domain.grid.lonMin + domain.grid.dx * ranges[1]['start'];
-	const latMin = domain.grid.latMin + domain.grid.dy * ranges[0]['start'];
-	const lonMax = domain.grid.lonMin + domain.grid.dx * ranges[1]['end'];
-	const latMax = domain.grid.latMin + domain.grid.dy * ranges[0]['end'];
+	const dx = domain.grid.dx;
+	const dy = domain.grid.dy;
+
+	const lonMin = domain.grid.lonMin + dx * ranges[1]['start'];
+	const latMin = domain.grid.latMin + dy * ranges[0]['start'];
+	const lonMax = domain.grid.lonMin + dx * ranges[1]['end'];
+	const latMax = domain.grid.latMin + dy * ranges[0]['end'];
 
 	if (lat < latMin || lat > latMax || lon < lonMin || lon > lonMax) {
 		return { index: NaN, xFraction: 0, yFraction: 0 };
 	} else {
-		const x = Math.floor((lon - lonMin) / domain.grid.dx);
-		const y = Math.floor((lat - latMin) / domain.grid.dy);
+		const x = Math.floor((lon - lonMin) / dx);
+		const y = Math.floor((lat - latMin) / dy);
 
-		const xFraction = ((lon - lonMin) % domain.grid.dx) / domain.grid.dx;
-		const yFraction = ((lat - latMin) % domain.grid.dy) / domain.grid.dy;
+		const xFraction = ((lon - lonMin) % dx) / dx;
+		const yFraction = ((lat - latMin) % dy) / dy;
 
 		const index = y * (ranges[1]['end'] - ranges[1]['start']) + x;
 		return { index, xFraction, yFraction };
@@ -207,13 +213,14 @@ export const getIndexFromLatLong = (
 
 export const getIndicesFromBounds = (
 	south: number,
-	east: number,
-	north: number,
 	west: number,
+	north: number,
+	east: number,
 	domain: Domain
-) => {
+): [minX: number, minY: number, maxX: number, maxY: number] => {
 	const dx = domain.grid.dx;
 	const dy = domain.grid.dy;
+
 	const nx = domain.grid.nx;
 	const ny = domain.grid.ny;
 
@@ -223,34 +230,36 @@ export const getIndicesFromBounds = (
 	const xPrecision = String(dx).split('.')[1].length;
 	const yPrecision = String(dy).split('.')[1].length;
 
+	// local sw, ne
 	const s = Number((south - (south % dy)).toFixed(yPrecision));
+	const w = Number((west - (west % dx)).toFixed(xPrecision));
+	const n = Number((north - (north % dy)).toFixed(yPrecision));
 	const e = Number((east - (east % dx)).toFixed(xPrecision));
-	const n = Number((north - (north % dy) + dy).toFixed(yPrecision));
-	const w = Number((west - (west % dx) + dy).toFixed(xPrecision));
 
 	let minX: number, minY: number, maxX: number, maxY: number;
-	if (w - minLon < 0) {
-		minX = 0;
-	} else {
-		minX = Math.round(Math.max((w - minLon) / dx, 0));
-	}
 
 	if (s - minLat < 0) {
 		minY = 0;
 	} else {
-		minY = Math.round(Math.max((s - minLat) / dy, 0));
+		minY = Math.floor(Math.max((s - minLat) / dy - 1, 0));
 	}
 
-	if (e - minLon < 0) {
-		maxX = nx;
+	if (w - minLon < 0) {
+		minX = 0;
 	} else {
-		maxX = Math.round(Math.min((e - minLon) / dx, nx));
+		minX = Math.floor(Math.max((w - minLon) / dx - 1, 0));
 	}
 
 	if (n - minLat < 0) {
 		maxY = ny;
 	} else {
-		maxY = Math.round(Math.min((n - minLat) / dy, ny));
+		maxY = Math.floor(Math.min((n - minLat) / dy + 1, ny));
+	}
+
+	if (e - minLon < 0) {
+		maxX = nx;
+	} else {
+		maxX = Math.floor(Math.min((e - minLon) / dx + 1, nx));
 	}
 
 	return [minX, minY, maxX, maxY];

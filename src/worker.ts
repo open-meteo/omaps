@@ -115,7 +115,7 @@ const getIndexAndFractions = (
 	lat: number,
 	lon: number,
 	domain: Domain,
-	projectionGrid: ProjectionGrid,
+	projectionGrid: ProjectionGrid | null,
 	ranges = [
 		{ start: 0, end: domain.grid.ny },
 		{ start: 0, end: domain.grid.nx }
@@ -158,7 +158,7 @@ self.onmessage = async (message) => {
 
 		colors = colorScales[variable.value.split('_')[0]] ?? colors['temperature'];
 
-		let projectionGrid;
+		let projectionGrid = null;
 		if (domain.grid.projection) {
 			const ny = domain.grid.ny;
 			const latitude = domain.grid.projection.latitude ?? domain.grid.latMin;
@@ -199,7 +199,13 @@ self.onmessage = async (message) => {
 					ranges
 				);
 
-				let px = interpolate2DHermite(values, nx, index, xFraction, yFraction);
+				let px = interpolate2DHermite(
+					values,
+					ranges[1]['end'] - ranges[1]['start'],
+					index,
+					xFraction,
+					yFraction
+				);
 
 				if (hideZero.includes(variable.value)) {
 					if (px < 0.25) {

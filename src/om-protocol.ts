@@ -3,6 +3,8 @@ import { type GetResourceResponse, type RequestParameters } from 'maplibre-gl';
 import {
 	OmFileReader,
 	OmDataType,
+	BlockCacheBackend,
+	S3HttpBackend,
 	MemoryHttpBackend,
 	type TypedArray
 } from '@openmeteo/file-reader';
@@ -25,6 +27,7 @@ import type { TileJSON, TileIndex, Domain, Variable, Bounds, Range } from './typ
 import { DynamicProjection, ProjectionGrid, type Projection } from '$lib/utils/projection';
 
 let dark = false;
+let partial = false;
 let domain: Domain;
 let variable: Variable;
 let currentPath: string;
@@ -45,7 +48,7 @@ let dy: number;
 
 interface FileReader {
 	reader: OmFileReader | undefined;
-	backend: MemoryHttpBackend | undefined;
+	backend: BlockCacheBackend | undefined;
 	child?: OmFileReader | null;
 }
 
@@ -75,7 +78,7 @@ export const getValueFromLatLong = (
 		if (domain.grid.projection) {
 			indexObject = projectionGrid.findPointInterpolated(lat, lon);
 		} else {
-			indexObject = getIndexFromLatLong(lat, lon, domain);
+			indexObject = getIndexFromLatLong(lat, lon, domain, ranges);
 		}
 
 		const { index, xFraction, yFraction } = indexObject ?? {
@@ -175,6 +178,7 @@ const initOMFile = async (url: string): Promise<void> => {
 
 	const urlParams = new URLSearchParams(omParams);
 	dark = urlParams.get('dark') === 'true';
+	partial = urlParams.get('partial') === 'true';
 	domain = domains.find((dm) => dm.value === omUrl.split('/')[4]) ?? domains[0];
 	variable = variables.find((v) => urlParams.get('variable') === v.value) ?? variables[0];
 	mapBounds = urlParams
@@ -191,19 +195,19 @@ const initOMFile = async (url: string): Promise<void> => {
 	);
 
 	if (omUrl !== currentPath) {
-		if (fileReader.child) {
-			fileReader.child.dispose();
-		}
-		if (fileReader.reader) {
-			fileReader.reader.dispose();
-		}
-		if (fileReader.backend) {
-			fileReader.backend.close();
-		}
+		// if (fileReader.child) {
+		// 	fileReader.child.dispose();
+		// }
+		// if (fileReader.reader) {
+		// 	fileReader.reader.dispose();
+		// }
+		// if (fileReader.backend) {
+		// 	fileReader.backend.close();
+		// }
 
-		delete fileReader.child;
-		delete fileReader.reader;
-		delete fileReader.backend;
+		// delete fileReader.child;
+		// delete fileReader.reader;
+		// delete fileReader.backend;
 
 		nx = domain.grid.nx;
 		ny = domain.grid.ny;
@@ -231,41 +235,49 @@ const initOMFile = async (url: string): Promise<void> => {
 			);
 		}
 
-		fileReader.backend = new MemoryHttpBackend({
-			url: omUrl,
-			maxFileSize: 1000 * 1024 * 1024 // 500 MB,
+		const s3_backend = new S3HttpBackend({
+			url: omUrl
+			// debug: true
 		});
+
+		fileReader.backend = new BlockCacheBackend(s3_backend, BigInt(0));
+
 		fileReader.reader = await OmFileReader.create(fileReader.backend).catch(() => {
 			throw new Error(`OMFile error: 404 file not found`);
 		});
 
 		for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
 			const child = await fileReader.reader.getChild(i);
-			if (child.getName() === variable.value) {
-				const dimensions = child.getDimensions();
+			if (child) {
+				if (child.getName() === variable.value) {
+					const dimensions = child.getDimensions();
 
-				// Create ranges for each dimension
-				// ranges = [
-				// 	{ start: mapBoundsIndexes[1], end: mapBoundsIndexes[3] },
-				// 	{ start: mapBoundsIndexes[0], end: mapBoundsIndexes[2] }
-				// ];
-				ranges = [
-					{ start: 0, end: dimensions[0] },
-					{ start: 0, end: dimensions[1] }
-				];
-				let dataValues;
-				try {
-					dataValues = await child.read(OmDataType.FloatArray, ranges);
-				} catch (e) {
-					throw new Error(e);
+					if (partial) {
+						ranges = [
+							{ start: mapBoundsIndexes[1], end: mapBoundsIndexes[3] },
+							{ start: mapBoundsIndexes[0], end: mapBoundsIndexes[2] }
+						];
+					} else {
+						ranges = [
+							{ start: 0, end: dimensions[0] },
+							{ start: 0, end: dimensions[1] }
+						];
+					}
+
+					let dataValues;
+					try {
+						dataValues = await child.read(OmDataType.FloatArray, ranges);
+					} catch (e) {
+						throw new Error(e);
+					}
+
+					fileReader.child = child;
+
+					data = { values: dataValues };
+					break;
+				} else {
+					child.dispose();
 				}
-
-				fileReader.child = child;
-
-				data = { values: dataValues };
-				break;
-			} else {
-				child.dispose();
 			}
 		}
 
@@ -276,31 +288,38 @@ const initOMFile = async (url: string): Promise<void> => {
 		}
 		delete fileReader.child;
 
-		for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
-			const child = await fileReader.reader.getChild(i);
-			if (child.getName() === variable.value) {
-				const dimensions = child.getDimensions();
+		if (fileReader.reader) {
+			for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
+				const child = await fileReader.reader.getChild(i);
+				if (child) {
+					if (child.getName() === variable.value) {
+						const dimensions = child.getDimensions();
 
-				// Create ranges for each dimension
-				// ranges = [
-				// 	{ start: mapBoundsIndexes[1], end: mapBoundsIndexes[3] },
-				// 	{ start: mapBoundsIndexes[0], end: mapBoundsIndexes[2] }
-				// ];
-				ranges = [
-					{ start: 0, end: dimensions[0] },
-					{ start: 0, end: dimensions[1] }
-				];
-				let dataValues = await child.read(OmDataType.FloatArray, ranges);
+						if (partial) {
+							ranges = [
+								{ start: mapBoundsIndexes[1], end: mapBoundsIndexes[3] },
+								{ start: mapBoundsIndexes[0], end: mapBoundsIndexes[2] }
+							];
+						} else {
+							ranges = [
+								{ start: 0, end: dimensions[0] },
+								{ start: 0, end: dimensions[1] }
+							];
+						}
 
-				if (variable.value == 'wind_gusts_10m') {
-					dataValues = dataValues.map((val) => val * 1.94384);
+						let dataValues = await child.read(OmDataType.FloatArray, ranges);
+
+						if (variable.value == 'wind_gusts_10m') {
+							dataValues = dataValues.map((val) => val * 1.94384);
+						}
+
+						fileReader.child = child;
+						data = { values: dataValues };
+						break;
+					} else {
+						child.dispose();
+					}
 				}
-
-				fileReader.child = child;
-				data = { values: dataValues };
-				break;
-			} else {
-				child.dispose();
 			}
 		}
 	}
