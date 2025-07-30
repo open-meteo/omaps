@@ -1,7 +1,7 @@
 import type { TypedArray } from '@openmeteo/file-reader';
 import type { Domain, Bounds, Center, IndexAndFractions } from '../types';
-import type { Projection, ProjectionGrid } from './projection';
 import type { Range } from '../../types';
+import { DynamicProjection, ProjectionGrid, type Projection } from '$lib/utils/projection';
 
 const r2d = 180 / Math.PI;
 export const tile2lon = (x: number, z: number): number => {
@@ -61,20 +61,20 @@ export const interpolate2DHermite = (
 	xFraction: number,
 	yFraction: number
 ) => {
-	if (import.meta.env.DEV) {
-		if (xFraction < 0.05 && yFraction < 0.05) {
-			return 40;
-		}
-		if (xFraction < 0.05 && yFraction > 0.95) {
-			return 0;
-		}
-		if (xFraction > 0.95 && yFraction > 0.95) {
-			return 40;
-		}
-		if (yFraction < 0.05 && xFraction > 0.95) {
-			return 0;
-		}
-	}
+	// if (import.meta.env.DEV) {
+	// 	if (xFraction < 0.05 && yFraction < 0.05) {
+	// 		return 40;
+	// 	}
+	// 	if (xFraction < 0.05 && yFraction > 0.95) {
+	// 		return 0;
+	// 	}
+	// 	if (xFraction > 0.95 && yFraction > 0.95) {
+	// 		return 40;
+	// 	}
+	// 	if (yFraction < 0.05 && xFraction > 0.95) {
+	// 		return 0;
+	// 	}
+	// }
 	// tension = 0 is Hermite with Catmull-Rom. Tension = 1 is bilinear interpolation
 	// 0.5 is somewhat in the middle
 	return interpolateCardinal2D(values, nx, index, xFraction, yFraction, 0.3);
@@ -227,42 +227,62 @@ export const getIndicesFromBounds = (
 	const minLat = domain.grid.latMin;
 	const minLon = domain.grid.lonMin;
 
-	const xPrecision = String(dx).split('.')[1].length;
-	const yPrecision = String(dy).split('.')[1].length;
-
 	// local sw, ne
-	const s = Number((south - (south % dy)).toFixed(yPrecision));
-	const w = Number((west - (west % dx)).toFixed(xPrecision));
-	const n = Number((north - (north % dy)).toFixed(yPrecision));
-	const e = Number((east - (east % dx)).toFixed(xPrecision));
-
+	let s, w, n, e;
 	let minX: number, minY: number, maxX: number, maxY: number;
 
-	if (s - minLat < 0) {
-		minY = 0;
-	} else {
-		minY = Math.floor(Math.max((s - minLat) / dy - 1, 0));
-	}
+	if (domain.grid.projection) {
+		const projectionName = domain.grid.projection.name;
 
-	if (w - minLon < 0) {
-		minX = 0;
-	} else {
-		minX = Math.floor(Math.max((w - minLon) / dx - 1, 0));
-	}
+		const projection = new DynamicProjection(projectionName, domain.grid.projection) as Projection;
+		const projectionGrid = new ProjectionGrid(projection, domain.grid);
 
-	if (n - minLat < 0) {
-		maxY = ny;
-	} else {
-		maxY = Math.floor(Math.min((n - minLat) / dy + 1, ny));
-	}
+		// const [westProjected, southProjected, eastProjected, northProjected] = getLatLonMinMaxProjected(
+		// 	projectionGrid,
+		// 	[s, w, n, e]
+		// );
+		const [x1, y1] = projectionGrid.findPointInterpolated2D(south, west);
+		const [x2, y2] = projectionGrid.findPointInterpolated2D(north, east);
+		minX = Math.floor(x1);
+		minY = Math.floor(y1);
+		maxX = Math.ceil(x2);
+		maxY = Math.ceil(y2);
 
-	if (e - minLon < 0) {
-		maxX = nx;
+		return [minX, minY, maxX, maxY];
 	} else {
-		maxX = Math.floor(Math.min((e - minLon) / dx + 1, nx));
-	}
+		const xPrecision = String(dx).split('.')[1].length;
+		const yPrecision = String(dy).split('.')[1].length;
 
-	return [minX, minY, maxX, maxY];
+		s = Number((south - (south % dy)).toFixed(yPrecision));
+		w = Number((west - (west % dx)).toFixed(xPrecision));
+		n = Number((north - (north % dy) + dy).toFixed(yPrecision));
+		e = Number((east - (east % dx) + dx).toFixed(xPrecision));
+
+		if (s - minLat < 0) {
+			minY = 0;
+		} else {
+			minY = Math.floor(Math.max((s - minLat) / dy - 1, 0));
+		}
+
+		if (w - minLon < 0) {
+			minX = 0;
+		} else {
+			minX = Math.floor(Math.max((w - minLon) / dx - 1, 0));
+		}
+
+		if (n - minLat < 0) {
+			maxY = ny;
+		} else {
+			maxY = Math.ceil(Math.min((n - minLat) / dy + 1, ny));
+		}
+
+		if (e - minLon < 0) {
+			maxX = nx;
+		} else {
+			maxX = Math.ceil(Math.min((e - minLon) / dx + 1, nx));
+		}
+		return [minX, minY, maxX, maxY];
+	}
 };
 
 // 1D Cardinal Spline for 4 values
@@ -366,10 +386,10 @@ export const getBoundsFromGrid = (
 	nx: number,
 	ny: number
 ): Bounds => {
-	let minLon = lonMin;
-	let minLat = latMin;
-	let maxLon = minLon + dx * nx;
-	let maxLat = minLat + dy * ny;
+	const minLon = lonMin;
+	const minLat = latMin;
+	const maxLon = minLon + dx * nx;
+	const maxLat = minLat + dy * ny;
 	return [minLon, minLat, maxLon, maxLat];
 };
 
@@ -381,7 +401,7 @@ export const getBoundsFromBorderPoints = (
 	let minLat = 90;
 	let maxLon = -180;
 	let maxLat = -90;
-	for (let borderPoint of borderPoints) {
+	for (const borderPoint of borderPoints) {
 		const borderPointLatLon = projection.reverse(borderPoint[0], borderPoint[1]);
 		if (borderPointLatLon[0] < minLat) {
 			minLat = borderPointLatLon[0];

@@ -1,5 +1,6 @@
 import { degreesToRadians, radiansToDegrees } from './math';
-import type { Domain } from '../types';
+import type { Domain } from '../../types';
+import type { Range } from '../../types';
 
 export interface Projection {
 	forward(latitude: number, longitude: number): [x: number, y: number];
@@ -21,19 +22,19 @@ export class RotatedLatLonProjection implements Projection {
 	}
 
 	forward(latitude: number, longitude: number): [x: number, y: number] {
-		let lon = degreesToRadians(longitude);
-		let lat = degreesToRadians(latitude);
+		const lon = degreesToRadians(longitude);
+		const lat = degreesToRadians(latitude);
 
-		let x = Math.cos(lon) * Math.cos(lat);
-		let y = Math.sin(lon) * Math.cos(lat);
-		let z = Math.sin(lat);
+		const x = Math.cos(lon) * Math.cos(lat);
+		const y = Math.sin(lon) * Math.cos(lat);
+		const z = Math.sin(lat);
 
-		let x2 =
+		const x2 =
 			Math.cos(this.θ) * Math.cos(this.ϕ) * x +
 			Math.cos(this.θ) * Math.sin(this.ϕ) * y +
 			Math.sin(this.θ) * z;
-		let y2 = -Math.sin(this.ϕ) * x + Math.cos(this.ϕ) * y;
-		let z2 =
+		const y2 = -Math.sin(this.ϕ) * x + Math.cos(this.ϕ) * y;
+		const z2 =
 			-Math.sin(this.θ) * Math.cos(this.ϕ) * x -
 			Math.sin(this.θ) * Math.sin(this.ϕ) * y +
 			Math.cos(this.θ) * z;
@@ -42,16 +43,16 @@ export class RotatedLatLonProjection implements Projection {
 	}
 
 	reverse(x: number, y: number): [latitude: number, longitude: number] {
-		let lon = degreesToRadians(x);
-		let lat = degreesToRadians(y);
+		const lon = degreesToRadians(x);
+		const lat = degreesToRadians(y);
 
 		// quick solution without conversion in cartesian space
-		let lat2 =
+		const lat2 =
 			-1 *
 			Math.asin(
 				Math.cos(this.θ) * Math.sin(lat) - Math.cos(lon) * Math.sin(this.θ) * Math.cos(lat)
 			);
-		let lon2 =
+		const lon2 =
 			-1 *
 			(Math.atan2(
 				Math.sin(lon),
@@ -77,9 +78,9 @@ export class LambertConformalConicProjection implements Projection {
 			const ϕ2_dec = projectionData.ϕ2;
 			const radius = projectionData.radius;
 			this.λ0 = degreesToRadians(((λ0_dec + 180) % 360) - 180);
-			let ϕ0 = degreesToRadians(ϕ0_dec);
-			let ϕ1 = degreesToRadians(ϕ1_dec);
-			let ϕ2 = degreesToRadians(ϕ2_dec);
+			const ϕ0 = degreesToRadians(ϕ0_dec);
+			const ϕ1 = degreesToRadians(ϕ1_dec);
+			const ϕ2 = degreesToRadians(ϕ2_dec);
 
 			if (ϕ1 == ϕ2) {
 				this.n = Math.sin(ϕ1);
@@ -98,33 +99,33 @@ export class LambertConformalConicProjection implements Projection {
 	}
 
 	forward(latitude: number, longitude: number): [x: number, y: number] {
-		let ϕ = degreesToRadians(latitude);
-		let λ = degreesToRadians(longitude);
+		const ϕ = degreesToRadians(latitude);
+		const λ = degreesToRadians(longitude);
 		// If (λ - λ0) exceeds the range:±: 180°, 360° should be added or subtracted.
-		let θ = this.n * (λ - this.λ0);
+		const θ = this.n * (λ - this.λ0);
 
-		let p = this.F / Math.pow(Math.tan(Math.PI / 4 + ϕ / 2), this.n);
-		let x = this.R * p * Math.sin(θ);
-		let y = this.R * (this.ρ0 - p * Math.cos(θ));
+		const p = this.F / Math.pow(Math.tan(Math.PI / 4 + ϕ / 2), this.n);
+		const x = this.R * p * Math.sin(θ);
+		const y = this.R * (this.ρ0 - p * Math.cos(θ));
 		return [x, y];
 	}
 
 	reverse(x: number, y: number): [latitude: number, longitude: number] {
-		let x_scaled = x / this.R;
-		let y_scaled = y / this.R;
+		const x_scaled = x / this.R;
+		const y_scaled = y / this.R;
 
-		let θ =
+		const θ =
 			this.n >= 0
 				? Math.atan2(x_scaled, this.ρ0 - y_scaled)
 				: Math.atan2(-1 * x_scaled, y_scaled - this.ρ0);
-		let ρ =
+		const ρ =
 			(this.n > 0 ? 1 : -1) * Math.sqrt(Math.pow(x_scaled, 2) + Math.pow(this.ρ0 - y_scaled, 2));
 
-		let ϕ_rad = 2 * Math.atan(Math.pow(this.F / ρ, 1 / this.n)) - Math.PI / 2;
-		let λ_rad = this.λ0 + θ / this.n;
+		const ϕ_rad = 2 * Math.atan(Math.pow(this.F / ρ, 1 / this.n)) - Math.PI / 2;
+		const λ_rad = this.λ0 + θ / this.n;
 
-		let ϕ = radiansToDegrees(ϕ_rad);
-		let λ = radiansToDegrees(λ_rad);
+		const ϕ = radiansToDegrees(ϕ_rad);
+		const λ = radiansToDegrees(λ_rad);
 
 		return [ϕ, λ > 180 ? λ - 360 : λ];
 	}
@@ -151,18 +152,18 @@ export class LambertAzimuthalEqualAreaProjection implements Projection {
 	}
 
 	forward(latitude: number, longitude: number): [x: number, y: number] {
-		let λ = degreesToRadians(longitude);
-		let ϕ = degreesToRadians(latitude);
+		const λ = degreesToRadians(longitude);
+		const ϕ = degreesToRadians(latitude);
 
-		let k = Math.sqrt(
+		const k = Math.sqrt(
 			2 /
 				(1 +
 					Math.sin(this.ϕ1) * Math.sin(ϕ) +
 					Math.cos(this.ϕ1) * Math.cos(ϕ) * Math.cos(λ - this.λ0))
 		);
 
-		let x = this.R * k * Math.cos(ϕ) * Math.sin(λ - this.λ0);
-		let y =
+		const x = this.R * k * Math.cos(ϕ) * Math.sin(λ - this.λ0);
+		const y =
 			this.R *
 			k *
 			(Math.cos(this.ϕ1) * Math.sin(ϕ) - Math.sin(this.ϕ1) * Math.cos(ϕ) * Math.cos(λ - this.λ0));
@@ -173,8 +174,8 @@ export class LambertAzimuthalEqualAreaProjection implements Projection {
 	reverse(x: number, y: number): [latitude: number, longitude: number] {
 		x = x / this.R;
 		y = y / this.R;
-		let ρ = Math.sqrt(x * x + y * y);
-		let c = 2 * Math.asin(0.5 * ρ);
+		const ρ = Math.sqrt(x * x + y * y);
+		const c = 2 * Math.asin(0.5 * ρ);
 		let ϕ = Math.asin(Math.cos(c) * Math.sin(this.ϕ1) + (y * Math.sin(c) * Math.cos(this.ϕ1)) / ρ);
 		let λ =
 			this.λ0 +
@@ -252,51 +253,70 @@ export class ProjectionGrid {
 	origin;
 	dx; //meters
 	dy; //meters
+	range;
 
 	constructor(
 		projection: Projection,
-		nx: number,
-		ny: number,
-
-		latitude: number | number[],
-		longitude: number | number[],
-
-		dx = 0,
-		dy = 0,
-
-		projectOrigin = true
+		grid: Domain['grid'],
+		ranges: Range[] = [
+			{ start: 0, end: grid.ny },
+			{ start: 0, end: grid.nx }
+		]
 	) {
+		this.ranges = ranges;
 		this.projection = projection;
-		this.nx = nx;
-		this.ny = ny;
+
+		const latitude = grid.projection?.latitude ?? grid.latMin;
+		const longitude = grid.projection?.longitude ?? grid.lonMin;
+		const projectOrigin = grid.projection?.projectOrigin ?? true;
+
+		this.nx = grid.nx;
+		this.ny = grid.ny;
 		if (latitude && Array === latitude.constructor) {
-			latitude as number[];
-			longitude as number[];
-			let sw = projection.forward(latitude[0], longitude[0]);
-			let ne = projection.forward(latitude[1], longitude[1]);
+			const sw = projection.forward(latitude[0], longitude[0]);
+			const ne = projection.forward(latitude[1], longitude[1]);
 			this.origin = sw;
-			this.dx = (ne[0] - sw[0]) / (nx - 1);
-			this.dy = (ne[1] - sw[1]) / (ny - 1);
+			this.dx = (ne[0] - sw[0]) / (this.nx - 1);
+			this.dy = (ne[1] - sw[1]) / (this.ny - 1);
 		} else if (projectOrigin) {
-			this.dx = dx;
-			this.dy = dy;
+			this.dx = grid.dx;
+			this.dy = grid.dy;
 			this.origin = this.projection.forward(latitude as number, longitude as number);
 		} else {
-			this.dx = dx;
-			this.dy = dy;
+			this.dx = grid.dx;
+			this.dy = grid.dy;
 			this.origin = [latitude as number, longitude as number];
 		}
 	}
 
 	findPointInterpolated(lat: number, lon: number) {
 		const [xpos, ypos] = this.projection.forward(lat, lon);
+
 		const x = (xpos - this.origin[0]) / this.dx;
 		const y = (ypos - this.origin[1]) / this.dy;
+
 		const xFraction = x - Math.floor(x);
 		const yFraction = y - Math.floor(y);
+
 		if (y < 0 || x < 0 || y >= this.ny || x >= this.nx) {
 			return { index: NaN, xFraction: 0, yFraction: 0 };
 		}
-		return { index: Math.floor(y) * this.nx + Math.floor(x), xFraction, yFraction };
+		const index = Math.floor(y) * this.nx + Math.floor(x);
+		return { index: index, xFraction, yFraction };
+	}
+
+	findPointInterpolated2D(lat: number, lon: number) {
+		const [xpos, ypos] = this.projection.forward(lat, lon);
+
+		const x = Math.max(
+			Math.min((xpos - this.origin[0]) / this.dx, this.ranges[1]['end'] - this.ranges[1]['start']),
+			0
+		);
+		const y = Math.max(
+			Math.min((ypos - this.origin[1]) / this.dy, this.ranges[0]['end'] - this.ranges[0]['start']),
+			0
+		);
+
+		return [x, y];
 	}
 }

@@ -29,16 +29,7 @@ const getCenterPoint = (grid: Domain['grid']) => {
 	let center;
 	if (grid.projection) {
 		const projection = new DynamicProjection(grid.projection.name, grid.projection) as Projection;
-		const projectionGrid = new ProjectionGrid(
-			projection,
-			grid.nx,
-			grid.ny,
-			grid.projection.latitude,
-			grid.projection.longitude,
-			grid.dx,
-			grid.dy,
-			grid.projection.projectOrigin
-		);
+		const projectionGrid = new ProjectionGrid(projection, grid);
 		const borderPoints = getBorderPoints(projectionGrid);
 		const bounds = getBoundsFromBorderPoints(borderPoints, projection);
 		center = getCenterFromBounds(bounds);

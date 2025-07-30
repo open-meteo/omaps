@@ -1,13 +1,6 @@
 import { type GetResourceResponse, type RequestParameters } from 'maplibre-gl';
 
-import {
-	OmFileReader,
-	OmDataType,
-	BlockCacheBackend,
-	S3HttpBackend,
-	MemoryHttpBackend,
-	type TypedArray
-} from '@openmeteo/file-reader';
+import { setupGlobalCache, type TypedArray } from '@openmeteo/file-reader';
 
 import {
 	interpolate2DHermite,
@@ -24,7 +17,8 @@ import { variables } from '$lib//utils/variables';
 import TileWorker from './worker?worker';
 
 import type { TileJSON, TileIndex, Domain, Variable, Bounds, Range } from './types';
-import { DynamicProjection, ProjectionGrid, type Projection } from '$lib/utils/projection';
+import { ProjectionGrid, type Projection } from '$lib/utils/projection';
+import { OMapsFileReader } from './omaps-reader';
 
 let dark = false;
 let partial = false;
@@ -32,12 +26,12 @@ let domain: Domain;
 let variable: Variable;
 let currentPath: string;
 let mapBounds: number[];
+let omapsFileReader: OMapsFileReader;
 let mapBoundsIndexes: number[];
 let ranges: Range[];
 
 let projection: Projection;
 let projectionGrid: ProjectionGrid;
-let projectionName: string;
 
 let nx: number;
 let ny: number;
@@ -46,21 +40,10 @@ let latMin: number;
 let dx: number;
 let dy: number;
 
-interface FileReader {
-	reader: OmFileReader | undefined;
-	backend: BlockCacheBackend | undefined;
-	child?: OmFileReader | null;
-}
+setupGlobalCache();
 
-const fileReader: FileReader = {
-	reader: undefined,
-	backend: undefined,
-	child: undefined
-};
-
-interface Data {
+export interface Data {
 	values: TypedArray | undefined;
-	//directions?: TypedArray | undefined;
 }
 
 let data: Data;
@@ -121,7 +104,8 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 		domain,
 		variable,
 		ranges,
-		dark: dark
+		dark: dark,
+		mapBounds: mapBounds
 	});
 	const tilePromise = new Promise<ImageBitmap>((resolve) => {
 		worker.onmessage = async (message) => {
@@ -160,7 +144,14 @@ const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 		const borderPoints = getBorderPoints(projectionGrid);
 		bounds = getBoundsFromBorderPoints(borderPoints, projection);
 	} else {
-		bounds = getBoundsFromGrid(lonMin, latMin, dx, dy, nx, ny);
+		bounds = getBoundsFromGrid(
+			domain.grid.lonMin,
+			domain.grid.latMin,
+			domain.grid.dx,
+			domain.grid.dy,
+			domain.grid.nx,
+			domain.grid.ny
+		);
 	}
 
 	return {
@@ -186,7 +177,7 @@ const initOMFile = async (url: string): Promise<void> => {
 		?.split(',')
 		.map((b: string): number => Number(b)) as number[];
 
-	let mapBoundsIndexes = getIndicesFromBounds(
+	mapBoundsIndexes = getIndicesFromBounds(
 		mapBounds[0],
 		mapBounds[1],
 		mapBounds[2],
@@ -194,134 +185,30 @@ const initOMFile = async (url: string): Promise<void> => {
 		domain
 	);
 
-	if (omUrl !== currentPath) {
-		// if (fileReader.child) {
-		// 	fileReader.child.dispose();
-		// }
-		// if (fileReader.reader) {
-		// 	fileReader.reader.dispose();
-		// }
-		// if (fileReader.backend) {
-		// 	fileReader.backend.close();
-		// }
-
-		// delete fileReader.child;
-		// delete fileReader.reader;
-		// delete fileReader.backend;
-
-		nx = domain.grid.nx;
-		ny = domain.grid.ny;
-		latMin = domain.grid.latMin;
-		lonMin = domain.grid.lonMin;
-		dx = domain.grid.dx;
-		dy = domain.grid.dy;
-
-		if (domain.grid.projection) {
-			const latitude = domain.grid.projection.latitude ?? domain.grid.latMin;
-			const longitude = domain.grid.projection.longitude ?? domain.grid.lonMin;
-			const projectOrigin = domain.grid.projection.projectOrigin ?? true;
-
-			projectionName = domain.grid.projection.name;
-			projection = new DynamicProjection(projectionName, domain.grid.projection) as Projection;
-			projectionGrid = new ProjectionGrid(
-				projection,
-				nx,
-				ny,
-				latitude,
-				longitude,
-				dx,
-				dy,
-				projectOrigin
-			);
-		}
-
-		const s3_backend = new S3HttpBackend({
-			url: omUrl
-			// debug: true
-		});
-
-		fileReader.backend = new BlockCacheBackend(s3_backend, BigInt(0));
-
-		fileReader.reader = await OmFileReader.create(fileReader.backend).catch(() => {
-			throw new Error(`OMFile error: 404 file not found`);
-		});
-
-		for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
-			const child = await fileReader.reader.getChild(i);
-			if (child) {
-				if (child.getName() === variable.value) {
-					const dimensions = child.getDimensions();
-
-					if (partial) {
-						ranges = [
-							{ start: mapBoundsIndexes[1], end: mapBoundsIndexes[3] },
-							{ start: mapBoundsIndexes[0], end: mapBoundsIndexes[2] }
-						];
-					} else {
-						ranges = [
-							{ start: 0, end: dimensions[0] },
-							{ start: 0, end: dimensions[1] }
-						];
-					}
-
-					let dataValues;
-					try {
-						dataValues = await child.read(OmDataType.FloatArray, ranges);
-					} catch (e) {
-						throw new Error(e);
-					}
-
-					fileReader.child = child;
-
-					data = { values: dataValues };
-					break;
-				} else {
-					child.dispose();
-				}
-			}
-		}
-
-		currentPath = omUrl;
+	if (partial) {
+		ranges = [
+			{ start: mapBoundsIndexes[1], end: mapBoundsIndexes[3] },
+			{ start: mapBoundsIndexes[0], end: mapBoundsIndexes[2] }
+		];
 	} else {
-		if (fileReader.child) {
-			fileReader.child.dispose();
-		}
-		delete fileReader.child;
+		ranges = [
+			{ start: 0, end: domain.grid.ny },
+			{ start: 0, end: domain.grid.nx }
+		];
+	}
 
-		if (fileReader.reader) {
-			for (const i of [...Array(fileReader.reader.numberOfChildren())].map((_, i) => i)) {
-				const child = await fileReader.reader.getChild(i);
-				if (child) {
-					if (child.getName() === variable.value) {
-						const dimensions = child.getDimensions();
+	if (!omapsFileReader) {
+		omapsFileReader = new OMapsFileReader(domain, partial);
+	}
 
-						if (partial) {
-							ranges = [
-								{ start: mapBoundsIndexes[1], end: mapBoundsIndexes[3] },
-								{ start: mapBoundsIndexes[0], end: mapBoundsIndexes[2] }
-							];
-						} else {
-							ranges = [
-								{ start: 0, end: dimensions[0] },
-								{ start: 0, end: dimensions[1] }
-							];
-						}
-
-						let dataValues = await child.read(OmDataType.FloatArray, ranges);
-
-						if (variable.value == 'wind_gusts_10m') {
-							dataValues = dataValues.map((val) => val * 1.94384);
-						}
-
-						fileReader.child = child;
-						data = { values: dataValues };
-						break;
-					} else {
-						child.dispose();
-					}
-				}
-			}
-		}
+	if (omUrl !== currentPath) {
+		currentPath = omUrl;
+		omapsFileReader.setReaderData(domain, partial);
+		await omapsFileReader.init(omUrl);
+		data = await omapsFileReader.iterateChildren(variable, ranges);
+	} else {
+		omapsFileReader.setReaderData(domain, partial);
+		data = await omapsFileReader.iterateChildren(variable, ranges);
 	}
 };
 

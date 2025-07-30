@@ -296,27 +296,27 @@
 			// 	maxzoom: 16
 			// });
 
-			// map.addSource('hillshadeSource', {
-			// 	type: 'raster-dem',
-			// 	tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
-			// 	tileSize: 256,
-			// 	maxzoom: 16
-			// });
+			map.addSource('hillshadeSource', {
+				type: 'raster-dem',
+				tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
+				tileSize: 256,
+				maxzoom: 16
+			});
 
-			// map.addLayer(
-			// 	{
-			// 		source: 'hillshadeSource',
-			// 		id: 'hillshadeLayer',
-			// 		type: 'hillshade',
-			// 		paint: {
-			// 			'hillshade-method': 'igor',
-			// 			//'hillshade-exaggeration': 1,
-			// 			'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
-			// 			'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
-			// 		}
-			// 	},
-			// 	'landuse_overlay_national_park'
-			// );
+			map.addLayer(
+				{
+					source: 'hillshadeSource',
+					id: 'hillshadeLayer',
+					type: 'hillshade',
+					paint: {
+						'hillshade-method': 'igor',
+						//'hillshade-exaggeration': 1,
+						'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
+						'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
+					}
+				},
+				'landuse_overlay_national_park'
+			);
 
 			// map.addControl(
 			// 	new maplibregl.TerrainControl({
@@ -529,6 +529,7 @@
 												d.toISOString().replace(/[:Z]/g, '').slice(0, 15)
 											);
 											pushState(url + map._hash.getHashString(), {});
+											changeOMfileURL();
 										}}
 										>{d.getUTCFullYear() +
 											'-' +

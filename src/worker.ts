@@ -123,7 +123,7 @@ const getIndexAndFractions = (
 ) => {
 	let indexObject: IndexAndFractions;
 	if (domain.grid.projection && projectionGrid) {
-		indexObject = projectionGrid.findPointInterpolated(lat, lon);
+		indexObject = projectionGrid.findPointInterpolated(lat, lon, ranges);
 	} else {
 		indexObject = getIndexFromLatLong(lat, lon, domain, ranges);
 	}
@@ -146,11 +146,10 @@ self.onmessage = async (message) => {
 		const z = message.data.z;
 		const values = message.data.data.values;
 		const ranges = message.data.ranges;
-		//const directions = message.data.data.directions;
+		const mapBounds = message.data.mapBounds;
 
 		const domain = message.data.domain;
 		const variable = message.data.variable;
-		const nx = domain.grid.nx;
 
 		const pixels = TILE_SIZE * TILE_SIZE;
 		const rgba = new Uint8ClampedArray(pixels * 4);
@@ -160,29 +159,12 @@ self.onmessage = async (message) => {
 
 		let projectionGrid = null;
 		if (domain.grid.projection) {
-			const ny = domain.grid.ny;
-			const latitude = domain.grid.projection.latitude ?? domain.grid.latMin;
-			const longitude = domain.grid.projection.longitude ?? domain.grid.lonMin;
-			const dx = domain.grid.dx;
-			const dy = domain.grid.dy;
-			const projectOrigin = domain.grid.projection.projectOrigin ?? true;
-
 			const projectionName = domain.grid.projection.name;
-
 			const projection = new DynamicProjection(
 				projectionName,
 				domain.grid.projection
 			) as Projection;
-			projectionGrid = new ProjectionGrid(
-				projection,
-				nx,
-				ny,
-				latitude,
-				longitude,
-				dx,
-				dy,
-				projectOrigin
-			);
+			projectionGrid = new ProjectionGrid(projection, domain.grid, ranges);
 		}
 
 		for (let i = 0; i < TILE_SIZE; i++) {
