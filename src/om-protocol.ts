@@ -17,7 +17,7 @@ import { variables } from '$lib//utils/variables';
 import TileWorker from './worker?worker';
 
 import type { TileJSON, TileIndex, Domain, Variable, Bounds, Range } from './types';
-import { ProjectionGrid, type Projection } from '$lib/utils/projection';
+import { DynamicProjection, ProjectionGrid, type Projection } from '$lib/utils/projection';
 import { OMapsFileReader } from './omaps-reader';
 
 let dark = false;
@@ -141,6 +141,10 @@ const renderTile = async (url: string) => {
 const getTilejson = async (fullUrl: string): Promise<TileJSON> => {
 	let bounds: Bounds;
 	if (domain.grid.projection) {
+		const projectionName = domain.grid.projection.name;
+		projection = new DynamicProjection(projectionName, domain.grid.projection) as Projection;
+		projectionGrid = new ProjectionGrid(projection, domain.grid);
+
 		const borderPoints = getBorderPoints(projectionGrid);
 		bounds = getBoundsFromBorderPoints(borderPoints, projection);
 	} else {
