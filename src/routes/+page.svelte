@@ -22,6 +22,7 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Drawer from '$lib/components/ui/drawer';
 
+	let partial = $state(false);
 	let sheetOpen = $state(false);
 	let drawerOpen = $state(false);
 
@@ -85,6 +86,32 @@
 				map.setStyle(
 					`https://maptiler.servert.nl/styles/basic-world-maps${mode.current === 'dark' ? '-dark' : ''}/style.json`
 				);
+				setTimeout(() => changeOMfileURL(), 500);
+			});
+			return div;
+		}
+		onRemove() {}
+	}
+
+	class PartialButton {
+		onAdd() {
+			const div = document.createElement('div');
+			div.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+
+			const partialSVG = `<button style="display:flex;justify-content:center;align-items:center;">
+				<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" stroke-width="1.2" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-database-zap-icon lucide-database-zap"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 15 21.84"/><path d="M21 5V8"/><path d="M21 12L18 17H22L19 22"/><path d="M3 12A9 3 0 0 0 14.59 14.87"/></svg>
+             </button>`;
+
+			const fullSVG = `<button style="display:flex;justify-content:center;align-items:center;">
+				<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" stroke-width="1.2" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-database-icon lucide-database"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+        </button>`;
+			div.innerHTML = partial ? partialSVG : fullSVG;
+			div.addEventListener('contextmenu', (e) => e.preventDefault());
+			div.addEventListener('click', () => {
+				partial = !partial;
+				div.innerHTML = partial ? partialSVG : fullSVG;
+				url.searchParams.set('partial', String(partial));
+				pushState(url + map._hash.getHashString(), {});
 				setTimeout(() => changeOMfileURL(), 500);
 			});
 			return div;
@@ -200,6 +227,10 @@
 		} else {
 			variable = variables.find((v) => v.value === import.meta.env.VITE_VARIABLE) ?? variables[0];
 		}
+
+		if (params.get('partial')) {
+			partial = params.get('partial') === 'true';
+		}
 	});
 
 	let showPopup = false;
@@ -249,54 +280,55 @@
 
 		map.on('load', async () => {
 			mapBounds = map.getBounds();
-			map.setSky({
-				'sky-color': '#000000',
-				'sky-horizon-blend': 0.8,
-				'horizon-color': '#80C1FF',
-				'horizon-fog-blend': 0.6,
-				'fog-color': '#D6EAFF',
-				'fog-ground-blend': 0
-			});
+			// map.setSky({
+			// 	'sky-color': '#000000',
+			// 	'sky-horizon-blend': 0.8,
+			// 	'horizon-color': '#80C1FF',
+			// 	'horizon-fog-blend': 0.6,
+			// 	'fog-color': '#D6EAFF',
+			// 	'fog-ground-blend': 0
+			// });
 
-			map.addSource('terrainSource', {
-				type: 'raster-dem',
-				tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
-				tileSize: 256,
-				maxzoom: 16
-			});
+			// map.addSource('terrainSource', {
+			// 	type: 'raster-dem',
+			// 	tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
+			// 	tileSize: 256,
+			// 	maxzoom: 16
+			// });
 
-			map.addSource('hillshadeSource', {
-				type: 'raster-dem',
-				tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
-				tileSize: 256,
-				maxzoom: 16
-			});
+			// map.addSource('hillshadeSource', {
+			// 	type: 'raster-dem',
+			// 	tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
+			// 	tileSize: 256,
+			// 	maxzoom: 16
+			// });
 
-			map.addLayer(
-				{
-					source: 'hillshadeSource',
-					id: 'hillshadeLayer',
-					type: 'hillshade',
-					paint: {
-						'hillshade-method': 'igor',
-						//'hillshade-exaggeration': 1,
-						'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
-						'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
-					}
-				},
-				'landuse_overlay_national_park'
-			);
+			// map.addLayer(
+			// 	{
+			// 		source: 'hillshadeSource',
+			// 		id: 'hillshadeLayer',
+			// 		type: 'hillshade',
+			// 		paint: {
+			// 			'hillshade-method': 'igor',
+			// 			//'hillshade-exaggeration': 1,
+			// 			'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
+			// 			'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
+			// 		}
+			// 	},
+			// 	'landuse_overlay_national_park'
+			// );
 
-			map.addControl(
-				new maplibregl.TerrainControl({
-					source: 'terrainSource',
-					exaggeration: 1
-				})
-			);
+			// map.addControl(
+			// 	new maplibregl.TerrainControl({
+			// 		source: 'terrainSource',
+			// 		exaggeration: 1
+			// 	})
+			// );
 
 			map.addControl(new SettingsButton());
 			map.addControl(new VariableButton());
 			map.addControl(new DarkModeButton());
+			map.addControl(new PartialButton());
 
 			latest = await getDomainData();
 			omUrl = getOMUrl();
@@ -388,7 +420,7 @@
 	let latestRequest = $derived(getDomainData());
 
 	const getOMUrl = () => {
-		return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${modelRunSelected.getUTCFullYear()}/${pad(modelRunSelected.getUTCMonth() + 1)}/${pad(modelRunSelected.getUTCDate())}/${pad(modelRunSelected.getUTCHours())}00Z/${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())}T${pad(timeSelected.getUTCHours())}00.om?dark=${darkMode}&variable=${variable.value}&bounds=${mapBounds.getSouth()},${mapBounds.getEast()},${mapBounds.getNorth()},${mapBounds.getWest()}`;
+		return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${modelRunSelected.getUTCFullYear()}/${pad(modelRunSelected.getUTCMonth() + 1)}/${pad(modelRunSelected.getUTCDate())}/${pad(modelRunSelected.getUTCHours())}00Z/${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())}T${pad(timeSelected.getUTCHours())}00.om?dark=${darkMode}&variable=${variable.value}&bounds=${mapBounds.getSouth()},${mapBounds.getWest()},${mapBounds.getNorth()},${mapBounds.getEast()}&partial=${partial}`;
 	};
 
 	const timeValid = $derived.by(async () => {
