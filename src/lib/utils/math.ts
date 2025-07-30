@@ -1,7 +1,7 @@
 import type { TypedArray } from '@openmeteo/file-reader';
-import type { Domain, Bounds, Center, IndexAndFractions } from '../types';
+import type { Domain, Bounds, Center, IndexAndFractions } from '../../types';
 import type { Range } from '../../types';
-import { DynamicProjection, ProjectionGrid, type Projection } from '$lib/utils/projection';
+import { DynamicProjection, ProjectionGrid, type Projection } from './projection';
 
 const r2d = 180 / Math.PI;
 export const tile2lon = (x: number, z: number): number => {

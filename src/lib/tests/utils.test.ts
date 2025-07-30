@@ -3,8 +3,8 @@ import { RotatedLatLonProjection, LambertConformalConicProjection } from '../uti
 
 import { domains } from '../utils/domains';
 
-let dmiDomain = domains.find((d) => d.value === 'dmi_harmonie_arome_europe');
-let knmiDomain = domains.find((d) => d.value === 'knmi_harmonie_arome_europe');
+const dmiDomain = domains.find((d) => d.value === 'dmi_harmonie_arome_europe');
+const knmiDomain = domains.find((d) => d.value === 'knmi_harmonie_arome_europe');
 
 test('Test LambertConformalConicProjection for DMI', () => {
 	const proj = new LambertConformalConicProjection(dmiDomain.grid.projection);
