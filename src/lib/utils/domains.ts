@@ -10,19 +10,19 @@ import { DynamicProjection, ProjectionGrid, type Projection } from './projection
 
 export const domainGroups = [
 	//'bom',
-	'dmi',
-	'dwd',
-	'ecmwf',
-	'cmc_gem',
-	'ncep',
-	'italia_meteo',
-	'jma',
-	'kma',
-	'knmi',
-	'meteofrance',
-	'metno',
-	'meteoswiss',
-	'ukmo'
+	{ value: 'dmi', label: 'DMI Denmark' },
+	{ value: 'dwd', label: 'DWD Germany' },
+	{ value: 'ecmwf', label: 'ECMWF' },
+	{ value: 'cmc_gem', label: 'GEM Canada' },
+	{ value: 'ncep', label: 'NOAA U.S.' },
+	{ value: 'italia_meteo', label: 'ItaliaMeteo' },
+	{ value: 'jma', label: 'JMA Japan' },
+	{ value: 'kma', label: 'KMA Korea' },
+	{ value: 'knmi', label: 'KNMI Netherlands' },
+	{ value: 'meteofrance', label: 'Météo-France' },
+	{ value: 'metno', label: 'MET Norway' },
+	{ value: 'meteoswiss', label: 'MeteoSwiss' },
+	{ value: 'ukmo', label: 'UKMO' }
 ];
 
 const getCenterPoint = (grid: Domain['grid']) => {
@@ -1218,7 +1218,7 @@ export const domains: Array<Domain> = [
 	}
 ];
 
-for (let domain of domains) {
+for (const domain of domains) {
 	if (domain.grid.center && typeof domain.grid.center == 'function') {
 		domain.grid.center();
 	}

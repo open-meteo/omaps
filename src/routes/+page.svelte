@@ -12,7 +12,7 @@
 
 	import { omProtocol, getValueFromLatLong } from '../om-protocol';
 	import { pad } from '$lib/utils/pad';
-	import { domains } from '$lib/utils/domains';
+	import { domainGroups, domains } from '$lib/utils/domains';
 	import { hideZero, variables } from '$lib/utils/variables';
 
 	import type { Variable, Domain } from '../types';
@@ -20,6 +20,7 @@
 	import { Button } from '$lib/components/ui/button';
 
 	import * as Sheet from '$lib/components/ui/sheet';
+	import * as Select from '$lib/components/ui/select';
 	import * as Drawer from '$lib/components/ui/drawer';
 
 	let partial = $state(false);
@@ -296,27 +297,27 @@
 			// 	maxzoom: 16
 			// });
 
-			map.addSource('hillshadeSource', {
-				type: 'raster-dem',
-				tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
-				tileSize: 256,
-				maxzoom: 16
-			});
+			// map.addSource('hillshadeSource', {
+			// 	type: 'raster-dem',
+			// 	tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
+			// 	tileSize: 256,
+			// 	maxzoom: 16
+			// });
 
-			map.addLayer(
-				{
-					source: 'hillshadeSource',
-					id: 'hillshadeLayer',
-					type: 'hillshade',
-					paint: {
-						'hillshade-method': 'igor',
-						//'hillshade-exaggeration': 1,
-						'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
-						'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
-					}
-				},
-				'landuse_overlay_national_park'
-			);
+			// map.addLayer(
+			// 	{
+			// 		source: 'hillshadeSource',
+			// 		id: 'hillshadeLayer',
+			// 		type: 'hillshade',
+			// 		paint: {
+			// 			'hillshade-method': 'igor',
+			// 			//'hillshade-exaggeration': 1,
+			// 			'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
+			// 			'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
+			// 		}
+			// 	},
+			// 	'landuse_overlay_national_park'
+			// );
 
 			// map.addControl(
 			// 	new maplibregl.TerrainControl({
@@ -433,6 +434,8 @@
 		}
 		return false;
 	});
+
+	let selectedDomain = $derived(domain.value);
 </script>
 
 <div class="map" id="#map_container" bind:this={mapContainer}></div>
@@ -445,40 +448,59 @@
 	<Drawer.Root bind:open={drawerOpen}>
 		<Drawer.Content class=" h-1/2 ">
 			<div class="flex flex-col items-center overflow-y-scroll">
-				<div class="container px-3">
-					<div class="mt-3 flex w-full flex-col gap-6 md:flex-row md:gap-0">
-						<div class="flex flex-col gap-3 md:w-1/4 md:pr-3">
+				<div class="container mx-auto px-3">
+					<div class="mt-3 flex w-full flex-col flex-wrap gap-6 sm:flex-row sm:gap-0">
+						<div class="flex flex-col gap-3 sm:w-1/2 md:w-1/4 md:pr-3">
 							<h2 class="text-lg font-bold">Domains</h2>
-							{#each domains as d, i (i)}
-								<Button
-									class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.value === domain.value
-										? 'bg-blue-400'
-										: ''}"
-									onclick={() => {
-										domain = d;
-										url.searchParams.set('domain', d.value);
+							<div class="relative">
+								<Select.Root
+									name="domains"
+									type="single"
+									bind:value={selectedDomain}
+									onValueChange={(value) => {
+										domain = domains.find((dm) => dm.value === value) ?? domains[0];
+										url.searchParams.set('domain', value);
 										pushState(url + map._hash.getHashString(), {});
 										toast('Domain set to: ' + domain.label);
-									}}>{d.label}</Button
+									}}
 								>
-							{/each}
+									<Select.Trigger
+										aria-label="Domain trigger"
+										class="top-[0.35rem] !h-12 w-full  pt-6 ">{domain?.label}</Select.Trigger
+									>
+									<Select.Content side="bottom">
+										{#each domainGroups as { value: group, label: groupLabel } (group)}
+											<Select.Group>
+												<Select.GroupHeading>{groupLabel}</Select.GroupHeading>
+												{#each domains as { value, label } (value)}
+													{#if value.startsWith(group)}
+														<Select.Item {value}>{label}</Select.Item>
+													{/if}
+												{/each}
+											</Select.Group>
+										{/each}
+									</Select.Content>
+									<Select.Label class="absolute top-0 left-2 z-10 px-1 text-xs">Domain</Select.Label
+									>
+								</Select.Root>
+							</div>
 						</div>
 
 						{#await latestRequest}
-							<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
+							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:px-3">
 								<h2 class="mb-2 text-lg font-bold">Model runs</h2>
 								Loading latest model runs...
 							</div>
-							<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
+							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:px-3">
 								<h2 class="mb-2 text-lg font-bold">Valid times</h2>
 								Loading latest valid times...
 							</div>
-							<div class="flex flex-col gap-1 md:w-1/4 md:pl-3">
+							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:pl-3">
 								<h2 class="mb-2 text-lg font-bold">Variables</h2>
 								Loading domain variables...
 							</div>
 						{:then latest}
-							<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
+							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:px-3">
 								<h2 class="mb-2 text-lg font-bold">Model runs</h2>
 								{#each [modelRunSelected] as vt, i (i)}
 									{@const d = new Date(vt)}
@@ -513,7 +535,7 @@
 									>
 								{/each}
 							</div>
-							<div class="flex flex-col gap-1 md:w-1/4 md:px-3">
+							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:px-3">
 								<h2 class="mb-2 text-lg font-bold">Valid times</h2>
 								{#each latest.valid_times as vt, i (i)}
 									{@const d = new Date(vt)}
@@ -544,7 +566,7 @@
 								{/each}
 							</div>
 							{#if timeValid}
-								<div class="flex flex-col gap-1 md:w-1/4 md:pl-3">
+								<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:pl-3">
 									<h2 class="mb-2 text-lg font-bold">Variables</h2>
 
 									{#each latest.variables as vr, i (i)}
