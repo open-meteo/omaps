@@ -146,7 +146,6 @@ self.onmessage = async (message) => {
 		const z = message.data.z;
 		const values = message.data.data.values;
 		const ranges = message.data.ranges;
-		const mapBounds = message.data.mapBounds;
 
 		const domain = message.data.domain;
 		const variable = message.data.variable;
@@ -155,7 +154,8 @@ self.onmessage = async (message) => {
 		const rgba = new Uint8ClampedArray(pixels * 4);
 		const dark = message.data.dark;
 
-		colors = colorScales[variable.value.split('_')[0]] ?? colors['temperature'];
+		const colorsObject = colorScales[variable.value.split('_')[0]] ?? colors['temperature'];
+		colors = colorsObject.colors;
 
 		let projectionGrid = null;
 		if (domain.grid.projection) {

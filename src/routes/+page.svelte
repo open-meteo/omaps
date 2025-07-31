@@ -23,7 +23,10 @@
 	import * as Select from '$lib/components/ui/select';
 	import * as Drawer from '$lib/components/ui/drawer';
 
+	import { colorScales } from '$lib/utils/color-scales';
+
 	let partial = $state(false);
+	let showScale = $state(true);
 	let sheetOpen = $state(false);
 	let drawerOpen = $state(false);
 
@@ -111,7 +114,11 @@
 			div.addEventListener('click', () => {
 				partial = !partial;
 				div.innerHTML = partial ? partialSVG : fullSVG;
-				url.searchParams.set('partial', String(partial));
+				if (partial) {
+					url.searchParams.set('partial', String(partial));
+				} else {
+					url.searchParams.delete('partial');
+				}
 				pushState(url + map._hash.getHashString(), {});
 				setTimeout(() => changeOMfileURL(), 500);
 			});
@@ -436,10 +443,64 @@
 	});
 
 	let selectedDomain = $derived(domain.value);
+
+	let colorScale = $derived.by(() => {
+		for (let [cs, value] of Object.entries(colorScales)) {
+			if (variable.value.startsWith(cs)) {
+				return value;
+			}
+		}
+	});
+
+	let colors = $derived(colorScale.colors.reverse());
 </script>
 
 <div class="map" id="#map_container" bind:this={mapContainer}></div>
+<div class="absolute bottom-1 left-1 max-h-[300px]">
+	{#if showScale}
+		{#each colors as cs, i (i)}
+			<div
+				style={'background: rgba(' +
+					cs.join(',') +
+					`); width: 25px; height:${300 / (colorScale.max - colorScale.min)}px;`}
+			></div>
+		{/each}
 
+		{#each [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100] as step, i (i)}
+			<div
+				class="absolute w-[25px] text-center text-xs"
+				style={'bottom: ' + (2 + 298 * step * 0.0093) + 'px;'}
+			>
+				{(colorScale.min + step * 0.01 * (colorScale.max - colorScale.min)).toFixed(0)}
+			</div>
+		{/each}
+		{#if variable.value.startsWith('temperature')}
+			<div class="bg-background absolute top-[-20px] w-[25px] py-1 text-center text-xs">C°</div>
+		{/if}
+		{#if variable.value.startsWith('precipitation')}
+			<div class="bg-background absolute top-[-20px] w-[25px] py-1 text-center text-xs">mm</div>
+		{/if}
+	{/if}
+	<div
+		class=" bg-background/35 absolute bottom-0 left-8 w-[190px] rounded px-3 py-2 text-xs overflow-ellipsis"
+	>
+		<div>Domain: <span class="ml-auto text-end">{domain.label}</span></div>
+		<div>
+			Local time: <span class="ml-auto text-end"
+				>{timeSelected.getFullYear() +
+					'-' +
+					pad(timeSelected.getMonth() + 1) +
+					'-' +
+					timeSelected.getDate() +
+					' ' +
+					timeSelected.getHours() +
+					':' +
+					pad(timeSelected.getMinutes())}</span
+			>
+		</div>
+		<div>Variable: <span class="ml-auto text-end">{variable.label}</span></div>
+	</div>
+</div>
 <div class="absolute">
 	<Sheet.Root bind:open={sheetOpen}>
 		<Sheet.Content><div class="px-6 pt-12">Units</div></Sheet.Content>
