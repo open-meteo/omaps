@@ -288,50 +288,50 @@
 
 		map.on('load', async () => {
 			mapBounds = map.getBounds();
-			// map.setSky({
-			// 	'sky-color': '#000000',
-			// 	'sky-horizon-blend': 0.8,
-			// 	'horizon-color': '#80C1FF',
-			// 	'horizon-fog-blend': 0.6,
-			// 	'fog-color': '#D6EAFF',
-			// 	'fog-ground-blend': 0
-			// });
+			map.setSky({
+				'sky-color': '#000000',
+				'sky-horizon-blend': 0.8,
+				'horizon-color': '#80C1FF',
+				'horizon-fog-blend': 0.6,
+				'fog-color': '#D6EAFF',
+				'fog-ground-blend': 0
+			});
 
-			// map.addSource('terrainSource', {
-			// 	type: 'raster-dem',
-			// 	tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
-			// 	tileSize: 256,
-			// 	maxzoom: 16
-			// });
+			map.addSource('terrainSource', {
+				type: 'raster-dem',
+				tiles: ['https://mapproxy.servert.nl/wmts/copernicus/webmercator/{z}/{x}/{y}.png'],
+				tileSize: 256,
+				maxzoom: 16
+			});
 
-			// map.addSource('hillshadeSource', {
-			// 	type: 'raster-dem',
-			// 	tiles: ['https://mbtiles.servert.nl/services/copernicus-30m-terrain/tiles/{z}/{x}/{y}.png'],
-			// 	tileSize: 256,
-			// 	maxzoom: 16
-			// });
+			map.addSource('hillshadeSource', {
+				type: 'raster-dem',
+				tiles: ['https://mapproxy.servert.nl/wmts/copernicus/webmercator/{z}/{x}/{y}.png'],
+				tileSize: 256,
+				maxzoom: 16
+			});
 
-			// map.addLayer(
-			// 	{
-			// 		source: 'hillshadeSource',
-			// 		id: 'hillshadeLayer',
-			// 		type: 'hillshade',
-			// 		paint: {
-			// 			'hillshade-method': 'igor',
-			// 			//'hillshade-exaggeration': 1,
-			// 			'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
-			// 			'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
-			// 		}
-			// 	},
-			// 	'landuse_overlay_national_park'
-			// );
+			map.addLayer(
+				{
+					source: 'hillshadeSource',
+					id: 'hillshadeLayer',
+					type: 'hillshade',
+					paint: {
+						'hillshade-method': 'igor',
+						//'hillshade-exaggeration': 1,
+						'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
+						'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
+					}
+				},
+				'landuse_overlay_national_park'
+			);
 
-			// map.addControl(
-			// 	new maplibregl.TerrainControl({
-			// 		source: 'terrainSource',
-			// 		exaggeration: 1
-			// 	})
-			// );
+			map.addControl(
+				new maplibregl.TerrainControl({
+					source: 'terrainSource',
+					exaggeration: 1
+				})
+			);
 
 			map.addControl(new SettingsButton());
 			map.addControl(new VariableButton());
@@ -523,6 +523,7 @@
 										url.searchParams.set('domain', value);
 										pushState(url + map._hash.getHashString(), {});
 										toast('Domain set to: ' + domain.label);
+										changeOMfileURL();
 									}}
 								>
 									<Select.Trigger
@@ -564,35 +565,36 @@
 							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:px-3">
 								<h2 class="mb-2 text-lg font-bold">Model runs</h2>
 								{#each [modelRunSelected] as vt, i (i)}
-									{@const d = new Date(vt)}
+									{@const mr = new Date(vt)}
 									<Button
-										class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.getTime() ===
+										class="cursor-pointer bg-blue-200 hover:bg-blue-600 {mr.getTime() ===
 										modelRunSelected.getTime()
 											? 'bg-blue-400'
 											: ''}"
 										onclick={() => {
 											toast(
 												'Model run set to: ' +
-													d.getUTCFullYear() +
+													mr.getUTCFullYear() +
 													'-' +
-													pad(d.getUTCMonth() + 1) +
+													pad(mr.getUTCMonth() + 1) +
 													'-' +
-													d.getUTCDate() +
+													pad(mr.getUTCDate()) +
 													' ' +
-													d.getUTCHours() +
+													pad(mr.getUTCHours()) +
 													':' +
-													pad(d.getUTCMinutes())
+													pad(mr.getUTCMinutes())
 											);
+											changeOMfileURL();
 										}}
-										>{d.getUTCFullYear() +
+										>{mr.getUTCFullYear() +
 											'-' +
-											pad(d.getUTCMonth() + 1) +
+											pad(mr.getUTCMonth() + 1) +
 											'-' +
-											d.getUTCDate() +
+											pad(mr.getUTCDate()) +
 											' ' +
-											d.getUTCHours() +
+											pad(mr.getUTCHours()) +
 											':' +
-											pad(d.getUTCMinutes())}</Button
+											pad(mr.getUTCMinutes())}</Button
 									>
 								{/each}
 							</div>
@@ -612,15 +614,27 @@
 												d.toISOString().replace(/[:Z]/g, '').slice(0, 15)
 											);
 											pushState(url + map._hash.getHashString(), {});
+											toast(
+												'Time set to: ' +
+													d.getUTCFullYear() +
+													'-' +
+													pad(d.getUTCMonth() + 1) +
+													'-' +
+													pad(d.getUTCDate()) +
+													' ' +
+													pad(d.getUTCHours()) +
+													':' +
+													pad(d.getUTCMinutes())
+											);
 											changeOMfileURL();
 										}}
 										>{d.getUTCFullYear() +
 											'-' +
 											pad(d.getUTCMonth() + 1) +
 											'-' +
-											d.getUTCDate() +
+											pad(d.getUTCDate()) +
 											' ' +
-											d.getUTCHours() +
+											pad(d.getUTCHours()) +
 											':' +
 											pad(d.getUTCMinutes())}</Button
 									>
@@ -642,6 +656,7 @@
 													variable = vrb ?? variables[0];
 													url.searchParams.set('variable', vr);
 													pushState(url + map._hash.getHashString(), {});
+													toast('Variable set to: ' + variable.label);
 													changeOMfileURL();
 												}}>{vrb ? vrb.label : vr}</Button
 											>
