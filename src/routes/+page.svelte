@@ -302,7 +302,7 @@
 				tiles: ['https://mapproxy.servert.nl/wmts/copernicus/webmercator/{z}/{x}/{y}.png'],
 				tileSize: 256,
 				scheme: 'tms',
-				maxzoom: 16
+				maxzoom: 11
 			});
 
 			map.addSource('hillshadeSource', {
@@ -310,7 +310,7 @@
 				tiles: ['https://mapproxy.servert.nl/wmts/copernicus/webmercator/{z}/{x}/{y}.png'],
 				tileSize: 256,
 				scheme: 'tms',
-				maxzoom: 16
+				maxzoom: 11
 			});
 
 			map.addLayer(
@@ -321,7 +321,7 @@
 					paint: {
 						'hillshade-method': 'igor',
 						//'hillshade-exaggeration': 1,
-						'hillshade-shadow-color': 'rgba(0,0,0,0.35)',
+						'hillshade-shadow-color': 'rgba(0,0,0,0.4)',
 						'hillshade-highlight-color': 'rgba(255,255,255,0.35)'
 					}
 				},
