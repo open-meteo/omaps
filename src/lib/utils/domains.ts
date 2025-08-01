@@ -131,6 +131,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -175,6 +176,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 6,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -212,6 +214,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -249,6 +252,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -288,6 +292,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			//'cloud_cover', <- only per hPa
@@ -321,6 +326,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -360,6 +366,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -401,6 +408,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -436,6 +444,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -466,7 +475,8 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
-		time_interval: 6,
+		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -499,7 +509,8 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
-		time_interval: 3,
+		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -564,6 +575,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -605,7 +617,8 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
-		time_interval: 3,
+		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -642,6 +655,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -676,6 +690,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -705,6 +720,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -735,6 +751,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -773,6 +790,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -811,6 +829,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -850,6 +869,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'precipitation',
@@ -892,6 +912,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -921,7 +942,8 @@ export const domains: Array<Domain> = [
 				return this;
 			}
 		},
-		time_interval: 3,
+		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -962,6 +984,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cloud_cover_2m',
 			'precipitation',
@@ -1000,6 +1023,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -1035,6 +1059,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cloud_cover',
 			'precipitation',
@@ -1079,6 +1104,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -1120,6 +1146,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -1156,6 +1183,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
@@ -1194,6 +1222,7 @@ export const domains: Array<Domain> = [
 			}
 		},
 		time_interval: 1,
+		model_interval: 3,
 		variables: [
 			'cape',
 			'cloud_cover',
