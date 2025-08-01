@@ -301,6 +301,7 @@
 				type: 'raster-dem',
 				tiles: ['https://mapproxy.servert.nl/wmts/copernicus/webmercator/{z}/{x}/{y}.png'],
 				tileSize: 256,
+				scheme: 'tms',
 				maxzoom: 16
 			});
 
@@ -308,6 +309,7 @@
 				type: 'raster-dem',
 				tiles: ['https://mapproxy.servert.nl/wmts/copernicus/webmercator/{z}/{x}/{y}.png'],
 				tileSize: 256,
+				scheme: 'tms',
 				maxzoom: 16
 			});
 
