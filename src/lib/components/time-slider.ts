@@ -2,6 +2,7 @@ export type TimeSliderOptions = {
 	container: HTMLElement;
 	initialDate: Date;
 	onChange: (date: Date) => void;
+	resolution?: number;
 };
 
 function pad2(n: number) {
@@ -22,14 +23,19 @@ function formatDateInputValue(date: Date) {
 	return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
 }
 
-export function createTimeSlider({ container, initialDate, onChange }: TimeSliderOptions) {
+export function createTimeSlider({
+	container,
+	initialDate,
+	onChange,
+	resolution = 1
+}: TimeSliderOptions) {
 	let currentDate = getLocalMidnight(initialDate);
 	let currentHour = initialDate.getHours();
 
 	container.innerHTML = `
-		<div>
+		<div style="display:flex; gap: 0.5em; justify-items: center; align-items: center;">
 			<button id="prev_hour" type="button">&lt;</button>
-			<span id="slider_time_label">${formatSliderLabel(currentDate, currentHour)}</span>
+			<span style="white-space:nowrap;" id="slider_time_label">${formatSliderLabel(currentDate, currentHour)}</span>
 			<button id="next_hour" type="button">&gt;</button>
 		</div>
 		<input
@@ -37,11 +43,10 @@ export function createTimeSlider({ container, initialDate, onChange }: TimeSlide
 			id="time_slider"
 			min="0"
 			max="23"
-			step="1"
+			step="${resolution}"
 			value="${currentHour}"
 			style="width: 200px;"
 		/>
-		<br>
 		<input
 			type="date"
 			id="date_picker"
@@ -73,8 +78,8 @@ export function createTimeSlider({ container, initialDate, onChange }: TimeSlide
 	});
 
 	prevBtn.addEventListener('click', () => {
-		if (currentHour > 0) {
-			currentHour--;
+		if (currentHour > resolution - 1) {
+			currentHour -= resolution;
 		} else {
 			currentHour = 23;
 			currentDate.setDate(currentDate.getDate() - 1);
@@ -86,8 +91,8 @@ export function createTimeSlider({ container, initialDate, onChange }: TimeSlide
 	});
 
 	nextBtn.addEventListener('click', () => {
-		if (currentHour < 23) {
-			currentHour++;
+		if (currentHour < 23 - resolution) {
+			currentHour += resolution;
 		} else {
 			currentHour = 0;
 			currentDate.setDate(currentDate.getDate() + 1);

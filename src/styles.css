@@ -169,80 +169,6 @@ body {
 	min-height: 100%;
 }
 
-.nav-logo {
-	color: white;
-	display: flex;
-	align-items: center;
-	text-decoration: none;
-	gap: 5px;
-	padding-top: 25px;
-	padding-left: 25px;
-}
-
-.nav-logo svg {
-	margin-top: -5px;
-}
-
-.nav-logo:hover {
-	text-decoration: underline;
-}
-
-.info-wrapper {
-	position: absolute;
-	bottom: 15px;
-	left: 50%;
-	transform: translate(-50%);
-}
-
-#info_box {
-	background: rgba(255, 255, 255, 0.8);
-	border-radius: 15px;
-	padding: 15px 20px;
-	color: black;
-	text-align: center;
-}
-
-.maplibregl-popup {
-	pointer-events: none;
-}
-
-#time_slider_container button {
-	border-width: 1px;
-	background-color: white;
-	color: black;
-	padding: 5px;
-	border-radius: 5px;
-	font-size: 15px;
-	padding: 0.5rem 0.75rem;
-	font-weight: bold;
-}
-
-#slider_time_label {
-	margin: 0 0.3rem;
-}
-
-.date-time-selection {
-	margin-top: 0.5rem;
-	border-width: 1px;
-}
-
-.dark .domain-selection,
-.dark .variable-selection,
-.dark .date-time-selection {
-	background-color: rgba(100, 100, 100, 0.8);
-	color: white;
-}
-
-.dark #time_slider_container button {
-	background-color: rgba(100, 100, 100, 0.8);
-	color: white;
-}
-
-.dark #darkmode_toggle {
-	background-color: rgba(100, 100, 100, 0.8);
-	color: white;
-}
-
 .dark .maplibregl-ctrl.maplibregl-ctrl-group {
 	background-color: rgba(40, 40, 40, 0.95);
 }
@@ -279,18 +205,21 @@ body {
 	font-weight: bold;
 }
 
-.time-slider-container button {
-	border-width: 1px;
-	background-color: white;
-	color: black;
-	padding: 5px;
-	border-radius: 5px;
-	font-size: 15px;
-	padding: 0.3rem 0.75rem;
-	font-weight: bold;
-}
-
 .dark .time-slider-container button {
 	background: rgba(100, 100, 100, 0.8);
 	color: white;
+}
+
+.date-time-selection {
+	border-radius: 0.25em;
+	border-width: 1px;
+}
+
+.dark .date-time-selection {
+	background-color: rgba(100, 100, 100, 0.8);
+	color: white;
+}
+
+#time_slider {
+	margin: 0.6em 0;
 }

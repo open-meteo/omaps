@@ -183,6 +183,8 @@
 
 			mapBounds = map.getBounds();
 
+			timeSliderApi.setDisabled(true);
+
 			omUrl = getOMUrl();
 			if (map.getLayer('omFileLayer')) {
 				map.removeLayer('omFileLayer');
@@ -217,6 +219,8 @@
 				checked++;
 				if (source.loaded() || checked >= 30) {
 					checked = 0;
+					timeSliderApi.setDisabled(false);
+
 					clearInterval(checkSourceLoadedInterval);
 				}
 			}, 100);
@@ -444,13 +448,17 @@
 					url.searchParams.set('time', newDate.toISOString().replace(/[:Z]/g, '').slice(0, 15));
 					history.pushState({}, '', url);
 					changeOMfileURL();
-				}
+				},
+				resolution: domain.time_interval
 			});
 		});
 	});
 	onDestroy(() => {
 		if (map) {
 			map.remove();
+		}
+		if (timeSliderContainer) {
+			timeSliderContainer.innerHTML = ``;
 		}
 	});
 
@@ -531,33 +539,26 @@
 		{/if}
 	{/if}
 	<div
-		class=" bg-background/35 absolute bottom-0 left-8 w-[195px] rounded px-3 py-2 text-xs overflow-ellipsis"
+		class=" bg-background/35 absolute bottom-0 left-8 w-[165px] rounded px-2 py-2 text-xs overflow-ellipsis"
 	>
-		<div>Domain: <span class="ml-auto text-end">{domain.label}</span></div>
-		<div>
-			Local time: <span class="ml-auto text-end"
-				>{timeSelected.getFullYear() +
-					'-' +
-					pad(timeSelected.getMonth() + 1) +
-					'-' +
-					timeSelected.getDate() +
-					' ' +
-					timeSelected.getHours() +
-					':' +
-					pad(timeSelected.getMinutes())}</span
-			>
+		<div class=" overflow-hidden">
+			<p class="truncate">
+				Domain: {domain.label}
+			</p>
+			<p class="truncate">
+				Variable: {variable.label}
+			</p>
 		</div>
-		<div>Variable: <span class="ml-auto text-end">{variable.label}</span></div>
 	</div>
 </div>
 <div
-	class="bg-background/40 absolute bottom-18 left-[50%] mx-auto transform-[translate(-50%)] px-4 py-4 {!showTimeSelector
+	class="bg-background/40 absolute bottom-14.5 left-[50%] mx-auto transform-[translate(-50%)] rounded-lg px-4 py-4 {!showTimeSelector
 		? 'pointer-events-none opacity-0'
 		: 'opacity-100'}"
 >
 	<div
 		bind:this={timeSliderContainer}
-		class="time-slider-container flex flex-col items-center"
+		class="time-slider-container flex flex-col items-center gap-0"
 	></div>
 </div>
 <div class="absolute">
