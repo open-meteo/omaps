@@ -228,7 +228,6 @@
 	};
 
 	let latest = $state();
-	let progress = $state();
 
 	onMount(() => {
 		url = new URL(document.location.href);
@@ -567,7 +566,7 @@
 	</Sheet.Root>
 
 	<Drawer.Root bind:open={drawerOpen}>
-		<Drawer.Content class=" h-1/2 ">
+		<Drawer.Content class=" h-1/3 ">
 			<div class="flex flex-col items-center overflow-y-scroll">
 				<div class="container mx-auto px-3">
 					<div class="mt-3 flex w-full flex-col flex-wrap gap-6 sm:flex-row sm:gap-0">
@@ -613,10 +612,7 @@
 								<h2 class="mb-2 text-lg font-bold">Model runs</h2>
 								Loading latest model runs...
 							</div>
-							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:px-3">
-								<h2 class="mb-2 text-lg font-bold">Valid times</h2>
-								Loading latest valid times...
-							</div>
+
 							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:pl-3">
 								<h2 class="mb-2 text-lg font-bold">Variables</h2>
 								Loading domain variables...
@@ -694,48 +690,6 @@
 										>
 									{/if}
 								{/await}
-							</div>
-							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:px-3">
-								<h2 class="mb-2 text-lg font-bold">Valid times</h2>
-								{#each latest.valid_times as vt, i (i)}
-									{@const d = new Date(vt)}
-									<Button
-										class="cursor-pointer bg-blue-200 hover:bg-blue-600 {d.getTime() ===
-										timeSelected.getTime()
-											? 'bg-blue-400'
-											: ''}"
-										onclick={() => {
-											timeSelected = d;
-											url.searchParams.set(
-												'time',
-												d.toISOString().replace(/[:Z]/g, '').slice(0, 15)
-											);
-											pushState(url + map._hash.getHashString(), {});
-											toast(
-												'Time set to: ' +
-													d.getUTCFullYear() +
-													'-' +
-													pad(d.getUTCMonth() + 1) +
-													'-' +
-													pad(d.getUTCDate()) +
-													' ' +
-													pad(d.getUTCHours()) +
-													':' +
-													pad(d.getUTCMinutes())
-											);
-											changeOMfileURL();
-										}}
-										>{d.getUTCFullYear() +
-											'-' +
-											pad(d.getUTCMonth() + 1) +
-											'-' +
-											pad(d.getUTCDate()) +
-											' ' +
-											pad(d.getUTCHours()) +
-											':' +
-											pad(d.getUTCMinutes())}</Button
-									>
-								{/each}
 							</div>
 							{#if timeValid}
 								<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:pl-3">
