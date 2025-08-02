@@ -300,17 +300,17 @@
 			map.addSource('terrainSource', {
 				type: 'raster-dem',
 				tiles: ['https://mapproxy.servert.nl/wmts/copernicus/webmercator/{z}/{x}/{y}.png'],
-				tileSize: 256,
+				tileSize: 512,
 				scheme: 'tms',
-				maxzoom: 11
+				maxzoom: 10
 			});
 
 			map.addSource('hillshadeSource', {
 				type: 'raster-dem',
 				tiles: ['https://mapproxy.servert.nl/wmts/copernicus/webmercator/{z}/{x}/{y}.png'],
-				tileSize: 256,
+				tileSize: 512,
 				scheme: 'tms',
-				maxzoom: 11
+				maxzoom: 10
 			});
 
 			map.addLayer(
