@@ -60,9 +60,14 @@ export const variables = [
 	{ value: 'soil_temperature_6cm', label: 'Soil Temperature (6 cm)' },
 	{ value: 'soil_temperature_18cm', label: 'Soil Temperature (18 cm)' },
 	{ value: 'soil_temperature_54cm', label: 'Soil Temperature (54 cm)' },
+	{ value: 'soil_temperature_0_to_7cm', label: 'Soil Temperature (0-7 cm)' },
+	{ value: 'soil_temperature_7_to_28cm', label: 'Soil Temperature (7-28 cm)' },
+
 	{ value: 'soil_moisture_0_to_1cm', label: 'Soil Moisture (0-1 cm)' },
+	{ value: 'soil_moisture_0_to_7cm', label: 'Soil Moisture (0-7 cm)' },
 	{ value: 'soil_moisture_1_to_3cm', label: 'Soil Moisture (1-3 cm)' },
 	{ value: 'soil_moisture_3_to_9cm', label: 'Soil Moisture (3-9 cm)' },
+	{ value: 'soil_moisture_7_to_28cm', label: 'Soil Moisture (7-28 cm)' },
 	{ value: 'soil_moisture_9_to_27cm', label: 'Soil Moisture (9-27 cm)' },
 	{ value: 'soil_moisture_27_to_81cm', label: 'Soil Moisture (27-81 cm)' }
 ];

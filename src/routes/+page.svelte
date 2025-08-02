@@ -14,6 +14,7 @@
 	import { pad } from '$lib/utils/pad';
 	import { domainGroups, domains } from '$lib/utils/domains';
 	import { hideZero, variables } from '$lib/utils/variables';
+	import { createTimeSlider } from '$lib/components/time-slider';
 
 	import type { Variable, Domain } from '../types';
 
@@ -29,10 +30,13 @@
 	let showScale = $state(true);
 	let sheetOpen = $state(false);
 	let drawerOpen = $state(false);
+	let showTimeSelector = $state(true);
 
 	import '../styles.css';
 
 	let darkMode = $derived(mode.current);
+	let timeSliderApi: { setDisabled: (d: boolean) => void };
+	let timeSliderContainer: HTMLElement;
 
 	class SettingsButton {
 		onAdd() {
@@ -127,6 +131,29 @@
 		onRemove() {}
 	}
 
+	class TimeButton {
+		onAdd() {
+			const div = document.createElement('div');
+			div.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+
+			const clockSVG = `<button style="display:flex;justify-content:center;align-items:center;">
+				<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" stroke-width="1.2"  width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-clock-icon lucide-calendar-clock"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg>
+			 </button>`;
+			const calendarSVG = `<button style="display:flex;justify-content:center;align-items:center;">
+				<svg xmlns="http://www.w3.org/2000/svg" opacity="0.75" stroke-width="1.2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-off-icon lucide-calendar-off"><path d="M4.2 4.2A2 2 0 0 0 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 1.82-1.18"/><path d="M21 15.5V6a2 2 0 0 0-2-2H9.5"/><path d="M16 2v4"/><path d="M3 10h7"/><path d="M21 10h-5.5"/><path d="m2 2 20 20"/></svg>
+			</button>`;
+
+			div.innerHTML = clockSVG;
+			div.addEventListener('contextmenu', (e) => e.preventDefault());
+			div.addEventListener('click', () => {
+				showTimeSelector = !showTimeSelector;
+				div.innerHTML = showTimeSelector ? clockSVG : calendarSVG;
+			});
+			return div;
+		}
+		onRemove() {}
+	}
+
 	let map: maplibregl.Map;
 	let mapContainer: HTMLElement | null;
 
@@ -149,46 +176,51 @@
 	let checkSourceLoadedInterval: ReturnType<typeof setInterval>;
 	let checked = 0;
 	const changeOMfileURL = () => {
-		if (popup) {
-			popup.remove();
-		}
-
-		if (!domain.variables.includes(variable.value)) {
-			variable = variables.find((v) => v.value === domain.variables[0]) as Variable;
-		}
-
-		mapBounds = map.getBounds();
-
-		omUrl = getOMUrl();
-		if (map.getLayer('omFileLayer')) {
-			map.removeLayer('omFileLayer');
-		}
-		if (map.getSource('omFileSource')) {
-			map.removeSource('omFileSource');
-		}
-
-		source = map.addSource('omFileSource', {
-			type: 'raster',
-			url: 'om://' + omUrl,
-			tileSize: TILE_SIZE,
-			volatile: import.meta.env.DEV
-		});
-
-		map.addLayer(
-			{
-				source: 'omFileSource',
-				id: 'omFileLayer',
-				type: 'raster'
-			},
-			'landuse_overlay_national_park'
-		);
-		checkSourceLoadedInterval = setInterval(() => {
-			checked++;
-			if (source.loaded() || checked >= 30) {
-				checked = 0;
-				clearInterval(checkSourceLoadedInterval);
+		if (map) {
+			if (popup) {
+				popup.remove();
 			}
-		}, 100);
+
+			mapBounds = map.getBounds();
+
+			omUrl = getOMUrl();
+			if (map.getLayer('omFileLayer')) {
+				map.removeLayer('omFileLayer');
+			}
+			// let omSource: maplibregl.RasterTileSource | undefined = map.getSource('omFileSource');
+			// if (omSource) {
+			// 	omSource.setUrl(omUrl);
+			// 	map.style.sourceCaches['omFileSource'].clearTiles();
+			// 	map.style.sourceCaches['omFileSource'].update(map.transform);
+			// 	map.triggerRepaint();
+			// }
+			if (map.getSource('omFileSource')) {
+				map.removeSource('omFileSource');
+			}
+
+			source = map.addSource('omFileSource', {
+				type: 'raster',
+				url: 'om://' + omUrl,
+				tileSize: TILE_SIZE,
+				volatile: import.meta.env.DEV
+			});
+
+			map.addLayer(
+				{
+					source: 'omFileSource',
+					id: 'omFileLayer',
+					type: 'raster'
+				},
+				'landuse_overlay_national_park'
+			);
+			checkSourceLoadedInterval = setInterval(() => {
+				checked++;
+				if (source.loaded() || checked >= 30) {
+					checked = 0;
+					clearInterval(checkSourceLoadedInterval);
+				}
+			}, 100);
+		}
 	};
 
 	let latest = $state();
@@ -339,6 +371,7 @@
 			map.addControl(new VariableButton());
 			map.addControl(new DarkModeButton());
 			map.addControl(new PartialButton());
+			map.addControl(new TimeButton());
 
 			latest = await getDomainData();
 			omUrl = getOMUrl();
@@ -401,6 +434,18 @@
 					popup.setLngLat(coordinates).addTo(map);
 				}
 			});
+
+			timeSliderApi = createTimeSlider({
+				container: timeSliderContainer,
+				initialDate: timeSelected,
+				onChange: (newDate) => {
+					console.log(newDate);
+					timeSelected = newDate;
+					url.searchParams.set('time', newDate.toISOString().replace(/[:Z]/g, '').slice(0, 15));
+					history.pushState({}, '', url);
+					changeOMfileURL();
+				}
+			});
 		});
 	});
 	onDestroy(() => {
@@ -412,7 +457,7 @@
 	const getDomainData = async (latest = true) => {
 		return new Promise((resolve) => {
 			fetch(
-				`https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${latest ? 'latest' : 'progress'}.json`
+				`https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${latest ? 'latest' : 'in-progress'}.json`
 			).then(async (result) => {
 				const json = await result.json();
 				const referenceTime = json.reference_time;
@@ -428,6 +473,7 @@
 	};
 
 	let latestRequest = $derived(getDomainData());
+	let progressRequest = $derived(getDomainData(false));
 
 	const getOMUrl = () => {
 		return `https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${modelRunSelected.getUTCFullYear()}/${pad(modelRunSelected.getUTCMonth() + 1)}/${pad(modelRunSelected.getUTCDate())}/${pad(modelRunSelected.getUTCHours())}00Z/${timeSelected.getUTCFullYear()}-${pad(timeSelected.getUTCMonth() + 1)}-${pad(timeSelected.getUTCDate())}T${pad(timeSelected.getUTCHours())}00.om?dark=${darkMode}&variable=${variable.value}&bounds=${mapBounds.getSouth()},${mapBounds.getWest()},${mapBounds.getNorth()},${mapBounds.getEast()}&partial=${partial}`;
@@ -445,6 +491,7 @@
 	});
 
 	let selectedDomain = $derived(domain.value);
+	let selectedVariable = $derived(variable.value);
 
 	let colorScale = $derived.by(() => {
 		for (let [cs, value] of Object.entries(colorScales)) {
@@ -484,7 +531,7 @@
 		{/if}
 	{/if}
 	<div
-		class=" bg-background/35 absolute bottom-0 left-8 w-[190px] rounded px-3 py-2 text-xs overflow-ellipsis"
+		class=" bg-background/35 absolute bottom-0 left-8 w-[195px] rounded px-3 py-2 text-xs overflow-ellipsis"
 	>
 		<div>Domain: <span class="ml-auto text-end">{domain.label}</span></div>
 		<div>
@@ -502,6 +549,16 @@
 		</div>
 		<div>Variable: <span class="ml-auto text-end">{variable.label}</span></div>
 	</div>
+</div>
+<div
+	class="bg-background/40 absolute bottom-18 left-[50%] mx-auto transform-[translate(-50%)] px-4 py-4 {!showTimeSelector
+		? 'pointer-events-none opacity-0'
+		: 'opacity-100'}"
+>
+	<div
+		bind:this={timeSliderContainer}
+		class="time-slider-container flex flex-col items-center"
+	></div>
 </div>
 <div class="absolute">
 	<Sheet.Root bind:open={sheetOpen}>
@@ -599,6 +656,43 @@
 											pad(mr.getUTCMinutes())}</Button
 									>
 								{/each}
+								{#await progressRequest then progress}
+									{#if progress.completed !== true}
+										<h2 class="mt-4 mb-2 text-lg font-bold">In progress</h2>
+
+										{@const ip = new Date(progress.reference_time)}
+										<Button
+											class="cursor-pointer bg-blue-200 hover:bg-blue-600 {ip.getTime() ===
+											modelRunSelected.getTime()
+												? 'bg-blue-400'
+												: ''}"
+											onclick={() => {
+												toast(
+													'Model run set to: ' +
+														ip.getUTCFullYear() +
+														'-' +
+														pad(ip.getUTCMonth() + 1) +
+														'-' +
+														pad(ip.getUTCDate()) +
+														' ' +
+														pad(ip.getUTCHours()) +
+														':' +
+														pad(ip.getUTCMinutes())
+												);
+												changeOMfileURL();
+											}}
+											>{ip.getUTCFullYear() +
+												'-' +
+												pad(ip.getUTCMonth() + 1) +
+												'-' +
+												pad(ip.getUTCDate()) +
+												' ' +
+												pad(ip.getUTCHours()) +
+												':' +
+												pad(ip.getUTCMinutes())}</Button
+										>
+									{/if}
+								{/await}
 							</div>
 							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:px-3">
 								<h2 class="mb-2 text-lg font-bold">Valid times</h2>
@@ -646,24 +740,39 @@
 								<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:pl-3">
 									<h2 class="mb-2 text-lg font-bold">Variables</h2>
 
-									{#each latest.variables as vr, i (i)}
-										{#if !vr.startsWith('wind_') || vr === 'wind_gusts_10m'}
-											{@const vrb = variables.find((v) => v.value === vr)}
-
-											<Button
-												class="cursor-pointer bg-blue-200 hover:bg-blue-600 {variable.value === vr
-													? 'bg-blue-400'
-													: ''}"
-												onclick={() => {
-													variable = vrb ?? variables[0];
-													url.searchParams.set('variable', vr);
-													pushState(url + map._hash.getHashString(), {});
-													toast('Variable set to: ' + variable.label);
-													changeOMfileURL();
-												}}>{vrb ? vrb.label : vr}</Button
+									<div class="relative">
+										<Select.Root
+											name="variables"
+											type="single"
+											bind:value={selectedVariable}
+											onValueChange={(value) => {
+												variable = variables.find((v) => v.value === value) ?? variables[0];
+												url.searchParams.set('variable', variable.value);
+												pushState(url + map._hash.getHashString(), {});
+												toast('Variable set to: ' + variable.label);
+												changeOMfileURL();
+											}}
+										>
+											<Select.Trigger
+												aria-label="Domain trigger"
+												class="top-[0.35rem] !h-12 w-full  pt-6 ">{variable?.label}</Select.Trigger
 											>
-										{/if}
-									{/each}
+											<Select.Content side="bottom">
+												{#each latest.variables as vr, i (i)}
+													{#if !vr.startsWith('wind_') || vr === 'wind_gusts_10m'}
+														{@const v = variables.find((vrb) => vrb.value === vr)
+															? variables.find((vrb) => vrb.value === vr)
+															: { value: vr, label: vr }}
+
+														<Select.Item value={v.value}>{v.label}</Select.Item>
+													{/if}
+												{/each}
+											</Select.Content>
+											<Select.Label class="absolute top-0 left-2 z-10 px-1 text-xs"
+												>Variable</Select.Label
+											>
+										</Select.Root>
+									</div>
 								</div>
 							{:else}
 								<div class="flex min-w-1/4 flex-col gap-1">No valid time selected</div>

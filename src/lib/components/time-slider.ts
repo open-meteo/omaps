@@ -27,10 +27,11 @@ export function createTimeSlider({ container, initialDate, onChange }: TimeSlide
 	let currentHour = initialDate.getHours();
 
 	container.innerHTML = `
-		<button id="prev_hour" type="button">&lt;</button>
-		<span id="slider_time_label">${formatSliderLabel(currentDate, currentHour)}</span>
-		<button id="next_hour" type="button">&gt;</button>
-		<br>
+		<div>
+			<button id="prev_hour" type="button">&lt;</button>
+			<span id="slider_time_label">${formatSliderLabel(currentDate, currentHour)}</span>
+			<button id="next_hour" type="button">&gt;</button>
+		</div>
 		<input
 			type="range"
 			id="time_slider"

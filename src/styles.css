@@ -267,3 +267,30 @@ body {
 .maplibregl-ctrl-group {
 	transition: 1000ms;
 }
+
+.time-slider-container button {
+	border-width: 1px;
+	background-color: white;
+	color: black;
+	padding: 5px;
+	border-radius: 5px;
+	font-size: 15px;
+	padding: 0.3rem 0.75rem;
+	font-weight: bold;
+}
+
+.time-slider-container button {
+	border-width: 1px;
+	background-color: white;
+	color: black;
+	padding: 5px;
+	border-radius: 5px;
+	font-size: 15px;
+	padding: 0.3rem 0.75rem;
+	font-weight: bold;
+}
+
+.dark .time-slider-container button {
+	background: rgba(100, 100, 100, 0.8);
+	color: white;
+}
