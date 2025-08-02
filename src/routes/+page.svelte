@@ -33,6 +33,7 @@
 	let showTimeSelector = $state(true);
 
 	import '../styles.css';
+	import { SvelteDate } from 'svelte/reactivity';
 
 	let darkMode = $derived(mode.current);
 	let timeSliderApi: { setDisabled: (d: boolean) => void };
@@ -163,7 +164,11 @@
 	let url: URL;
 	let params: URLSearchParams;
 
-	let domain: Domain = $state({ value: 'meteoswiss_icon_ch1', label: 'DWD ICON D2' });
+	let domain: Domain = $state({
+		value: 'meteoswiss_icon_ch1',
+		label: 'DWD ICON D2',
+		model_interval: 3
+	});
 	let variable: Variable = $state({ value: 'temperature_2m', label: 'Temperature 2m' });
 	let timeSelected = $state(new Date());
 	let modelRunSelected = $state(new Date());
@@ -239,7 +244,7 @@
 			domain = domains.find((dm) => dm.value === import.meta.env.VITE_DOMAIN) ?? domains[0];
 		}
 
-		let urlModelTime = params.get('model_time');
+		let urlModelTime = params.get('model');
 		if (urlModelTime && urlModelTime.length == 15) {
 			const year = parseInt(urlModelTime.slice(0, 4));
 			const month = parseInt(urlModelTime.slice(5, 7)) - 1; // zero-based
@@ -467,11 +472,13 @@
 				`https://openmeteo.s3.amazonaws.com/data_spatial/${domain.value}/${latest ? 'latest' : 'in-progress'}.json`
 			).then(async (result) => {
 				const json = await result.json();
-				const referenceTime = json.reference_time;
-				modelRunSelected = new Date(referenceTime);
+				if (latest) {
+					const referenceTime = json.reference_time;
+					modelRunSelected = new Date(referenceTime);
 
-				if (modelRunSelected - timeSelected > 0) {
-					timeSelected = new Date(referenceTime);
+					if (modelRunSelected - timeSelected > 0) {
+						timeSelected = new Date(referenceTime);
+					}
 				}
 
 				resolve(json);
@@ -509,6 +516,22 @@
 	});
 
 	let colors = $derived(colorScale.colors.reverse());
+
+	let modelRuns = $derived.by(() => {
+		if (latest) {
+			let referenceTime = new Date(latest.reference_time);
+			let returnArray = [
+				...Array(Math.round(referenceTime.getUTCHours() / domain.model_interval + 1))
+			].map((_, i) => {
+				let d = new Date();
+				d.setUTCHours(i * domain.model_interval, 0, 0, 0);
+				return d;
+			});
+			return returnArray;
+		} else {
+			return [];
+		}
+	});
 </script>
 
 <div class="map" id="#map_container" bind:this={mapContainer}></div>
@@ -566,11 +589,11 @@
 	</Sheet.Root>
 
 	<Drawer.Root bind:open={drawerOpen}>
-		<Drawer.Content class=" h-1/3 ">
-			<div class="flex flex-col items-center overflow-y-scroll">
+		<Drawer.Content class="h-1/3">
+			<div class="flex flex-col items-center overflow-y-scroll pb-12">
 				<div class="container mx-auto px-3">
 					<div class="mt-3 flex w-full flex-col flex-wrap gap-6 sm:flex-row sm:gap-0">
-						<div class="flex flex-col gap-3 sm:w-1/2 md:w-1/4 md:pr-3">
+						<div class="flex flex-col gap-3 sm:w-1/2 md:w-1/3 md:pr-3">
 							<h2 class="text-lg font-bold">Domains</h2>
 							<div class="relative">
 								<Select.Root
@@ -608,26 +631,31 @@
 						</div>
 
 						{#await latestRequest}
-							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:px-3">
+							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/3 md:px-3">
 								<h2 class="mb-2 text-lg font-bold">Model runs</h2>
 								Loading latest model runs...
 							</div>
 
-							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:pl-3">
+							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/3 md:pl-3">
 								<h2 class="mb-2 text-lg font-bold">Variables</h2>
 								Loading domain variables...
 							</div>
 						{:then latest}
-							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:px-3">
+							<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/3 md:px-3">
 								<h2 class="mb-2 text-lg font-bold">Model runs</h2>
-								{#each [modelRunSelected] as vt, i (i)}
-									{@const mr = new Date(vt)}
+								{#each modelRuns as mr, i (i)}
 									<Button
 										class="cursor-pointer bg-blue-200 hover:bg-blue-600 {mr.getTime() ===
 										modelRunSelected.getTime()
 											? 'bg-blue-400'
 											: ''}"
 										onclick={() => {
+											modelRunSelected = mr;
+											url.searchParams.set(
+												'model',
+												mr.toISOString().replace(/[:Z]/g, '').slice(0, 15)
+											);
+											pushState(url + map._hash.getHashString(), {});
 											toast(
 												'Model run set to: ' +
 													mr.getUTCFullYear() +
@@ -664,6 +692,12 @@
 												? 'bg-blue-400'
 												: ''}"
 											onclick={() => {
+												modelRunSelected = ip;
+												url.searchParams.set(
+													'model',
+													ip.toISOString().replace(/[:Z]/g, '').slice(0, 15)
+												);
+												pushState(url + map._hash.getHashString(), {});
 												toast(
 													'Model run set to: ' +
 														ip.getUTCFullYear() +
@@ -692,7 +726,7 @@
 								{/await}
 							</div>
 							{#if timeValid}
-								<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/4 md:pl-3">
+								<div class="flex flex-col gap-1 sm:w-1/2 md:w-1/3 md:pl-3">
 									<h2 class="mb-2 text-lg font-bold">Variables</h2>
 
 									<div class="relative">
