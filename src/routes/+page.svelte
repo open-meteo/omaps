@@ -513,6 +513,7 @@
 				return value;
 			}
 		}
+		return colorScales['temperature'];
 	});
 
 	let colors = $derived(colorScale.colors.reverse());
