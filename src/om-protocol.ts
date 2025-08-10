@@ -209,10 +209,10 @@ const initOMFile = async (url: string): Promise<void> => {
 		currentPath = omUrl;
 		omapsFileReader.setReaderData(domain, partial);
 		await omapsFileReader.init(omUrl);
-		data = await omapsFileReader.iterateChildren(variable, ranges);
+		data = await omapsFileReader.readVariable(variable, ranges);
 	} else {
 		omapsFileReader.setReaderData(domain, partial);
-		data = await omapsFileReader.iterateChildren(variable, ranges);
+		data = await omapsFileReader.readVariable(variable, ranges);
 	}
 };
 
