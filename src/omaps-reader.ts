@@ -37,30 +37,20 @@ export class OMapsFileReader {
 			this.projectionGrid = new ProjectionGrid(this.projection, domain.grid);
 		}
 	}
-
-	async iterateChildren(variable: Variable, ranges: Range[] | null = null): Promise<Data> {
-		for (const i of [...Array(this.reader.numberOfChildren())].map((_, i) => i)) {
-			this.child = await this.reader.getChild(i);
-			if (this.child) {
-				if (this.child.getName() === variable.value) {
-					const dimensions = this.child.getDimensions();
-
-					if (this.partial) {
-						this.ranges = ranges ?? this.ranges;
-					} else {
-						this.ranges = [
-							{ start: 0, end: dimensions[0] },
-							{ start: 0, end: dimensions[1] }
-						];
-					}
-
-					return { values: await this.child.read(OmDataType.FloatArray, this.ranges) };
-				} else {
-					this.child.dispose();
-				}
-			}
+	async readVariable(variable: Variable, ranges: Range[] | null = null): Promise<Data> {
+		const variableReader = await this.reader.getChildByName(variable.value);
+		const dimensions = variableReader.getDimensions();
+		if (this.partial) {
+			this.ranges = ranges ?? this.ranges;
+		} else {
+			this.ranges = [
+				{ start: 0, end: dimensions[0] },
+				{ start: 0, end: dimensions[1] }
+			];
 		}
-		return { values: undefined };
+		return {
+			values: await variableReader.read(OmDataType.FloatArray, this.ranges)
+		};
 	}
 
 	dispose() {
