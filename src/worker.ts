@@ -84,15 +84,12 @@ const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
 // };
 
 const getColor = (v: string, px: number): number[] => {
-	if (v.startsWith('temperature')) {
-		// increase minimum temperature by 40, since scale starts at -40
-		return colors[Math.max(0, Math.floor(px + 40))];
-	} else if (v.startsWith('pressure')) {
-		// increase minimum index by 950
-		return colors[Math.min(colors.length - 1, Math.max(0, Math.floor((px - 950) / 2)))];
-	} else {
-		return colors[Math.min(colors.length - 1, Math.max(0, Math.floor(px)))];
-	}
+	return colorsObj.colors[
+		Math.min(
+			colorsObj.colors.length - 1,
+			Math.max(0, Math.floor((px - colorsObj.min) / colorsObj.scalefactor))
+		)
+	];
 };
 
 const getOpacity = (v: string, px: number, dark: boolean): number => {
@@ -137,7 +134,7 @@ const getIndexAndFractions = (
 	);
 };
 
-let colors;
+let colorsObj;
 self.onmessage = async (message) => {
 	if (message.data.type == 'GT') {
 		const key = message.data.key;
@@ -154,8 +151,7 @@ self.onmessage = async (message) => {
 		const rgba = new Uint8ClampedArray(pixels * 4);
 		const dark = message.data.dark;
 
-		const colorsObject = colorScales[variable.value.split('_')[0]] ?? colors['temperature'];
-		colors = colorsObject.colors;
+		colorsObj = colorScales[variable.value.split('_')[0]] ?? colorScales['temperature'];
 
 		let projectionGrid = null;
 		if (domain.grid.projection) {
