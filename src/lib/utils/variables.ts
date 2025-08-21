@@ -84,7 +84,7 @@ for (const height of heights) {
 	variables.push({ value: `wind_${height}m`, label: `Wind ${height}m` });
 }
 
-export const hideZero = ['precipitation', 'cloud_cover'];
+export const hideZero = ['precipitation', 'cloud_cover', 'rain'];
 export const requestMultiple = [
 	'wind_10m',
 	'wind_40m',

@@ -5,7 +5,7 @@ function interpolateColorScaleHSL(colors: Array<string>, steps: number) {
 	const stepsPerSegment = Math.floor(steps / segments);
 	const remainder = steps % segments;
 
-	const rgbArray = [];
+	const rgbArray: number[][] = [];
 
 	for (let i = 0; i < segments; i++) {
 		const startColor = colors[i];
@@ -27,7 +27,29 @@ function interpolateColorScaleHSL(colors: Array<string>, steps: number) {
 	return rgbArray;
 }
 
-export const colorScales = {
+type ColorScale = {
+	min: number;
+	max: number;
+	scalefactor: number;
+	colors: number[][];
+};
+
+type ColorScales = {
+	[key: string]: ColorScale;
+};
+
+const precipScale: ColorScale = {
+	min: 0,
+	max: 20,
+	scalefactor: 1,
+	colors: [
+		...interpolateColorScaleHSL(['blue', 'green'], 5), // 0 to 5mm
+		...interpolateColorScaleHSL(['green', 'orange'], 5), // 5 to 10mm
+		...interpolateColorScaleHSL(['orange', 'red'], 10) // 10 to 20mm
+	]
+};
+
+export const colorScales: ColorScales = {
 	cape: {
 		min: 0,
 		max: 4000,
@@ -47,15 +69,7 @@ export const colorScales = {
 			...interpolateColorScaleHSL(['#FFF', '#c3c2c2'], 100) // 0 to 100%
 		]
 	},
-	precipitation: {
-		min: 0,
-		max: 20,
-		colors: [
-			...interpolateColorScaleHSL(['blue', 'green'], 5), // 0 to 5mm
-			...interpolateColorScaleHSL(['green', 'orange'], 5), // 5 to 10mm
-			...interpolateColorScaleHSL(['orange', 'red'], 10) // 10 to 20mm
-		]
-	},
+	precipitation: precipScale,
 	pressure: {
 		min: 950,
 		max: 1050,
@@ -65,6 +79,7 @@ export const colorScales = {
 			...interpolateColorScaleHSL(['#FFFFFF', '#FF4444'], 25) // 1000hPa to 1050hPa
 		]
 	},
+	rain: precipScale,
 	relative: {
 		min: 0,
 		max: 100,
