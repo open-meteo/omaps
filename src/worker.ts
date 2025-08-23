@@ -1,5 +1,3 @@
-import { colorScales } from './lib/utils/color-scales';
-
 import { hideZero, drawOnTiles } from './lib/utils/variables';
 
 import { DynamicProjection, ProjectionGrid, type Projection } from './lib/utils/projection';
@@ -10,12 +8,12 @@ import {
 	getIndexFromLatLong,
 	interpolateLinear,
 	interpolate2DHermite,
+	quinticHermite2D,
 	degreesToRadians
 } from './lib/utils/math';
 
-import type { TypedArray } from '@openmeteo/file-reader';
 import type { IconListPixels } from './lib/utils/icons';
-import type { Domain, IndexAndFractions } from './types';
+import type { ColorScale, Domain, IndexAndFractions, Interpolator } from './types';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
 const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
@@ -83,11 +81,11 @@ const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
 // 	}
 // };
 
-const getColor = (v: string, px: number): number[] => {
-	return colorsObj.colors[
+const getColor = (colorScale: ColorScale, px: number): number[] => {
+	return colorScale.colors[
 		Math.min(
-			colorsObj.colors.length - 1,
-			Math.max(0, Math.floor((px - colorsObj.min) / colorsObj.scalefactor))
+			colorScale.colors.length - 1,
+			Math.max(0, Math.floor((px - colorScale.min) / colorScale.scalefactor))
 		)
 	];
 };
@@ -134,7 +132,6 @@ const getIndexAndFractions = (
 	);
 };
 
-let colorsObj;
 self.onmessage = async (message) => {
 	if (message.data.type == 'GT') {
 		const key = message.data.key;
@@ -146,12 +143,11 @@ self.onmessage = async (message) => {
 
 		const domain = message.data.domain;
 		const variable = message.data.variable;
+		const colorScale: ColorScale = message.data.colorScale;
 
 		const pixels = TILE_SIZE * TILE_SIZE;
 		const rgba = new Uint8ClampedArray(pixels * 4);
 		const dark = message.data.dark;
-
-		colorsObj = colorScales[variable.value.split('_')[0]] ?? colorScales['temperature'];
 
 		let projectionGrid = null;
 		if (domain.grid.projection) {
@@ -161,6 +157,16 @@ self.onmessage = async (message) => {
 				domain.grid.projection
 			) as Projection;
 			projectionGrid = new ProjectionGrid(projection, domain.grid, ranges);
+		}
+
+		let interpolator: Interpolator;
+		if (colorScale.interpolationMethod === 'hermite2d') {
+			interpolator = interpolate2DHermite;
+		} else if (colorScale.interpolationMethod === 'quintic2d') {
+			interpolator = quinticHermite2D;
+		} else {
+			// default is hermite2d
+			interpolator = interpolate2DHermite;
 		}
 
 		for (let i = 0; i < TILE_SIZE; i++) {
@@ -177,7 +183,7 @@ self.onmessage = async (message) => {
 					ranges
 				);
 
-				let px = interpolate2DHermite(
+				let px = interpolator(
 					values,
 					ranges[1]['end'] - ranges[1]['start'],
 					index,
@@ -197,7 +203,7 @@ self.onmessage = async (message) => {
 					rgba[4 * ind + 2] = 0;
 					rgba[4 * ind + 3] = 0;
 				} else {
-					const color = getColor(variable.value, px);
+					const color = getColor(colorScale, px);
 
 					if (color) {
 						rgba[4 * ind] = color[0];
