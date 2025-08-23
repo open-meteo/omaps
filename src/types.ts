@@ -46,6 +46,24 @@ export type Variable = {
 	label: string;
 };
 
+export type ColorScale = {
+	min: number;
+	max: number;
+	scalefactor: number;
+	colors: number[][];
+	interpolationMethod: InterpolationMethod;
+};
+
+export type InterpolationMethod = 'hermite2d' | 'quintic2d';
+
+export type Interpolator = (
+	values: Float32Array<ArrayBufferLike>,
+	nx: number,
+	index: number,
+	xFraction: number,
+	yFraction: number
+) => number;
+
 export interface Domain {
 	value: string;
 	label: string;

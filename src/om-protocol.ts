@@ -12,13 +12,14 @@ import {
 } from '$lib/utils/math';
 
 import { domains } from '$lib/utils/domains';
-import { variables } from '$lib//utils/variables';
+import { variables } from '$lib/utils/variables';
 
 import TileWorker from './worker?worker';
 
 import type { TileJSON, TileIndex, Domain, Variable, Bounds, Range } from './types';
 import { DynamicProjection, ProjectionGrid, type Projection } from '$lib/utils/projection';
 import { OMapsFileReader } from './omaps-reader';
+import { getColorScale } from '$lib/utils/color-scales';
 
 let dark = false;
 let partial = false;
@@ -91,6 +92,7 @@ export const getValueFromLatLong = (
 
 const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitmap> => {
 	const key = `${omUrl}/${TILE_SIZE}/${z}/${x}/${y}`;
+	const colorScale = getColorScale(variable);
 
 	const worker = new TileWorker();
 
@@ -103,6 +105,7 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 		data,
 		domain,
 		variable,
+		colorScale,
 		ranges,
 		dark: dark,
 		mapBounds: mapBounds

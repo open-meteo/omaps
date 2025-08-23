@@ -55,7 +55,7 @@ export const getDerivative = (fPrev: number, fNext: number) => {
 };
 
 export const interpolate2DHermite = (
-	values: TypedArray,
+	values: Float32Array<ArrayBufferLike>,
 	nx: number,
 	index: number,
 	xFraction: number,

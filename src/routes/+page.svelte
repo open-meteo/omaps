@@ -24,7 +24,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import * as Drawer from '$lib/components/ui/drawer';
 
-	import { colorScales } from '$lib/utils/color-scales';
+	import { getColorScale } from '$lib/utils/color-scales';
 
 	let partial = $state(false);
 	let showScale = $state(true);
@@ -508,12 +508,7 @@
 	let selectedVariable = $derived(variable.value);
 
 	let colorScale = $derived.by(() => {
-		for (let [cs, value] of Object.entries(colorScales)) {
-			if (variable.value.startsWith(cs)) {
-				return value;
-			}
-		}
-		return colorScales['temperature'];
+		return getColorScale(variable);
 	});
 
 	let colors = $derived(colorScale.colors.reverse());
