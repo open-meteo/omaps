@@ -16,10 +16,10 @@ import { variables } from '$lib/utils/variables';
 
 import TileWorker from './worker?worker';
 
-import type { TileJSON, TileIndex, Domain, Variable, Bounds, Range } from './types';
+import type { TileJSON, TileIndex, Domain, Variable, Bounds, Range, ColorScale } from './types';
 import { DynamicProjection, ProjectionGrid, type Projection } from '$lib/utils/projection';
 import { OMapsFileReader } from './omaps-reader';
-import { getColorScale } from '$lib/utils/color-scales';
+import { getInterpolator } from '$lib/utils/color-scales';
 
 let dark = false;
 let partial = false;
@@ -53,7 +53,8 @@ const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
 
 export const getValueFromLatLong = (
 	lat: number,
-	lon: number
+	lon: number,
+	colorScale: ColorScale
 ): { index: number; value: number; direction?: number } => {
 	if (data) {
 		const values = data.values;
@@ -72,14 +73,9 @@ export const getValueFromLatLong = (
 		};
 
 		if (values && index) {
+			const interpolator = getInterpolator(colorScale);
 			//const px = interpolateLinear(data, index, xFraction, yFraction);
-			const px = interpolate2DHermite(
-				values as TypedArray,
-				domain.grid.nx,
-				index,
-				xFraction,
-				yFraction
-			);
+			const px = interpolator(values as Float32Array, domain.grid.nx, index, xFraction, yFraction);
 
 			return { index: index, value: px };
 		} else {
@@ -92,7 +88,6 @@ export const getValueFromLatLong = (
 
 const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitmap> => {
 	const key = `${omUrl}/${TILE_SIZE}/${z}/${x}/${y}`;
-	const colorScale = getColorScale(variable);
 
 	const worker = new TileWorker();
 
@@ -105,7 +100,6 @@ const getTile = async ({ z, x, y }: TileIndex, omUrl: string): Promise<ImageBitm
 		data,
 		domain,
 		variable,
-		colorScale,
 		ranges,
 		dark: dark,
 		mapBounds: mapBounds

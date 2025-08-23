@@ -9,11 +9,13 @@ import {
 	interpolateLinear,
 	interpolate2DHermite,
 	quinticHermite2D,
-	degreesToRadians
+	degreesToRadians,
+	noInterpolation
 } from './lib/utils/math';
 
 import type { IconListPixels } from './lib/utils/icons';
 import type { ColorScale, Domain, IndexAndFractions, Interpolator } from './types';
+import { getColorScale, getInterpolator } from '$lib/utils/color-scales';
 
 const TILE_SIZE = Number(import.meta.env.VITE_TILE_SIZE) * 2;
 const OPACITY = Number(import.meta.env.VITE_TILE_OPACITY);
@@ -143,7 +145,7 @@ self.onmessage = async (message) => {
 
 		const domain = message.data.domain;
 		const variable = message.data.variable;
-		const colorScale: ColorScale = message.data.colorScale;
+		const colorScale = getColorScale(message.data.variable);
 
 		const pixels = TILE_SIZE * TILE_SIZE;
 		const rgba = new Uint8ClampedArray(pixels * 4);
@@ -159,15 +161,7 @@ self.onmessage = async (message) => {
 			projectionGrid = new ProjectionGrid(projection, domain.grid, ranges);
 		}
 
-		let interpolator: Interpolator;
-		if (colorScale.interpolationMethod === 'hermite2d') {
-			interpolator = interpolate2DHermite;
-		} else if (colorScale.interpolationMethod === 'quintic2d') {
-			interpolator = quinticHermite2D;
-		} else {
-			// default is hermite2d
-			interpolator = interpolate2DHermite;
-		}
+		const interpolator = getInterpolator(colorScale);
 
 		for (let i = 0; i < TILE_SIZE; i++) {
 			const lat = tile2lat(y + i / TILE_SIZE, z);

@@ -410,7 +410,7 @@
 					} else {
 						popup.addTo(map);
 					}
-					let { index, value } = getValueFromLatLong(coordinates.lat, coordinates.lng);
+					let { index, value } = getValueFromLatLong(coordinates.lat, coordinates.lng, colorScale);
 					if (index) {
 						if ((hideZero.includes(variable.value) && value <= 0.25) || !value) {
 							popup.remove();

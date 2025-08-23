@@ -38,6 +38,16 @@ export const interpolateLinear = (
 	);
 };
 
+export const noInterpolation = (
+	values: TypedArray,
+	nx: number,
+	index: number,
+	xFraction: number,
+	yFraction: number
+): number => {
+	return values[index];
+};
+
 export const hermite = (t: number, p0: number, p1: number, m0: number, m1: number) => {
 	const t2 = t * t;
 	const t3 = t2 * t;

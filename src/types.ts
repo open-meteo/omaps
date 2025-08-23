@@ -54,7 +54,7 @@ export type ColorScale = {
 	interpolationMethod: InterpolationMethod;
 };
 
-export type InterpolationMethod = 'hermite2d' | 'quintic2d';
+export type InterpolationMethod = 'hermite2d' | 'quintic2d' | 'none';
 
 export type Interpolator = (
 	values: Float32Array<ArrayBufferLike>,

@@ -1,5 +1,6 @@
 import { interpolateHsl, color } from 'd3';
-import type { ColorScale, Variable } from '../../types';
+import type { ColorScale, Interpolator, Variable } from '../../types';
+import { interpolate2DHermite, noInterpolation, quinticHermite2D } from './math';
 
 function interpolateColorScaleHSL(colors: Array<string>, steps: number) {
 	const segments = colors.length - 1;
@@ -51,7 +52,7 @@ const convectiveCloudScale: ColorScale = {
 	colors: [
 		...interpolateColorScaleHSL(['#c0392b', '#d35400', '#f1c40f', '#16a085', '#2980b9'], 6000)
 	],
-	interpolationMethod: 'quintic2d'
+	interpolationMethod: 'none'
 };
 
 export const colorScales: ColorScales = {
@@ -169,4 +170,17 @@ export function getColorScale(variable: Variable) {
 		colorScales[variable.value.split('_')[0]] ??
 		colorScales['temperature']
 	);
+}
+
+export function getInterpolator(colorScale: ColorScale): Interpolator {
+	if (colorScale.interpolationMethod === 'hermite2d') {
+		return interpolate2DHermite;
+	} else if (colorScale.interpolationMethod === 'quintic2d') {
+		return quinticHermite2D;
+	} else if (colorScale.interpolationMethod === 'none') {
+		return noInterpolation;
+	} else {
+		// default is hermite2d
+		return interpolate2DHermite;
+	}
 }
